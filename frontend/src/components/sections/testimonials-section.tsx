@@ -8,16 +8,16 @@ export function TestimonialsSection() {
       {/* Large Text Statement */}
       <div className="px-6 py-24 md:px-12 md:py-32 lg:px-20 lg:py-40">
         <p className="mx-auto max-w-5xl text-2xl leading-relaxed text-foreground md:text-3xl lg:text-[2.5rem] lg:leading-snug">
-          Alpine & Forest accessories combine aerospace-grade materials with cutting-edge technology — 
-          designed for explorers who refuse to compromise on quality or performance in the wild.
+          স্বপ্নউড়ান প্রকাশন প্রতিটি সৃজনশীল মানুষের ঘর। আমরা বিশ্বাস করি আপনার গল্পটি বিশ্বের কাছে পৌঁছে দেওয়ার দায়িত্ব আমাদের। 
+          গুণগত মান এবং শৈল্পিক উৎকর্ষতা আমাদের প্রতিটি কাজের বৈশিষ্ট্য।
         </p>
       </div>
 
       {/* About Image */}
       <div className="relative aspect-[16/9] w-full">
         <Image
-          src="/images/3d4046a0-b072-4b07-941f-9141ee3ed4a7.png"
-          alt="Mountain peaks at sunrise"
+          src="/sarad utsab2025.jpeg"
+          alt="Sarad Utsab 2025"
           fill
           className="object-cover"
         />

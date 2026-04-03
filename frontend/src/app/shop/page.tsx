@@ -8,14 +8,85 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { ShoppingCart, Search, Filter, SlidersHorizontal } from 'lucide-react';
 
 export default function ShopPage() {
-  const books = Array.from({ length: 8 }).map((_, i) => ({
-    id: i + 1,
-    title: `Modern Volume ${i + 1}`,
-    author: i % 2 === 0 ? 'Moholy-Nagy' : 'Herbert Bayer',
-    price: (19.99 + i * 2).toFixed(2),
-    publisher: 'Botanical Press',
-    image: PlaceHolderImages[i % PlaceHolderImages.length].imageUrl
-  }));
+  const books = [
+    {
+      id: 1,
+      title: "আত্মকথা ও কবিতা",
+      author: "স্বপ্নউড়ান",
+      price: "২৫০.০০",
+      image: "/atmakatha and kobita.jpeg"
+    },
+    {
+      id: 2,
+      title: "বিনি সুতোর মেলা",
+      author: "স্বপ্নউড়ান",
+      price: "১৮০.০০",
+      image: "/bini sutor mala.jpeg"
+    },
+    {
+      id: 3,
+      title: "বিশ্ব ছাড়িয়ে",
+      author: "স্বপ্নউড়ান",
+      price: "৩০০.০০",
+      image: "/biswa chariye.jpeg"
+    },
+    {
+      id: 4,
+      title: "ক্লাসরুমের কবিতা",
+      author: "স্বপ্নউড়ান",
+      price: "১৫০.০০",
+      image: "/classroomer kobita.jpeg"
+    },
+    {
+      id: 5,
+      title: "দক্ষিণজঙ্গলের লোকদেবতারে",
+      author: "স্বপ্নউড়ান",
+      price: "২০০.০০",
+      image: "/dakhinjangaler lokdebtare.jpeg"
+    },
+    {
+      id: 6,
+      title: "মেঘপিওনের ডাকচিঠি",
+      author: "স্বপ্নউড়ান",
+      price: "১২০.০০",
+      image: "/meghpioner dakchithi.jpeg"
+    },
+    {
+      id: 7,
+      title: "প্রলাপ",
+      author: "স্বপ্নউড়ান",
+      price: "৩৫০.০০",
+      image: "/pralap.jpeg"
+    },
+    {
+      id: 8,
+      title: "রহস্যময় পদ্মনাভস্বামী",
+      author: "স্বপ্নউড়ান",
+      price: "৪০০.০০",
+      image: "/rahasyamoy padmanabhasami.jpeg"
+    },
+    {
+      id: 9,
+      title: "শারদ উৎসব ২০২৫",
+      author: "স্বপ্নউড়ান",
+      price: "১০০.০০",
+      image: "/sarad utsab2025.jpeg"
+    },
+    {
+      id: 10,
+      title: "স্মৃতির এশ্রাদ্ধ",
+      author: "স্বপ্নউড়ান",
+      price: "২০০.০০",
+      image: "/smritir esrad.jpeg"
+    },
+    {
+      id: 11,
+      title: "উড়ান",
+      author: "স্বপ্নউড়ান",
+      price: "২৫০.০০",
+      image: "/uran.jpeg"
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-background">

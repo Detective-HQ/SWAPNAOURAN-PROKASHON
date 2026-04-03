@@ -4,49 +4,49 @@ import { FadeImage } from "@/components/fade-image";
 
 const features = [
   {
-    title: "Smart Temperature Control",
-    description: "Innovation",
-    image: "/images/d18fe616-5596-4559-90f5-a90f5397d0d8.png",
+    title: "দক্ষিণজঙ্গলের লোকদেবতারে",
+    description: "প্রবন্ধ",
+    image: "/dakhinjangaler lokdebtare.jpeg",
   },
   {
-    title: "Ultra-Light Carbon Frame",
-    description: "Performance",
-    image: "/images/e26fa9c3-966d-4966-94a4-954a1e511c1c.png",
+    title: "মেঘপিওনের ডাকচিঠি",
+    description: "কাব্যগ্রন্থ",
+    image: "/meghpioner dakchithi.jpeg",
   },
   {
-    title: "Weather-Resistant Design",
-    description: "Durability",
-    image: "/images/car.jpg",
+    title: "প্রলাপ",
+    description: "উপন্যাস",
+    image: "/pralap.jpeg",
   },
   {
-    title: "Integrated GPS Tracking",
-    description: "Navigation",
-    image: "/images/204cee22-9e85-49e8-9303-1d309af626b0.png",
+    title: "রহস্যময় পদ্মনাভস্বামী",
+    description: "থ্রিলার",
+    image: "/rahasyamoy padmanabhasami.jpeg",
   },
   {
-    title: "Built-In LED Flashlight",
-    description: "Visibility",
-    image: "/images/led-flashlight-bottle.png",
+    title: "শারদ উৎসব ২০২৫",
+    description: "বিশেষ সংখ্যা",
+    image: "/sarad utsab2025.jpeg",
   },
   {
-    title: "Self-Heating Technology",
-    description: "Comfort",
-    image: "/images/heating-campfire.png",
+    title: "স্মৃতির এশ্রাদ্ধ",
+    description: "কবিতা",
+    image: "/smritir esrad.jpeg",
   },
 ];
 
 export function FeaturedProductsSection() {
   return (
-    <section id="technology" className="bg-background">
+    <section id="products" className="bg-background">
       {/* Section Title */}
       <div className="px-6 py-20 text-center md:px-12 md:py-28 lg:px-20 lg:py-32 lg:pb-20">
         <h2 className="text-3xl font-medium tracking-tight text-foreground md:text-4xl lg:text-5xl">
-          Engineered for Excellence.
+          আমাদের বিশেষ প্রকাশনা সমূহ
           <br />
-          Designed for Adventure.
+          অক্ষরের মায়ায় সাজানো ভুবন
         </h2>
-        <p className="mx-auto mt-6 max-w-md text-sm text-muted-foreground">
-          Technology
+        <p className="mx-auto mt-6 max-w-md text-sm text-muted-foreground uppercase tracking-widest">
+          নির্বাচিত বই
         </p>
       </div>
 
@@ -55,31 +55,26 @@ export function FeaturedProductsSection() {
         {features.map((feature) => (
           <div key={feature.title} className="group">
             {/* Image */}
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-muted/50">
               <FadeImage
                 src={feature.image || "/placeholder.svg"}
                 alt={feature.title}
                 fill
-                className="object-cover group-hover:scale-105"
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
               />
             </div>
 
             {/* Content */}
             <div className="py-6">
-              <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">
+              <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground font-medium">
                 {feature.description}
               </p>
-              <h3 className="text-foreground text-xl font-semibold">
+              <h3 className="text-foreground text-xl font-semibold leading-tight">
                 {feature.title}
               </h3>
             </div>
           </div>
         ))}
-      </div>
-
-      {/* CTA Link */}
-      <div className="flex justify-center px-6 pb-28 md:px-12 lg:px-20">
-        
       </div>
     </section>
   );

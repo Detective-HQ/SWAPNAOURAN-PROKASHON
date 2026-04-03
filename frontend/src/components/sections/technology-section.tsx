@@ -60,26 +60,26 @@ function ScrollRevealText({ text }: { text: string }) {
 
 const sideImages = [
   {
-    src: "https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=1000",
-    alt: "Forest trail",
+    src: "/atmakatha and kobita.jpeg",
+    alt: "Atmakatha and Kobita",
     position: "left",
     span: 1,
   },
   {
-    src: "https://images.unsplash.com/photo-1511593358241-7eea1f3c84e5?q=80&w=1000",
-    alt: "Mountain peak",
+    src: "/bini sutor mala.jpeg",
+    alt: "Bini Sutor Mala",
     position: "left",
     span: 1,
   },
   {
-    src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1000",
-    alt: "Alpine landscape",
+    src: "/classroomer kobita.jpeg",
+    alt: "Classroomer Kobita",
     position: "right",
     span: 1,
   },
   {
-    src: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1000",
-    alt: "Snow mountain",
+    src: "/dakhinjangaler lokdebtare.jpeg",
+    alt: "Dakhinjangaler lokdebtare",
     position: "right",
     span: 1,
   },
@@ -91,7 +91,7 @@ export function TechnologySection() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [textProgress, setTextProgress] = useState(0);
   
-  const descriptionText = "Experience outdoor gear reimagined with cutting-edge technology. Alpine & Forest accessories combine ultra-lightweight materials, intelligent temperature control, and weather-resistant engineering to elevate every adventure. From mountain peaks to forest trails, your gear adapts to the conditions.";
+  const descriptionText = "স্বপ্নউড়ান প্রকাশন প্রতিটি বইয়ের গুণগত মান নিশ্চিত করতে সর্বাধুনিক মুদ্রণ প্রযুক্তি এবং শৈল্পিক প্রচ্ছদ সজ্জা ব্যবহার করে। আমাদের প্রতিটি প্রকাশনা পাঠকের হৃদয়ে স্থান করে নিতে বদ্ধপরিকর। আমরা কেবল বই ছাপাই না, আমরা একটি অভিজ্ঞতা তৈরি করি যা প্রজন্মের পর প্রজন্ম বেঁচে থাকে।";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -198,8 +198,8 @@ export function TechnologySection() {
               }}
             >
               <Image
-                src="https://images.unsplash.com/photo-1501555088652-021faa106b9b?q=80&w=2000"
-                alt="Aerial view of camping expedition in wilderness"
+                src="/sapnauran.jpeg"
+                alt="Sapnauran Publication Art"
                 fill
                 className="object-cover"
               />
@@ -210,9 +210,9 @@ export function TechnologySection() {
                 className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center"
               >
                 <h2 className="max-w-3xl font-medium leading-tight tracking-tight text-white md:text-5xl lg:text-7xl text-5xl">
-                  {["Technology", "Meets", "Wilderness."].map((word, index) => {
+                  {["সৃজনশীলতা", "ও", "প্রকাশনা।"].map((word, index) => {
                     // Each word fades out sequentially based on scrollProgress
-                    const wordFadeStart = index * 0.07; // Technology: 0, Meets: 0.07, Wilderness: 0.14
+                    const wordFadeStart = index * 0.07;
                     const wordFadeEnd = wordFadeStart + 0.07;
                     const wordProgress = Math.max(0, Math.min(1, (scrollProgress - wordFadeStart) / (wordFadeEnd - wordFadeStart)));
                     const wordOpacity = 1 - wordProgress;

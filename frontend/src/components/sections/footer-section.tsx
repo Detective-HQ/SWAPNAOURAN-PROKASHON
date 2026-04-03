@@ -4,22 +4,22 @@ import Link from "next/link";
 
 const footerLinks = {
   explore: [
-    { label: "Products", href: "#products" },
-    { label: "Technology", href: "#technology" },
-    { label: "Gallery", href: "#gallery" },
-    { label: "Accessories", href: "#accessories" },
+    { label: "বই", href: "/shop" },
+    { label: "ই-বুক", href: "/ebooks" },
+    { label: "গ্যালারি", href: "#gallery" },
+    { label: "সংকলন", href: "#collection" },
   ],
   about: [
-    { label: "Our Story", href: "#" },
-    { label: "Team", href: "#" },
-    { label: "Careers", href: "#" },
-    { label: "Contact", href: "#" },
+    { label: "আমাদের গল্প", href: "#" },
+    { label: "লেখকবৃন্দ", href: "#" },
+    { label: "ক্যারিয়ার", href: "#" },
+    { label: "যোগাযোগ", href: "#" },
   ],
   service: [
-    { label: "FAQ", href: "#" },
-    { label: "Shipping", href: "#" },
-    { label: "Returns", href: "#" },
-    { label: "Warranty", href: "#" },
+    { label: "সাধারণ জিজ্ঞাসা", href: "#" },
+    { label: "শিপিং", href: "#" },
+    { label: "রিটার্ন", href: "#" },
+    { label: "গোপনীয়তা নীতি", href: "#" },
   ],
 };
 
@@ -32,10 +32,10 @@ export function FooterSection() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1 lg:col-span-2">
             <Link href="/" className="text-lg font-medium text-foreground">
-              EVASION
+              SWAPNAOURAN PROKASHON
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-              Premium smart bottles engineered for adventure. GPS tracking, LED flashlight, and self-heating technology.
+              স্বপ্নউড়ান প্রকাশন - সাহিত্যের নতুন আকাশ। আমরা প্রতিটি পাণ্ডুলিপিকে যত্নে সাজিয়ে তুলি।
             </p>
           </div>
 
@@ -96,7 +96,7 @@ export function FooterSection() {
       <div className="border-t border-border px-6 py-6 md:px-12 lg:px-20">
         <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
           <p className="text-xs text-muted-foreground">
-            2026 EVASION. All rights reserved.
+            &copy; 2026 SWAPNAOURAN PROKASHON. All rights reserved.
           </p>
 
           

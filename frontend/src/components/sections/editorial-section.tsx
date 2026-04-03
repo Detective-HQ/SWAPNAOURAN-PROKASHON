@@ -1,10 +1,10 @@
 "use client";
 
 const specs = [
-  { label: "Weight", value: "400g" },
-  { label: "Capacity", value: "0.5L - 2L" },
-  { label: "Setup", value: "2 min" },
-  { label: "Packed size", value: "30 x 15 cm" },
+  { label: "প্রকাশিত বই", value: "৫০+" },
+  { label: "লেখক", value: "২৫+" },
+  { label: "পাঠক সংখ্যা", value: "১০০০০+" },
+  { label: "পুরস্কার", value: "৫+" },
 ];
 
 export function EditorialSection() {

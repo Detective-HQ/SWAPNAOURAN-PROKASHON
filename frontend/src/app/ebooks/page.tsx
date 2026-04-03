@@ -7,10 +7,10 @@ import { BookOpen, ShieldCheck, Zap } from 'lucide-react';
 
 export default function EbooksPage() {
   const ebooks = [
-    { id: 1, title: 'Digital Typography', price: '$4.99', image: PlaceHolderImages[0].imageUrl },
-    { id: 2, title: 'Screen Modernism', price: '$3.50', image: PlaceHolderImages[1].imageUrl },
-    { id: 3, title: 'Pixels as Points', price: '$5.99', image: PlaceHolderImages[2].imageUrl },
-    { id: 4, title: 'Vector Bauhaus', price: '$4.25', image: PlaceHolderImages[0].imageUrl },
+    { id: 1, title: 'আত্মকথা ও কবিতা', price: '৳ ১৫০.০০', image: '/atmakatha and kobita.jpeg' },
+    { id: 2, title: 'বিনি সুতোর মেলা', price: '৳ ১০০.০০', image: '/bini sutor mala.jpeg' },
+    { id: 3, title: 'বিশ্ব ছাড়িয়ে', price: '৳ ২০০.০০', image: '/biswa chariye.jpeg' },
+    { id: 4, title: 'ক্লাসরুমের কবিতা', price: '৳ ৮০.০০', image: '/classroomer kobita.jpeg' },
   ];
 
   return (
@@ -48,7 +48,7 @@ export default function EbooksPage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
             {ebooks.map((ebook) => (
-              <BauhausCard key={ebook.id} decorationShape="triangle" decorationColor="blue">
+              <BauhausCard key={ebook.id} decorationColor="blue">
                 <div className="aspect-[4/5] relative mb-6 border-2 border-black group overflow-hidden">
                   <Image 
                     src={ebook.image} 
@@ -62,7 +62,7 @@ export default function EbooksPage() {
                 <h2 className="text-xl font-black mb-6">{ebook.title}</h2>
                 <div className="flex justify-between items-center">
                   <span className="text-3xl font-black">{ebook.price}</span>
-                  <BauhausButton variant="red" size="sm">BUY NOW</BauhausButton>
+                  <BauhausButton variant="terracotta" size="sm">BUY NOW</BauhausButton>
                 </div>
               </BauhausCard>
             ))}

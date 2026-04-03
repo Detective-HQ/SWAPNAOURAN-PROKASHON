@@ -5,55 +5,55 @@ import { FadeImage } from "@/components/fade-image";
 const accessories = [
   {
     id: 1,
-    name: "Wireless Charging Stand",
-    description: "Induction charging dock for effortless power",
-    price: "$89",
-    image: "/images/accessory-charger.png",
+    name: "আত্মকথা ও কবিতা",
+    description: "স্বপ্নউড়ান প্রকাশন",
+    price: "৳ ২৫০",
+    image: "/atmakatha and kobita.jpeg",
   },
   {
     id: 2,
-    name: "Protective Silicone Sleeve",
-    description: "Textured grip sleeve for enhanced durability",
-    price: "$45",
-    image: "/images/accessory-sleeve.png",
+    name: "বিনি সুতোর মেলা",
+    description: "স্বপ্নউড়ান প্রকাশন",
+    price: "৳ ১৮০",
+    image: "/bini sutor mala.jpeg",
   },
   {
     id: 3,
-    name: "Carbon Fiber Bike Mount",
-    description: "Ultra-light mounting system for cycling",
-    price: "$129",
-    image: "/images/accessory-bike-mount.png",
+    name: "বিশ্ব ছাড়িয়ে",
+    description: "স্বপ্নউড়ান প্রকাশন",
+    price: "৳ ৩০০",
+    image: "/biswa chariye.jpeg",
   },
   {
     id: 4,
-    name: "Premium Carry Strap",
-    description: "Adjustable strap with quick-release clips",
-    price: "$39",
-    image: "/images/accessory-strap.png",
+    name: "ক্লাসরুমের কবিতা",
+    description: "স্বপ্নউড়ান প্রকাশন",
+    price: "৳ ১৫০",
+    image: "/classroomer kobita.jpeg",
   },
   {
     id: 5,
-    name: "Carabiner Clip System",
-    description: "Secure attachment for hands-free carrying",
-    price: "$29",
-    image: "/images/accessory-carabiner.png",
+    name: "দক্ষিণজঙ্গলের লোকদেবতারে",
+    description: "স্বপ্নউড়ান প্রকাশন",
+    price: "৳ ২০০",
+    image: "/dakhinjangaler lokdebtare.jpeg",
   },
   {
     id: 6,
-    name: "Bluetooth Speaker Base",
-    description: "High-fidelity audio dock with grip stabilizers",
-    price: "$149",
-    image: "/images/accessory-speaker-base.png",
+    name: "মেঘপিওনের ডাকচিঠি",
+    description: "স্বপ্নউড়ান প্রকাশন",
+    price: "৳ ১২০",
+    image: "/meghpioner dakchithi.jpeg",
   },
 ];
 
 export function CollectionSection() {
   return (
-    <section id="accessories" className="bg-background">
+    <section id="collection" className="bg-background">
       {/* Section Title */}
       <div className="px-6 py-20 md:px-12 lg:px-20 md:py-10">
         <h2 className="text-3xl font-medium tracking-tight text-foreground md:text-4xl">
-          Essential Accessories
+          আমাদের বইয়ের সমাহার
         </h2>
       </div>
 
@@ -64,7 +64,7 @@ export function CollectionSection() {
           {accessories.map((accessory) => (
             <div key={accessory.id} className="group flex-shrink-0 w-[75vw] snap-center">
               {/* Image */}
-              <div className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-secondary">
+              <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-secondary">
                 <FadeImage
                   src={accessory.image || "/placeholder.svg"}
                   alt={accessory.name}
@@ -98,7 +98,7 @@ export function CollectionSection() {
           {accessories.map((accessory) => (
             <div key={accessory.id} className="group">
               {/* Image */}
-              <div className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-secondary">
+              <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-secondary">
                 <FadeImage
                   src={accessory.image || "/placeholder.svg"}
                   alt={accessory.name}

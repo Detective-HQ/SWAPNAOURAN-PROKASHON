@@ -12,14 +12,18 @@ export function GallerySection() {
   const lastScrollRef = useRef(0);
 
   const images = [
-    { src: "/images/bottle-bike.png", alt: "Thermal bottle on bike" },
-    { src: "/images/bottle-lake.png", alt: "Thermal bottle by lake" },
-    { src: "/images/bottle-water.png", alt: "Thermal bottle in water" },
-    { src: "/images/bottle-stream.png", alt: "Thermal bottle by stream" },
-    { src: "/images/bottle-fire.png", alt: "Thermal bottle by fire" },
-    { src: "/images/bottle-snow.png", alt: "Thermal bottle in snow" },
-    { src: "/images/bottle-mountain.png", alt: "Thermal bottle on mountain" },
-    { src: "/images/bottle-canyon.png", alt: "Thermal bottle at canyon" },
+    { src: "/atmakatha and kobita.jpeg", alt: "Atmakatha and Kobita" },
+    { src: "/bini sutor mala.jpeg", alt: "Bini Sutor Mala" },
+    { src: "/biswa chariye.jpeg", alt: "Biswa Chariye" },
+    { src: "/classroomer kobita.jpeg", alt: "Classroomer Kobita" },
+    { src: "/dakhinjangaler lokdebtare.jpeg", alt: "Dakhinjangaler lokdebtare" },
+    { src: "/meghpioner dakchithi.jpeg", alt: "Meghpioner Dakchithi" },
+    { src: "/pralap.jpeg", alt: "Pralap" },
+    { src: "/rahasyamoy padmanabhasami.jpeg", alt: "Rahasyamoy Padmanabhasami" },
+    { src: "/sapnauran.jpeg", alt: "Sapnauran" },
+    { src: "/sarad utsab2025.jpeg", alt: "Sarad Utsab 2025" },
+    { src: "/smritir esrad.jpeg", alt: "Smritir Esrad" },
+    { src: "/uran.jpeg", alt: "Uran" },
   ];
 
   // Calculate section height based on content width
@@ -100,7 +104,7 @@ export function GallerySection() {
           {/* Horizontal scrolling container */}
           <div 
             ref={containerRef}
-            className="flex gap-6 px-6"
+            className="flex gap-4 md:gap-6 px-4 md:px-6"
             style={{
               transform: `translate3d(${translateX}px, 0, 0)`,
               WebkitTransform: `translate3d(${translateX}px, 0, 0)`,
@@ -114,7 +118,7 @@ export function GallerySection() {
             {images.map((image, index) => (
               <div
                 key={index}
-                className="relative h-[70vh] w-[85vw] flex-shrink-0 overflow-hidden rounded-2xl md:w-[60vw] lg:w-[45vw]"
+                className="relative h-[65vh] md:h-[70vh] w-[90vw] md:w-[60vw] lg:w-[45vw] flex-shrink-0 overflow-hidden rounded-[2rem] md:rounded-2xl"
                 style={{
                   transform: 'translateZ(0)',
                   WebkitTransform: 'translateZ(0)',
@@ -124,7 +128,7 @@ export function GallerySection() {
                   src={image.src || "/placeholder.svg"}
                   alt={image.alt}
                   fill
-                  className="object-cover"
+                  className="object-cover hover:scale-105 transition-transform duration-700"
                   priority={index < 3}
                 />
               </div>
