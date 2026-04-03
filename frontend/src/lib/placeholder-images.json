@@ -1,0 +1,64 @@
+{
+  "placeholderImages": [
+    {
+      "id": "book-1",
+      "description": "Modernist Book Cover",
+      "imageUrl": "https://picsum.photos/seed/book1/400/600",
+      "imageHint": "minimalist book cover"
+    },
+    {
+      "id": "book-2",
+      "description": "Abstract Art Book",
+      "imageUrl": "https://picsum.photos/seed/book2/400/600",
+      "imageHint": "abstract graphic book"
+    },
+    {
+      "id": "book-3",
+      "description": "Geometric Design Book",
+      "imageUrl": "https://picsum.photos/seed/book3/400/600",
+      "imageHint": "geometric pattern book"
+    },
+    {
+      "id": "book-4",
+      "description": "Botany Journal",
+      "imageUrl": "https://picsum.photos/seed/book4/400/600",
+      "imageHint": "botanical illustration"
+    },
+    {
+      "id": "book-5",
+      "description": "Architecture Studies",
+      "imageUrl": "https://picsum.photos/seed/book5/400/600",
+      "imageHint": "architecture book"
+    },
+    {
+      "id": "book-6",
+      "description": "Design Theory",
+      "imageUrl": "https://picsum.photos/seed/book6/400/600",
+      "imageHint": "design book"
+    },
+    {
+      "id": "publisher-1",
+      "description": "Publisher Studio",
+      "imageUrl": "https://picsum.photos/seed/pub1/800/600",
+      "imageHint": "creative office studio"
+    },
+    {
+      "id": "publisher-2",
+      "description": "Printing Press",
+      "imageUrl": "https://picsum.photos/seed/pub2/600/800",
+      "imageHint": "printing press machine"
+    },
+    {
+      "id": "publisher-3",
+      "description": "Editorial Meeting",
+      "imageUrl": "https://picsum.photos/seed/pub3/800/800",
+      "imageHint": "editorial team working"
+    },
+    {
+      "id": "gallery-1",
+      "description": "Workspace",
+      "imageUrl": "https://picsum.photos/seed/gal1/800/1200",
+      "imageHint": "creative space"
+    }
+  ]
+}

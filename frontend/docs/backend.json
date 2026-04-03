@@ -1,0 +1,641 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a registered user of the Swapno Uran Prakashan bookstore, storing their core profile information.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "username": {
+          "type": "string",
+          "description": "The user's chosen display name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address, used for communication and login.",
+          "format": "email"
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "email"
+      ]
+    },
+    "Publisher": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Publisher",
+      "type": "object",
+      "description": "Represents a publisher featured in the bookstore, including details for the 'Photo Time' gallery.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Publisher entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The official name of the publisher."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description or biography of the publisher."
+        },
+        "logoUrl": {
+          "type": "string",
+          "description": "URL to the publisher's logo image.",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "PublisherGalleryImage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PublisherGalleryImage",
+      "type": "object",
+      "description": "Represents an image within a publisher's gallery for the 'Photo Time' section.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the PublisherGalleryImage entity."
+        },
+        "publisherId": {
+          "type": "string",
+          "description": "Reference to the Publisher this image belongs to. (Relationship: Publisher 1:N PublisherGalleryImage)"
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL to the image file in cloud storage.",
+          "format": "uri"
+        },
+        "caption": {
+          "type": "string",
+          "description": "A short description or caption for the image."
+        }
+      },
+      "required": [
+        "id",
+        "publisherId",
+        "imageUrl"
+      ]
+    },
+    "Book": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Book",
+      "type": "object",
+      "description": "Represents a physical book available for purchase in the store.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Book entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the book."
+        },
+        "author": {
+          "type": "string",
+          "description": "The name of the book's author."
+        },
+        "publisherId": {
+          "type": "string",
+          "description": "Reference to the Publisher of this book. (Relationship: Publisher 1:N Book)"
+        },
+        "price": {
+          "type": "number",
+          "description": "The selling price of the book."
+        },
+        "coverImageUrl": {
+          "type": "string",
+          "description": "URL to the book's cover image in cloud storage.",
+          "format": "uri"
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed summary or synopsis of the book."
+        },
+        "isbn": {
+          "type": "string",
+          "description": "The International Standard Book Number (ISBN) of the book."
+        },
+        "isFeatured": {
+          "type": "boolean",
+          "description": "Indicates if the book should be highlighted in the 'Featured Books' section on the landing page."
+        },
+        "isBestseller": {
+          "type": "boolean",
+          "description": "Indicates if the book is a current bestseller and should be displayed in the 'Bestsellers' section."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "author",
+        "publisherId",
+        "price",
+        "coverImageUrl",
+        "description",
+        "isFeatured",
+        "isBestseller"
+      ]
+    },
+    "Ebook": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Ebook",
+      "type": "object",
+      "description": "Represents a digital book (PDF) available for purchase and secure viewing.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Ebook entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the ebook."
+        },
+        "author": {
+          "type": "string",
+          "description": "The name of the ebook's author."
+        },
+        "publisherId": {
+          "type": "string",
+          "description": "Reference to the Publisher of this ebook. (Relationship: Publisher 1:N Ebook)"
+        },
+        "price": {
+          "type": "number",
+          "description": "The selling price of the ebook."
+        },
+        "coverImageUrl": {
+          "type": "string",
+          "description": "URL to the ebook's cover image in cloud storage.",
+          "format": "uri"
+        },
+        "pdfFileStorageKey": {
+          "type": "string",
+          "description": "A secure key or path to the ebook's PDF file in cloud storage. This is NOT a direct download URL."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed summary or synopsis of the ebook."
+        },
+        "isbn": {
+          "type": "string",
+          "description": "The International Standard Book Number (ISBN) of the ebook."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "author",
+        "publisherId",
+        "price",
+        "coverImageUrl",
+        "pdfFileStorageKey",
+        "description"
+      ]
+    },
+    "Cart": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Cart",
+      "type": "object",
+      "description": "Represents a user's active shopping cart, primarily for physical books.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Cart entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who owns this cart. (Relationship: User 1:1 Cart)"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the cart was initially created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp of the last modification to the cart.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CartItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CartItem",
+      "type": "object",
+      "description": "Represents a single item (physical book) within a user's shopping cart.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the CartItem entity."
+        },
+        "cartId": {
+          "type": "string",
+          "description": "Reference to the Cart this item belongs to. (Relationship: Cart 1:N CartItem)"
+        },
+        "bookId": {
+          "type": "string",
+          "description": "Reference to the physical Book added to the cart. (Relationship: Book 1:N CartItem)"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The number of units of the physical book in the cart."
+        }
+      },
+      "required": [
+        "id",
+        "cartId",
+        "bookId",
+        "quantity"
+      ]
+    },
+    "Order": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Order",
+      "type": "object",
+      "description": "Represents a completed purchase transaction by a user, containing details about the entire order.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Order entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who placed the order. (Relationship: User 1:N Order)"
+        },
+        "orderDate": {
+          "type": "string",
+          "description": "Timestamp when the order was placed.",
+          "format": "date-time"
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "The total monetary amount of the order, including all items and any applicable taxes/shipping."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the order (e.g., 'pending', 'completed', 'shipped', 'delivered', 'cancelled')."
+        },
+        "paymentTransactionId": {
+          "type": "string",
+          "description": "The transaction ID provided by the payment gateway (e.g., Razorpay, Stripe) for this order."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "orderDate",
+        "totalAmount",
+        "status"
+      ]
+    },
+    "OrderItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "OrderItem",
+      "type": "object",
+      "description": "Represents a single product (physical book or ebook) included within a completed order.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the OrderItem entity."
+        },
+        "orderId": {
+          "type": "string",
+          "description": "Reference to the Order this item belongs to. (Relationship: Order 1:N OrderItem)"
+        },
+        "bookId": {
+          "type": "string",
+          "description": "Reference to the physical Book if this order item is a physical book. (Relationship: Book 1:N OrderItem)"
+        },
+        "ebookId": {
+          "type": "string",
+          "description": "Reference to the Ebook if this order item is an ebook. (Relationship: Ebook 1:N OrderItem)"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The number of units of the physical book ordered. Not applicable for ebooks."
+        },
+        "unitPrice": {
+          "type": "number",
+          "description": "The price of the item at the time of purchase."
+        },
+        "itemType": {
+          "type": "string",
+          "description": "Indicates whether the item is a 'physicalBook' or an 'ebook'.",
+          "format": "enum"
+        }
+      },
+      "required": [
+        "id",
+        "orderId",
+        "unitPrice",
+        "itemType"
+      ]
+    },
+    "UserEbookAccess": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserEbookAccess",
+      "type": "object",
+      "description": "Records a user's entitlement to view a specific ebook after purchase, enabling secure PDF access.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserEbookAccess entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who purchased the ebook. (Relationship: User 1:N UserEbookAccess)"
+        },
+        "ebookId": {
+          "type": "string",
+          "description": "Reference to the Ebook that was purchased. (Relationship: Ebook 1:N UserEbookAccess)"
+        },
+        "purchaseDate": {
+          "type": "string",
+          "description": "Timestamp when the ebook was purchased and access was granted.",
+          "format": "date-time"
+        },
+        "accessExpiresAt": {
+          "type": "string",
+          "description": "Optional timestamp indicating when the user's access to the ebook expires, if applicable.",
+          "format": "date-time"
+        },
+        "isAccessActive": {
+          "type": "boolean",
+          "description": "Indicates whether the user currently has active access to view the ebook."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "ebookId",
+        "purchaseDate",
+        "isAccessActive"
+      ]
+    },
+    "BookRecommendation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "BookRecommendation",
+      "type": "object",
+      "description": "Stores personalized book recommendations generated by the AI tool for a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the BookRecommendation entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User for whom the recommendation is generated. (Relationship: User 1:N BookRecommendation)"
+        },
+        "recommendedBookId": {
+          "type": "string",
+          "description": "Reference to a recommended physical Book. (Relationship: Book 1:N BookRecommendation)"
+        },
+        "recommendedEbookId": {
+          "type": "string",
+          "description": "Reference to a recommended Ebook. (Relationship: Ebook 1:N BookRecommendation)"
+        },
+        "recommendationDate": {
+          "type": "string",
+          "description": "Timestamp when the recommendation was generated.",
+          "format": "date-time"
+        },
+        "reason": {
+          "type": "string",
+          "description": "A brief explanation of why this book was recommended (e.g., 'Based on your past purchases')."
+        },
+        "score": {
+          "type": "number",
+          "description": "A numerical score indicating the confidence or relevance of the recommendation."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "recommendationDate"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores core user profile information. Documents are accessible only by the user whose ID matches `{userId}` in the path."
+        }
+      },
+      {
+        "path": "/publishers/{publisherId}",
+        "definition": {
+          "entityName": "Publisher",
+          "schema": {
+            "$ref": "#/backend/entities/Publisher"
+          },
+          "description": "Stores public details about publishers. All documents are publicly readable to facilitate browsing throughout the app.",
+          "params": [
+            {
+              "name": "publisherId",
+              "description": "The unique identifier for a publisher."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/publishers/{publisherId}/galleryImages/{imageId}",
+        "definition": {
+          "entityName": "PublisherGalleryImage",
+          "schema": {
+            "$ref": "#/backend/entities/PublisherGalleryImage"
+          },
+          "description": "Stores images for a specific publisher's gallery in the 'Photo Time' section. Publicly readable. Includes denormalized 'publisherId' for authorization independence and direct querying.",
+          "params": [
+            {
+              "name": "publisherId",
+              "description": "The unique identifier of the parent publisher."
+            },
+            {
+              "name": "imageId",
+              "description": "The unique identifier for a gallery image."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/books/{bookId}",
+        "definition": {
+          "entityName": "Book",
+          "schema": {
+            "$ref": "#/backend/entities/Book"
+          },
+          "description": "Stores details for physical books available in the shop. All documents are publicly readable, enabling secure queries for featured or bestseller books.",
+          "params": [
+            {
+              "name": "bookId",
+              "description": "The unique identifier for a book."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/ebooks/{ebookId}",
+        "definition": {
+          "entityName": "Ebook",
+          "schema": {
+            "$ref": "#/backend/entities/Ebook"
+          },
+          "description": "Stores details for digital books (Ebooks). All documents are publicly readable for browsing. Secure PDF access is handled via '/users/{userId}/ebookAccess' records and storage rules.",
+          "params": [
+            {
+              "name": "ebookId",
+              "description": "The unique identifier for an ebook."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/cart",
+        "definition": {
+          "entityName": "Cart",
+          "schema": {
+            "$ref": "#/backend/entities/Cart"
+          },
+          "description": "Stores the single active shopping cart for a user. Accessible only by the owner whose ID matches '{userId}' in the path.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user who owns this cart."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/cartItems/{cartItemId}",
+        "definition": {
+          "entityName": "CartItem",
+          "schema": {
+            "$ref": "#/backend/entities/CartItem"
+          },
+          "description": "Stores individual items within a user's shopping cart. Accessible only by the owner whose ID matches '{userId}' in the path. For full authorization independence, 'userId' should also be denormalized within each CartItem document.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user who owns this cart item."
+            },
+            {
+              "name": "cartItemId",
+              "description": "The unique identifier for a cart item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/orders/{orderId}",
+        "definition": {
+          "entityName": "Order",
+          "schema": {
+            "$ref": "#/backend/entities/Order"
+          },
+          "description": "Stores a user's completed orders. Accessible only by the owner whose ID matches '{userId}' in the path.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user who placed this order."
+            },
+            {
+              "name": "orderId",
+              "description": "The unique identifier for an order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/orderItems/{orderItemId}",
+        "definition": {
+          "entityName": "OrderItem",
+          "schema": {
+            "$ref": "#/backend/entities/OrderItem"
+          },
+          "description": "Stores individual items purchased within a user's order. Accessible only by the owner whose ID matches '{userId}' in the path. For full authorization independence, 'userId' should also be denormalized within each OrderItem document.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user who owns this order item."
+            },
+            {
+              "name": "orderId",
+              "description": "The unique identifier of the parent order."
+            },
+            {
+              "name": "orderItemId",
+              "description": "The unique identifier for an order item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/ebookAccess/{userEbookAccessId}",
+        "definition": {
+          "entityName": "UserEbookAccess",
+          "schema": {
+            "$ref": "#/backend/entities/UserEbookAccess"
+          },
+          "description": "Records a user's entitlement to view a purchased ebook. Accessible only by the user whose ID matches '{userId}' in the path. Includes denormalized 'userId' and 'ebookId' for direct querying and authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user who owns this access record."
+            },
+            {
+              "name": "userEbookAccessId",
+              "description": "The unique identifier for the ebook access record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/recommendations/{recommendationId}",
+        "definition": {
+          "entityName": "BookRecommendation",
+          "schema": {
+            "$ref": "#/backend/entities/BookRecommendation"
+          },
+          "description": "Stores personalized book recommendations generated for a user. Accessible only by the owner whose ID matches '{userId}' in the path. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user for whom the recommendation is generated."
+            },
+            {
+              "name": "recommendationId",
+              "description": "The unique identifier for a book recommendation."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed following the core principles of Authorization Independence, Structural Segregation, and Access Modeling to ensure security, scalability, and debuggability. All entities are categorized into either public-facing collections or user-private, path-based collections.\n\n**Authorization Independence:**\nCrucially, hierarchical authorization dependencies (e.g., rules requiring `get()` calls to parent documents) are explicitly avoided. This is achieved by ensuring that authorization-relevant fields are denormalized into the documents themselves or are directly available in the path wildcards.\n\n1.  **User-Owned Data:** For all user-specific data (profile, cart, orders, ebook access, recommendations), a path-based ownership model `'/users/{userId}/...'` is used. This immediately binds the data to `request.auth.uid`, making security rules simple and efficient (e.g., `allow read, write: if request.auth.uid == userId;`).\n    *   For `CartItem` and `OrderItem`, while the `userId` is present in the parent path segment (`/users/{userId}/...`), for absolute authorization independence and to perfectly align with Mandate A (\"If a subcollection's access depends on the parent's attributes (owner, members), those attributes MUST be copied into every document\"), it is recommended that `userId` also be explicitly stored as a field within each `CartItem` and `OrderItem` document. This allows for atomic write operations and simplified, direct access control without relying on the parent document's existence or data.\n\n2.  **Public Data:** Entities like `Publisher`, `Book`, and `Ebook` are stored in top-level collections (`/publishers`, `/books`, `/ebooks`). These collections are designed with a homogeneous security posture: all documents within them are publicly readable. This eliminates the need for complex filtering logic in rules and allows for straightforward `list` queries without security concerns.\n    *   `PublisherGalleryImage` documents are placed as subcollections of `publishers` (`/publishers/{publisherId}/galleryImages/{imageId}`). This maintains logical hierarchy while still being publicly readable. The `publisherId` is denormalized within each `PublisherGalleryImage` document, enabling direct queries and authorization clarity.\n\n**QAPs (Rules are not Filters):**\n\n*   **Public Collections:** For `/books`, `/ebooks`, and `/publishers` (and their subcollections like `/publishers/{publisherId}/galleryImages`), `list` operations are inherently secure because all documents are intended for public consumption. Queries can filter by `isFeatured` or `isBestseller` on `/books` securely.\n*   **User-Private Collections:** For paths under `/users/{userId}/...`, `list` operations are automatically scoped to the authenticated user's ID (`request.auth.uid`), guaranteeing that a user can only query their own data. This design effectively makes `list` operations secure by construction without needing complex filtering logic in rules.\n\n**DBAC (Database Access Control):**\nWhile not explicitly creating a 'roles' collection based on the given entities, the pattern for administrative access would involve an existence-based check, for example, a `/roles_admin/{uid}` collection where the mere presence of a document signifies admin privileges. This adheres to the principle of storing roles in the database and relying on `request.auth.uid` for authorization, avoiding custom claims."
+  }
+}
