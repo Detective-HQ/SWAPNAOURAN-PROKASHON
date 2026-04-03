@@ -32,7 +32,7 @@ export function FooterSection() {
           {/* Brand */}
           <div className="lg:col-span-2 space-y-8">
             <Link href="/" className="flex items-center gap-4 group">
-              <GeometricShape type="arch" color="sage" className="w-8 h-12" />
+              <GeometricShape type="square" color="sage" className="w-10 h-10" />
               <span className="font-headline font-bold text-2xl tracking-tight text-botanical-forest italic">Swapno Uran</span>
             </Link>
             <p className="max-w-xs text-botanical-forest/60 text-sm leading-relaxed font-medium">

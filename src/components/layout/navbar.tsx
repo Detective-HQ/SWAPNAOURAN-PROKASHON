@@ -13,17 +13,17 @@ export function Navbar() {
     <nav className="bg-background/80 backdrop-blur-md sticky top-0 z-50 py-6 border-b border-border/40">
       <div className="max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-4 group">
-          <GeometricShape type="arch" color="sage" className="w-10 h-14" />
+          <GeometricShape type="square" color="sage" className="w-12 h-12" />
           <span className="font-headline font-bold text-2xl tracking-tight text-botanical-forest italic">Swapno Uran</span>
         </Link>
 
         {/* Conditionally show internal links only if user is logged in */}
         {user && !isUserLoading && (
           <div className="hidden lg:flex items-center gap-12 font-medium uppercase tracking-[0.2em] text-[11px] text-botanical-forest/70">
-            <Link href="/dashboard" className="hover:text-botanical-terracotta transition-colors">Dashboard</Link>
+            <Link href="/dashboard" className="hover:text-botanical-terracotta transition-colors">Home</Link>
             <Link href="/dashboard/shop" className="hover:text-botanical-terracotta transition-colors">Shop</Link>
             <Link href="/dashboard/ebooks" className="hover:text-botanical-terracotta transition-colors">Ebooks</Link>
-            <Link href="/dashboard/photo-time" className="hover:text-botanical-terracotta transition-colors">Gallery</Link>
+            <Link href="/dashboard/photo-time" className="hover:text-botanical-terracotta transition-colors">Photo Time</Link>
             <Link href="/dashboard/orders" className="hover:text-botanical-terracotta transition-colors">My Orders</Link>
           </div>
         )}
