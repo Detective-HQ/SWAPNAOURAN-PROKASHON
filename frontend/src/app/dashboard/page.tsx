@@ -1,11 +1,35 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
 import { AIRecommendations } from '@/components/shop/ai-recommendations';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { TrendingUp, ShoppingBag, BookOpen, Star, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardPage() {
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoaded && !user) {
+      router.push('/');
+    }
+  }, [user, isLoaded, router]);
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-botanical-forest"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="space-y-12 animate-fade-up">
       <header className="flex flex-col md:flex-row justify-between items-end gap-8 border-b border-border/40 pb-12">

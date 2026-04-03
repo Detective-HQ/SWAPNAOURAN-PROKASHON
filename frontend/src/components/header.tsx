@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { user } = useUser();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -60,12 +62,22 @@ export function Header() {
 
         {/* CTA */}
         <div className="hidden items-center gap-6 md:flex">
-          <Link
-            href="#reserve"
-            className={`px-4 py-2 text-sm font-medium transition-all rounded-full ${isScrolled ? "bg-foreground text-background hover:opacity-80" : "bg-white text-foreground hover:bg-white/90"}`}
-          >
-            Buy the product
-          </Link>
+          {!user ? (
+            <>
+              <SignInButton mode="modal">
+                <button className={`px-4 py-2 text-sm font-medium transition-all rounded-full ${isScrolled ? "text-muted-foreground hover:text-foreground" : "text-white/70 hover:text-white"}`}>
+                  Sign In
+                </button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button className={`px-4 py-2 text-sm font-medium transition-all rounded-full ${isScrolled ? "bg-foreground text-background hover:opacity-80" : "bg-white text-foreground hover:bg-white/90"}`}>
+                  Sign Up
+                </button>
+              </SignUpButton>
+            </>
+          ) : (
+            <UserButton afterSignOutUrl="/" />
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -111,13 +123,24 @@ export function Header() {
             >
               Accessories
             </Link>
-            <Link
-              href="#reserve"
-              className="mt-4 bg-foreground px-5 py-3 text-center text-sm font-medium text-background rounded-full"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Reserve
-            </Link>
+            {!user ? (
+              <>
+                <SignInButton mode="modal">
+                  <button className="mt-4 px-5 py-3 text-center text-sm font-medium text-foreground rounded-full border border-foreground hover:bg-foreground/10">
+                    Sign In
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button className="bg-foreground px-5 py-3 text-center text-sm font-medium text-background rounded-full">
+                    Sign Up
+                  </button>
+                </SignUpButton>
+              </>
+            ) : (
+              <div className="mt-4">
+                <UserButton afterSignOutUrl="/" />
+              </div>
+            )}
           </nav>
         </div>
       )}

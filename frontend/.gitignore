@@ -17,13 +17,9 @@
 /.next/
 /out/
 /build/
-*/.next/
-*/out/
-*/build/
 
 # Production
 /dist/
-*/dist/
 
 # Misc
 .DS_Store
@@ -49,7 +45,6 @@ lerna-debug.log*
 .env.local
 .env.*.local
 .env.production.local
-*.env.local
 
 # TypeScript
 *.tsbuildinfo
@@ -82,8 +77,3 @@ Thumbs.db
 
 # Clerk
 .clerk/
-
-# Package manager locks (keep one)
-yarn.lock
-pnpm-lock.yaml
-package-lock.json

@@ -4,10 +4,10 @@ import Link from 'next/link';
 import { GeometricShape, BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
 import { CartDrawer } from '@/components/shop/cart-drawer';
 import { Menu, User as UserIcon } from 'lucide-react';
-import { useUser } from '@/firebase';
+import { useUser, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs';
 
 export function Navbar() {
-  const { user, isUserLoading } = useUser();
+  const { user, isLoaded } = useUser();
 
   return (
     <nav className="bg-background/80 backdrop-blur-md sticky top-0 z-50 py-6 border-b border-border/40">
@@ -18,7 +18,7 @@ export function Navbar() {
         </Link>
 
         {/* Conditionally show internal links only if user is logged in */}
-        {user && !isUserLoading && (
+        {user && isLoaded && (
           <div className="hidden lg:flex items-center gap-12 font-medium uppercase tracking-[0.2em] text-[11px] text-botanical-forest/70">
             <Link href="/dashboard" className="hover:text-botanical-terracotta transition-colors">Home</Link>
             <Link href="/dashboard/shop" className="hover:text-botanical-terracotta transition-colors">Shop</Link>
@@ -30,23 +30,18 @@ export function Navbar() {
 
         <div className="flex items-center gap-4">
           <div className="hidden sm:flex items-center gap-4">
-            {!user && !isUserLoading ? (
+            {!user && isLoaded ? (
               <>
-                <Link href="/login">
+                <SignInButton mode="modal">
                   <BauhausButton variant="ghost" size="sm">Sign In</BauhausButton>
-                </Link>
-                <Link href="/signup">
+                </SignInButton>
+                <SignUpButton mode="modal">
                   <BauhausButton variant="primary" size="sm">Join Collective</BauhausButton>
-                </Link>
+                </SignUpButton>
               </>
-            ) : (
-              <Link href="/dashboard/profile">
-                <BauhausButton variant="ghost" size="sm" className="flex items-center gap-2">
-                  <UserIcon size={16} />
-                  <span className="hidden md:inline">Profile</span>
-                </BauhausButton>
-              </Link>
-            )}
+            ) : isLoaded && user ? (
+              <UserButton afterSignOutUrl="/" />
+            ) : null}
           </div>
           <CartDrawer />
           <button className="lg:hidden p-3 rounded-full hover:bg-botanical-forest/5 transition-colors">
