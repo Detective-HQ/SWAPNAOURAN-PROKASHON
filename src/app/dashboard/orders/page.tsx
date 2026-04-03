@@ -1,87 +1,162 @@
+'use client';
+
+import { useState } from 'react';
+import Image from 'next/image';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
-import { FileText, Download, CheckCircle2 } from 'lucide-react';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { ShoppingBag, Trash2, ChevronRight, Package, CheckCircle2 } from 'lucide-react';
 
 export default function OrdersPage() {
+  const [cartItems, setCartItems] = useState([
+    { id: 1, title: 'The Silent Modernist', author: 'L. Van der Rohe', price: 1850, qty: 1, image: PlaceHolderImages[0].imageUrl },
+    { id: 2, title: 'Primary Colors', author: 'K. Malevich', price: 1499, qty: 1, image: PlaceHolderImages[1].imageUrl },
+  ]);
+
   const orders = [
-    { id: 'ORD-101', date: '2024-03-15', total: '$45.00', status: 'Delivered', items: 2 },
-    { id: 'ORD-102', date: '2024-03-10', total: '$12.50', status: 'Processing', items: 1 },
-    { id: 'ORD-103', date: '2024-02-28', total: '$89.99', status: 'Delivered', items: 4 },
+    { id: 'ORD-8821', date: 'Oct 12, 2024', total: '₹3,200', status: 'Delivered', items: 3 },
+    { id: 'ORD-7640', date: 'Sept 28, 2024', total: '₹1,250', status: 'Processing', items: 1 },
   ];
 
-  return (
-    <div className="max-w-6xl mx-auto space-y-12">
-      <div className="flex flex-col md:flex-row justify-between items-end gap-8">
-        <div>
-          <h1 className="text-5xl lg:text-7xl font-black">MY ORDERS</h1>
-          <p className="text-xl font-bold uppercase tracking-widest text-[#1040C0] mt-4">Order History & Deliveries</p>
-        </div>
-        <BauhausButton variant="black" shape="pill">View Cart</BauhausButton>
-      </div>
+  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.qty), 0);
 
-      <div className="space-y-6">
-        {orders.map((order) => (
-          <BauhausCard key={order.id} decorationColor={order.status === 'Delivered' ? 'blue' : 'yellow'} className="p-0 overflow-hidden">
-            <div className="flex flex-col md:flex-row">
-              <div className="bg-[#121212] text-white p-8 flex flex-col justify-center min-w-[200px]">
-                <p className="text-xs font-black opacity-60 uppercase mb-1">ID</p>
-                <p className="text-xl font-black text-[#F0C020]">{order.id}</p>
+  return (
+    <div className="space-y-16 animate-fade-up">
+      {/* Flipkart Style Cart Section */}
+      <section className="space-y-8">
+        <header className="flex items-center gap-4">
+          <ShoppingBag className="text-botanical-terracotta w-6 h-6" />
+          <h2 className="text-3xl font-headline font-bold text-botanical-forest">My <span className="italic font-normal">Active Cart</span></h2>
+          <span className="bg-botanical-clay/30 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-botanical-forest">
+            {cartItems.length} Items
+          </span>
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div className="lg:col-span-2 space-y-6">
+            {cartItems.length > 0 ? (
+              cartItems.map((item) => (
+                <BauhausCard key={item.id} className="p-0 overflow-hidden border border-border/40">
+                  <div className="flex flex-col sm:flex-row">
+                    <div className="relative w-full sm:w-40 aspect-[3/4] sm:aspect-auto">
+                      <Image 
+                        src={item.image} 
+                        alt={item.title} 
+                        fill 
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="flex-grow p-8 space-y-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-xl font-headline font-bold text-botanical-forest">{item.title}</h3>
+                          <p className="text-[10px] font-bold text-botanical-sage uppercase tracking-widest italic">{item.author}</p>
+                        </div>
+                        <span className="text-xl font-bold italic">₹{item.price.toLocaleString()}</span>
+                      </div>
+                      
+                      <p className="text-xs text-botanical-forest/60 font-medium">Standard Delivery by Wednesday</p>
+                      
+                      <div className="flex items-center justify-between pt-4">
+                        <div className="flex items-center gap-4 bg-botanical-clay/10 rounded-full px-4 py-2 border border-border/40">
+                          <button className="text-botanical-forest font-bold hover:text-botanical-terracotta transition-colors">-</button>
+                          <span className="text-sm font-bold w-6 text-center">{item.qty}</span>
+                          <button className="text-botanical-forest font-bold hover:text-botanical-terracotta transition-colors">+</button>
+                        </div>
+                        <button 
+                          onClick={() => setCartItems(items => items.filter(i => i.id !== item.id))}
+                          className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </BauhausCard>
+              ))
+            ) : (
+              <div className="p-20 text-center bg-botanical-clay/10 rounded-[40px] border border-dashed border-border">
+                <p className="text-botanical-forest/40 font-bold uppercase tracking-[0.2em] text-xs italic">Your cart is silent...</p>
               </div>
-              <div className="flex-grow p-8 grid grid-cols-2 md:grid-cols-4 gap-8">
-                <div>
-                  <p className="text-xs font-black text-muted-foreground uppercase mb-1">Date</p>
-                  <p className="font-bold">{order.date}</p>
+            )}
+          </div>
+
+          <div className="space-y-6">
+            <BauhausCard variant="clay" className="sticky top-24">
+              <h3 className="text-lg font-headline font-bold text-botanical-forest mb-6 border-b border-botanical-forest/10 pb-4 uppercase tracking-widest text-[11px]">Price Details</h3>
+              <div className="space-y-4 font-medium text-sm">
+                <div className="flex justify-between">
+                  <span className="text-botanical-forest/60">Price ({cartItems.length} items)</span>
+                  <span>₹{subtotal.toLocaleString()}</span>
                 </div>
-                <div>
-                  <p className="text-xs font-black text-muted-foreground uppercase mb-1">Total</p>
-                  <p className="font-bold">{order.total}</p>
+                <div className="flex justify-between">
+                  <span className="text-botanical-forest/60">Delivery Charges</span>
+                  <span className="text-green-600 font-bold uppercase tracking-widest text-[10px]">Free</span>
                 </div>
-                <div>
-                  <p className="text-xs font-black text-muted-foreground uppercase mb-1">Items</p>
-                  <p className="font-bold">{order.items} Physical</p>
+                <div className="h-px bg-botanical-forest/10 my-6" />
+                <div className="flex justify-between items-end">
+                  <span className="text-lg font-headline font-bold">Total Amount</span>
+                  <span className="text-2xl font-bold italic text-botanical-terracotta">₹{subtotal.toLocaleString()}</span>
                 </div>
-                <div>
-                  <p className="text-xs font-black text-muted-foreground uppercase mb-1">Status</p>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className={order.status === 'Delivered' ? 'text-green-500' : 'text-yellow-500'} size={16} />
-                    <p className="font-bold">{order.status}</p>
+              </div>
+              <BauhausButton variant="primary" className="w-full mt-10" size="lg">
+                CHECKOUT
+              </BauhausButton>
+              <p className="text-[9px] font-bold text-botanical-forest/40 text-center mt-6 uppercase tracking-widest">
+                Safe and secure botanical payments
+              </p>
+            </BauhausCard>
+          </div>
+        </div>
+      </section>
+
+      {/* Flipkart Style Order History Section */}
+      <section className="space-y-8 pt-16 border-t border-border/40">
+        <header className="flex items-center gap-4">
+          <Package className="text-botanical-sage w-6 h-6" />
+          <h2 className="text-3xl font-headline font-bold text-botanical-forest">Order <span className="italic font-normal">History</span></h2>
+        </header>
+
+        <div className="space-y-4">
+          {orders.map((order) => (
+            <BauhausCard key={order.id} className="p-0 overflow-hidden hover:-translate-y-1 transition-all border border-border/40">
+              <div className="flex flex-col md:flex-row md:items-center">
+                <div className="p-8 md:w-48 bg-botanical-clay/10 flex flex-col justify-center">
+                  <span className="text-[9px] font-bold opacity-40 uppercase tracking-widest mb-1">Order ID</span>
+                  <span className="font-bold text-botanical-forest">{order.id}</span>
+                </div>
+                <div className="flex-grow p-8 grid grid-cols-2 lg:grid-cols-4 gap-8">
+                  <div>
+                    <span className="text-[9px] font-bold opacity-40 uppercase tracking-widest block mb-1">Placed On</span>
+                    <span className="font-medium">{order.date}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold opacity-40 uppercase tracking-widest block mb-1">Items</span>
+                    <span className="font-medium">{order.items} Books</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold opacity-40 uppercase tracking-widest block mb-1">Amount</span>
+                    <span className="font-bold italic">{order.total}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold opacity-40 uppercase tracking-widest block mb-1">Status</span>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className={order.status === 'Delivered' ? 'text-green-500' : 'text-botanical-sage'} size={14} />
+                      <span className="font-bold uppercase tracking-widest text-[10px]">{order.status}</span>
+                    </div>
                   </div>
                 </div>
+                <div className="p-8 md:border-l border-border/40 flex items-center justify-center">
+                  <button className="p-3 rounded-full hover:bg-botanical-clay/20 transition-colors text-botanical-sage">
+                    <ChevronRight />
+                  </button>
+                </div>
               </div>
-              <div className="p-8 flex items-center border-l-2 border-black bg-[#F0F0F0]">
-                <BauhausButton variant="outline" size="sm">Details</BauhausButton>
-              </div>
-            </div>
-          </BauhausCard>
-        ))}
-      </div>
-
-      <div className="mt-20">
-        <h2 className="text-4xl font-black mb-8">DIGITAL ARCHIVE</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <BauhausCard decorationShape="triangle" decorationColor="red" className="flex items-center gap-8">
-             <div className="bg-[#D02020] p-4 text-white">
-                <FileText size={32} />
-             </div>
-             <div className="flex-grow">
-               <h3 className="font-black text-lg">Screen Modernism.pdf</h3>
-               <p className="text-xs font-bold text-muted-foreground">Purchased: 2024-03-01</p>
-             </div>
-             <BauhausButton variant="black" size="sm">READ NOW</BauhausButton>
-          </BauhausCard>
-
-          <BauhausCard decorationShape="triangle" decorationColor="blue" className="flex items-center gap-8">
-             <div className="bg-[#1040C0] p-4 text-white">
-                <FileText size={32} />
-             </div>
-             <div className="flex-grow">
-               <h3 className="font-black text-lg">Digital Type Spec.pdf</h3>
-               <p className="text-xs font-bold text-muted-foreground">Purchased: 2024-02-15</p>
-             </div>
-             <BauhausButton variant="black" size="sm">READ NOW</BauhausButton>
-          </BauhausCard>
+            </BauhausCard>
+          ))}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

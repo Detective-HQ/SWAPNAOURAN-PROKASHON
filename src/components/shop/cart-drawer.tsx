@@ -2,13 +2,14 @@
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { BauhausButton } from "@/components/bauhaus/bauhaus-primitives";
-import { ShoppingBag, X, Trash2 } from "lucide-react";
+import { ShoppingBag, Trash2, ArrowRight } from "lucide-react";
 import { useState } from "react";
+import Link from 'next/link';
 
 export function CartDrawer() {
   const [items, setItems] = useState([
-    { id: 1, title: 'The Silent Modernist', price: 24.99, qty: 1 },
-    { id: 2, title: 'Primary Colors', price: 19.99, qty: 1 }
+    { id: 1, title: 'The Silent Modernist', price: 1850, qty: 1 },
+    { id: 2, title: 'Primary Colors', price: 1499, qty: 1 }
   ]);
 
   const total = items.reduce((acc, item) => acc + (item.price * item.qty), 0);
@@ -16,44 +17,55 @@ export function CartDrawer() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <button className="relative p-2 border-4 border-black bg-[#F0C020] hover:bg-[#F0C020]/90 transition-colors">
-          <ShoppingBag className="w-6 h-6" />
-          <span className="absolute -top-2 -right-2 bg-[#D02020] text-white w-6 h-6 flex items-center justify-center font-black text-xs border-2 border-black">
+        <button className="relative p-3 rounded-full bg-botanical-clay/20 hover:bg-botanical-clay/40 transition-colors group">
+          <ShoppingBag className="w-5 h-5 text-botanical-forest transition-transform group-hover:scale-110" />
+          <span className="absolute -top-1 -right-1 bg-botanical-terracotta text-white w-5 h-5 flex items-center justify-center font-bold text-[9px] rounded-full border-2 border-white">
             {items.length}
           </span>
         </button>
       </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-md border-l-8 border-black p-0 flex flex-col">
-        <SheetHeader className="p-8 border-b-4 border-black bg-white">
-          <SheetTitle className="text-4xl font-black">YOUR CART</SheetTitle>
+      <SheetContent className="w-full sm:max-w-md p-0 flex flex-col border-l border-border/40 bg-background">
+        <SheetHeader className="p-10 border-b border-border bg-white/50 backdrop-blur-md sticky top-0 z-10">
+          <SheetTitle className="text-3xl font-headline font-bold italic">Your <span className="not-italic">Sanctuary</span></SheetTitle>
         </SheetHeader>
         
-        <div className="flex-grow overflow-y-auto p-8 space-y-6 bauhaus-grid-dots bg-[#F0F0F0]">
+        <div className="flex-grow overflow-y-auto p-8 space-y-6">
           {items.map((item) => (
-            <div key={item.id} className="bg-white border-4 border-black p-4 flex gap-4 bauhaus-shadow-sm">
-              <div className="w-20 h-24 bg-[#1040C0] border-2 border-black flex-shrink-0"></div>
-              <div className="flex-grow">
-                <h3 className="font-black text-lg uppercase leading-none mb-1">{item.title}</h3>
-                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">${item.price}</p>
-                <div className="mt-4 flex justify-between items-center">
-                   <div className="flex items-center border-2 border-black">
-                      <button className="px-2 py-1 font-black">-</button>
-                      <span className="px-3 py-1 font-black bg-black text-white">{item.qty}</span>
-                      <button className="px-2 py-1 font-black">+</button>
-                   </div>
-                   <button className="text-[#D02020] hover:scale-110 transition-transform"><Trash2 size={18} /></button>
+            <div key={item.id} className="bg-white rounded-[32px] p-6 flex gap-6 organic-shadow border border-border/40 group hover:-translate-y-1 transition-all">
+              <div className="w-20 h-28 bg-botanical-clay/30 rounded-2xl overflow-hidden flex-shrink-0" />
+              <div className="flex-grow flex flex-col">
+                <h3 className="font-headline font-bold text-lg leading-tight mb-1">{item.title}</h3>
+                <p className="text-[10px] font-bold text-botanical-sage uppercase tracking-widest italic mb-auto">Curated Selection</p>
+                <div className="flex justify-between items-center pt-4">
+                  <span className="font-bold text-botanical-forest italic">₹{item.price.toLocaleString()}</span>
+                  <div className="flex items-center gap-4">
+                    <button className="text-red-400 hover:text-red-600 transition-colors" onClick={() => setItems(items.filter(i => i.id !== item.id))}>
+                      <Trash2 size={16} />
+                    </button>
+                    <span className="text-xs font-bold px-3 py-1 bg-botanical-clay/20 rounded-full">{item.qty}</span>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
+          {items.length === 0 && (
+            <div className="text-center py-20 text-botanical-forest/30 font-bold uppercase tracking-widest text-xs italic">
+              Empty garden...
+            </div>
+          )}
         </div>
 
-        <div className="p-8 border-t-4 border-black bg-white space-y-6">
+        <div className="p-10 border-t border-border bg-white/80 backdrop-blur-md space-y-8">
           <div className="flex justify-between items-end">
-            <span className="text-xs font-black uppercase tracking-widest">Estimated Total</span>
-            <span className="text-4xl font-black">${total.toFixed(2)}</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-botanical-sage">Estimated Total</span>
+            <span className="text-3xl font-bold italic text-botanical-forest">₹{total.toLocaleString()}</span>
           </div>
-          <BauhausButton variant="red" className="w-full" size="lg">PROCEED TO CHECKOUT</BauhausButton>
+          <Link href="/dashboard/orders" className="block">
+            <BauhausButton variant="primary" className="w-full group" size="lg">
+              PROCEED TO CHECKOUT
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+            </BauhausButton>
+          </Link>
         </div>
       </SheetContent>
     </Sheet>
