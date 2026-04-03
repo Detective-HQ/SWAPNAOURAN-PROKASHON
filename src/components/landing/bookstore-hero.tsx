@@ -38,7 +38,8 @@ export function BookstoreHero() {
         </div>
 
         <div className="relative">
-          <div className="relative aspect-[3/4] md:aspect-square lg:aspect-[4/5] rounded-[200px_200px_40px_40px] overflow-hidden organic-shadow-lg group">
+          {/* Changed rounded-[200px_200px_40px_40px] to rounded-[40px] for square look */}
+          <div className="relative aspect-[3/4] md:aspect-square lg:aspect-[4/5] rounded-[40px] overflow-hidden organic-shadow-lg group">
             <Image 
               src={heroImage}
               alt="Featured Volume"

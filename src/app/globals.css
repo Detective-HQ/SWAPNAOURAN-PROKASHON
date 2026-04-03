@@ -48,7 +48,8 @@
 }
 
 .arch-image {
-  border-radius: 200px 200px 24px 24px;
+  /* Changed from arch to square rounding */
+  border-radius: 40px;
 }
 
 .paper-grain {

@@ -33,10 +33,11 @@ export default function LoginPage() {
       <main className="flex-grow flex items-center justify-center p-6 lg:p-12 relative z-10">
         <div className="w-full max-w-md relative">
           <div className="absolute -top-16 -left-16 opacity-20 hidden md:block">
-            <GeometricShape type="circle" color="sage" className="w-48 h-48" />
+            <GeometricShape type="square" color="sage" className="w-48 h-48" />
           </div>
           <div className="absolute -bottom-16 -right-16 opacity-20 hidden md:block">
-            <GeometricShape type="arch" color="clay" className="w-48 h-64 rotate-12" />
+            {/* Changed type="arch" to type="square" */}
+            <GeometricShape type="square" color="clay" className="w-48 h-48 rotate-12" />
           </div>
           
           <BauhausCard className="p-10 lg:p-16 border border-border/40">
