@@ -17,14 +17,14 @@ export function Navbar() {
           <span className="font-headline font-bold text-2xl tracking-tight text-botanical-forest italic">Swapno Uran</span>
         </Link>
 
-        {/* Conditionally show links only if user is logged in */}
+        {/* Conditionally show internal links only if user is logged in */}
         {user && !isUserLoading && (
           <div className="hidden lg:flex items-center gap-12 font-medium uppercase tracking-[0.2em] text-[11px] text-botanical-forest/70">
-            <Link href="/" className="hover:text-botanical-terracotta transition-colors">Home</Link>
-            <Link href="/shop" className="hover:text-botanical-terracotta transition-colors">Shop</Link>
-            <Link href="/ebooks" className="hover:text-botanical-terracotta transition-colors">Ebooks</Link>
-            <Link href="/photo-time" className="hover:text-botanical-terracotta transition-colors">Gallery</Link>
             <Link href="/dashboard" className="hover:text-botanical-terracotta transition-colors">Dashboard</Link>
+            <Link href="/dashboard/shop" className="hover:text-botanical-terracotta transition-colors">Shop</Link>
+            <Link href="/dashboard/ebooks" className="hover:text-botanical-terracotta transition-colors">Ebooks</Link>
+            <Link href="/dashboard/photo-time" className="hover:text-botanical-terracotta transition-colors">Gallery</Link>
+            <Link href="/dashboard/orders" className="hover:text-botanical-terracotta transition-colors">My Orders</Link>
           </div>
         )}
 
