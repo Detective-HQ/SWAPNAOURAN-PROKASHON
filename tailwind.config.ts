@@ -10,19 +10,20 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Outfit', 'sans-serif'],
-        headline: ['Outfit', 'sans-serif'],
+        body: ['Source Sans 3', 'sans-serif'],
+        headline: ['Playfair Display', 'serif'],
         code: ['monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
-        bauhaus: {
-          red: '#D02020',
-          blue: '#1040C0',
-          yellow: '#F0C020',
-          black: '#121212',
-          offwhite: '#F0F0F0',
+        botanical: {
+          forest: '#2D3A31',
+          sage: '#8C9A84',
+          clay: '#DCCFC2',
+          stone: '#E6E2DA',
+          terracotta: '#C27B66',
+          alabaster: '#F9F8F4',
         },
         card: {
           DEFAULT: 'hsl(var(--card))',
@@ -60,6 +61,8 @@ export default {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+        '4xl': '2rem',
+        '5xl': '3rem',
       },
       keyframes: {
         'accordion-down': {
@@ -70,10 +73,15 @@ export default {
           from: { height: 'var(--radix-accordion-content-height)' },
           to: { height: '0' },
         },
+        'fade-up': {
+          from: { opacity: '0', transform: 'translateY(1rem)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'fade-up': 'fade-up 0.5s ease-out forwards',
       },
     },
   },

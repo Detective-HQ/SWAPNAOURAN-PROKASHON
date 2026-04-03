@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --background: 0 0% 94%; /* #F0F0F0 - Off-white canvas */
-    --foreground: 0 0% 7%;  /* #121212 - Stark Black */
+    --background: 47 33% 97%; /* #F9F8F4 - Warm Alabaster */
+    --foreground: 140 13% 20%;  /* #2D3A31 - Deep Forest Green */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 7%;
+    --card-foreground: 140 13% 20%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 7%;
-    --primary: 0 73% 47%;   /* #D02020 - Bauhaus Red */
+    --popover-foreground: 140 13% 20%;
+    --primary: 96 11% 56%;   /* #8C9A84 - Sage Green */
     --primary-foreground: 0 0% 100%;
-    --secondary: 224 85% 41%; /* #1040C0 - Bauhaus Blue */
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 88%;
-    --muted-foreground: 0 0% 40%;
-    --accent: 47 88% 53%;   /* #F0C020 - Bauhaus Yellow */
-    --accent-foreground: 0 0% 7%;
+    --secondary: 33 22% 81%; /* #DCCFC2 - Soft Clay */
+    --secondary-foreground: 140 13% 20%;
+    --muted: 33 22% 90%;
+    --muted-foreground: 140 10% 40%;
+    --accent: 14 47% 58%;   /* #C27B66 - Terracotta */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 7%;
-    --input: 0 0% 7%;
-    --ring: 0 0% 7%;
-    --radius: 0rem;
+    --border: 40 15% 88%;   /* Stone */
+    --input: 40 15% 88%;
+    --ring: 96 11% 56%;
+    --radius: 1.5rem;
   }
 }
 
@@ -32,44 +32,35 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body antialiased selection:bg-accent selection:text-accent-foreground;
+    @apply bg-background text-foreground font-body antialiased selection:bg-accent/30 selection:text-foreground;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-headline uppercase tracking-tighter leading-[0.9];
+    @apply font-headline font-semibold leading-tight tracking-tight;
   }
 }
 
-.bauhaus-shadow-sm {
-  box-shadow: 4px 4px 0px 0px #121212;
+.organic-shadow {
+  box-shadow: 0 10px 15px -3px rgba(45, 58, 49, 0.05), 0 4px 6px -2px rgba(45, 58, 49, 0.02);
 }
 
-.bauhaus-shadow-md {
-  box-shadow: 6px 6px 0px 0px #121212;
+.organic-shadow-lg {
+  box-shadow: 0 20px 40px -10px rgba(45, 58, 49, 0.08);
 }
 
-.bauhaus-shadow-lg {
-  box-shadow: 8px 8px 0px 0px #121212;
+.arch-image {
+  border-radius: 200px 200px 24px 24px;
 }
 
-.bauhaus-grid-dots {
-  background-image: radial-gradient(#121212 1px, transparent 1px);
-  background-size: 20px 20px;
+.paper-grain {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
 }
 
-.bauhaus-btn-press:active {
-  transform: translate(2px, 2px);
-  box-shadow: none;
-}
-
-/* Custom Bauhaus Patterns */
-.bauhaus-pattern-red {
-  background-color: #D02020;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.2) 2px, transparent 2px);
-  background-size: 24px 24px;
-}
-
-.bauhaus-pattern-blue {
-  background-color: #1040C0;
-  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.05) 75%, transparent 75%, transparent);
-  background-size: 40px 40px;
+.staggered-card:nth-child(even) {
+  @apply md:translate-y-12;
 }

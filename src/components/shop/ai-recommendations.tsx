@@ -29,9 +29,9 @@ export function AIRecommendations() {
 
   if (loading) {
     return (
-      <div className="bg-[#F0C020] p-12 border-4 border-black text-center bauhaus-grid-dots">
-        <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4" />
-        <p className="font-black uppercase tracking-widest">Constructing recommendations...</p>
+      <div className="bg-botanical-clay/20 p-16 rounded-[40px] border border-border text-center space-y-6">
+        <Loader2 className="w-12 h-12 animate-spin mx-auto text-botanical-sage" />
+        <p className="font-medium uppercase tracking-[0.2em] text-xs text-botanical-forest/60">Cultivating your library...</p>
       </div>
     );
   }
@@ -39,20 +39,23 @@ export function AIRecommendations() {
   if (!recommendations) return null;
 
   return (
-    <div className="bg-[#1040C0] p-12 border-4 border-black text-white">
-      <div className="flex items-center gap-4 mb-12">
-        <div className="bg-[#D02020] p-2 border-2 border-white rounded-full">
-          <Sparkles className="w-6 h-6" />
+    <div className="bg-botanical-forest p-16 rounded-[40px] text-botanical-alabaster space-y-16">
+      <div className="flex flex-col md:flex-row items-center gap-8 md:justify-between">
+        <div className="flex items-center gap-6">
+          <div className="bg-botanical-terracotta p-4 rounded-full text-white organic-shadow">
+            <Sparkles className="w-8 h-8" />
+          </div>
+          <h2 className="text-4xl lg:text-5xl font-headline italic font-normal">AI <span className="not-italic font-bold">Curated Edits</span></h2>
         </div>
-        <h2 className="text-4xl font-black">AI CURATED FOR YOU</h2>
+        <p className="text-sm font-medium opacity-60 uppercase tracking-widest">Personalized for your aesthetic</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {recommendations.recommendations.map((rec, i) => (
-          <BauhausCard key={i} className="text-black" decorationColor="yellow">
-            <h3 className="text-xl font-black mb-1">{rec.title}</h3>
-            <p className="text-muted-foreground font-bold mb-6">{rec.author}</p>
-            <BauhausButton variant="black" className="w-full">View Details</BauhausButton>
+          <BauhausCard key={i} className="text-botanical-forest" variant="white">
+            <h3 className="text-xl font-headline font-bold mb-1">{rec.title}</h3>
+            <p className="text-botanical-forest/50 font-medium text-sm mb-12 italic">{rec.author}</p>
+            <BauhausButton variant="terracotta" className="w-full">Discover</BauhausButton>
           </BauhausCard>
         ))}
       </div>

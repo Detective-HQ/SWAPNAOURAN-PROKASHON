@@ -1,41 +1,56 @@
+'use client';
+
 import Link from 'next/link';
 import { GeometricShape, BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
 import { CartDrawer } from '@/components/shop/cart-drawer';
-import { Menu } from 'lucide-react';
+import { Menu, User as UserIcon } from 'lucide-react';
+import { useUser } from '@/firebase';
 
 export function Navbar() {
+  const { user, isUserLoading } = useUser();
+
   return (
-    <nav className="border-b-4 border-[#121212] bg-white sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 h-20 flex items-center justify-between">
+    <nav className="bg-background/80 backdrop-blur-md sticky top-0 z-50 py-6 border-b border-border/40">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-4 group">
-          <div className="flex -space-x-3">
-            <GeometricShape type="circle" color="red" className="w-6 h-6 md:w-8 md:h-8 border-2 border-black" />
-            <GeometricShape type="square" color="yellow" className="w-6 h-6 md:w-8 md:h-8 border-2 border-black rotate-45" />
-            <GeometricShape type="triangle" color="blue" className="w-6 h-6 md:w-8 md:h-8 scale-75" />
-          </div>
-          <span className="font-black text-xl md:text-2xl tracking-tighter hidden sm:block">SWAPNO URAN</span>
+          <GeometricShape type="arch" color="sage" className="w-10 h-14" />
+          <span className="font-headline font-bold text-2xl tracking-tight text-botanical-forest italic">Swapno Uran</span>
         </Link>
 
-        <div className="hidden lg:flex items-center gap-8 font-bold uppercase tracking-widest text-xs">
-          <Link href="/" className="hover:text-[#D02020] transition-colors">Home</Link>
-          <Link href="/shop" className="hover:text-[#1040C0] transition-colors">Shop</Link>
-          <Link href="/ebooks" className="hover:text-[#F0C020] transition-colors">Ebooks</Link>
-          <Link href="/photo-time" className="hover:text-[#D02020] transition-colors">Photo Time</Link>
-          <Link href="/dashboard" className="hover:text-[#1040C0] transition-colors">Dashboard</Link>
-        </div>
+        {/* Conditionally show links only if user is logged in */}
+        {user && !isUserLoading && (
+          <div className="hidden lg:flex items-center gap-12 font-medium uppercase tracking-[0.2em] text-[11px] text-botanical-forest/70">
+            <Link href="/" className="hover:text-botanical-terracotta transition-colors">Home</Link>
+            <Link href="/shop" className="hover:text-botanical-terracotta transition-colors">Shop</Link>
+            <Link href="/ebooks" className="hover:text-botanical-terracotta transition-colors">Ebooks</Link>
+            <Link href="/photo-time" className="hover:text-botanical-terracotta transition-colors">Gallery</Link>
+            <Link href="/dashboard" className="hover:text-botanical-terracotta transition-colors">Dashboard</Link>
+          </div>
+        )}
 
-        <div className="flex items-center gap-2 md:gap-4">
-          <div className="hidden sm:flex items-center gap-2">
-            <Link href="/login">
-              <BauhausButton variant="outline" size="sm">Sign In</BauhausButton>
-            </Link>
-            <Link href="/signup">
-              <BauhausButton variant="black" size="sm" className="hidden md:inline-flex">Sign Up</BauhausButton>
-            </Link>
+        <div className="flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-4">
+            {!user && !isUserLoading ? (
+              <>
+                <Link href="/login">
+                  <BauhausButton variant="ghost" size="sm">Sign In</BauhausButton>
+                </Link>
+                <Link href="/signup">
+                  <BauhausButton variant="primary" size="sm">Join Collective</BauhausButton>
+                </Link>
+              </>
+            ) : (
+              <Link href="/dashboard/profile">
+                <BauhausButton variant="ghost" size="sm" className="flex items-center gap-2">
+                  <UserIcon size={16} />
+                  <span className="hidden md:inline">Profile</span>
+                </BauhausButton>
+              </Link>
+            )}
           </div>
           <CartDrawer />
-          <button className="lg:hidden p-2 border-4 border-black">
-            <Menu className="w-6 h-6" />
+          <button className="lg:hidden p-3 rounded-full hover:bg-botanical-forest/5 transition-colors">
+            <Menu className="w-6 h-6 text-botanical-forest" />
           </button>
         </div>
       </div>
