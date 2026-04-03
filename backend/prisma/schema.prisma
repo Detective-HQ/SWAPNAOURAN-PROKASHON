@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum BookType {
+  PHYSICAL
+  EBOOK
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum PaymentStatus {
+  CREATED
+  SUCCESS
+  FAILED
+}
+
+enum PaymentProvider {
+  MOCK
+  STRIPE
+  RAZORPAY
+}
+
+model User {
+  id            String        @id @default(cuid())
+  name          String
+  email         String        @unique
+  password      String
+  role          Role          @default(USER)
+  phone         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  orders        Order[]
+  ebookAccesses EbookAccess[]
+  qrCodes       QRCode[]
+  galleryImages Gallery[]     @relation("GalleryUploader")
+
+  @@index([role])
+}
+
+model Book {
+  id            String        @id @default(cuid())
+  title         String
+  description   String
+  price         Decimal       @db.Decimal(10, 2)
+  type          BookType
+  coverImage    String?
+  fileUrl       String?
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  orderItems    OrderItem[]
+  ebookAccesses EbookAccess[]
+  qrCodes       QRCode[]
+
+  @@index([type])
+  @@index([isActive])
+  @@index([title])
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  userId          String
+  status          OrderStatus   @default(PENDING)
+  totalAmount     Decimal       @db.Decimal(10, 2)
+  shippingAddress Json?
+  invoiceNumber   String?       @unique
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items           OrderItem[]
+  payment         Payment?
+  ebookAccesses   EbookAccess[]
+  qrCodes         QRCode[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  bookId     String
+  quantity   Int      @default(1)
+  unitPrice  Decimal  @db.Decimal(10, 2)
+  totalPrice Decimal  @db.Decimal(10, 2)
+  createdAt  DateTime @default(now())
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  book       Book     @relation(fields: [bookId], references: [id], onDelete: Restrict)
+
+  @@unique([orderId, bookId])
+  @@index([bookId])
+}
+
+model Payment {
+  id                String          @id @default(cuid())
+  orderId           String          @unique
+  provider          PaymentProvider @default(MOCK)
+  providerPaymentId String?
+  status            PaymentStatus   @default(CREATED)
+  amount            Decimal         @db.Decimal(10, 2)
+  currency          String          @default("INR")
+  payload           Json?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  order             Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([provider])
+  @@index([status])
+  @@index([providerPaymentId])
+}
+
+model EbookAccess {
+  id        String   @id @default(cuid())
+  userId    String
+  bookId    String
+  orderId   String
+  grantedAt DateTime @default(now())
+  expiresAt DateTime?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId, orderId])
+  @@index([userId, bookId])
+}
+
+model QRCode {
+  id            String   @id @default(cuid())
+  userId        String
+  bookId        String
+  orderId       String
+  imageUrl      String
+  qrData        Json
+  scannedCount  Int      @default(0)
+  lastScannedAt DateTime?
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book          Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([userId, bookId])
+  @@index([orderId])
+}
+
+model Gallery {
+  id           String   @id @default(cuid())
+  title        String?
+  imageUrl     String
+  publicId     String?
+  uploadedById String?
+  createdAt    DateTime @default(now())
+  uploadedBy   User?    @relation("GalleryUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([uploadedById])
+  @@index([createdAt])
+}
