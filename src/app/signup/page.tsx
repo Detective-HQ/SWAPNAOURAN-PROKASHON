@@ -1,48 +1,93 @@
+'use client';
+
+import { useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { BauhausButton, GeometricShape } from '@/components/bauhaus/bauhaus-primitives';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { Navbar } from '@/components/layout/navbar';
+import { useAuth, useUser, initiateAnonymousSignIn } from '@/firebase';
+import { Loader2 } from 'lucide-react';
 
 export default function SignupPage() {
+  const { auth } = useAuth();
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user && !isUserLoading) {
+      router.push('/dashboard');
+    }
+  }, [user, isUserLoading, router]);
+
+  const handleDemoSignup = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (auth) {
+      initiateAnonymousSignIn(auth);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#F0F0F0]">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      <main className="flex-grow flex items-center justify-center p-4">
-        <div className="w-full max-w-lg relative">
-          <div className="absolute top-0 right-0 p-8">
-             <GeometricShape type="square" color="yellow" className="w-16 h-16 rotate-12" />
+      <main className="flex-grow flex items-center justify-center p-6 lg:p-12 relative">
+        <div className="w-full max-w-xl relative">
+          <div className="absolute top-0 right-0 p-8 opacity-20">
+             <GeometricShape type="square" color="terracotta" className="w-24 h-24 rotate-12" />
           </div>
           
-          <BauhausCard decorationColor="red" decorationShape="circle" className="p-8 lg:p-12">
-            <h1 className="text-4xl font-black mb-8">JOIN THE<br /><span className="text-[#1040C0]">COLLECTIVE</span></h1>
-            <form className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-widest mb-2">First Name</label>
-                  <input type="text" className="w-full p-4 border-4 border-black font-bold focus:outline-none" />
+          <BauhausCard className="p-10 lg:p-16 border border-border/40">
+            <div className="space-y-4 mb-12 text-center md:text-left">
+              <h1 className="text-5xl font-headline font-bold text-botanical-forest leading-tight">Join The <br /><span className="italic font-normal text-botanical-terracotta">Collective</span></h1>
+              <p className="text-xs uppercase tracking-[0.3em] font-bold text-botanical-sage">Begin your botanical journey</p>
+            </div>
+
+            <form className="space-y-6" onSubmit={handleDemoSignup}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-botanical-forest/60 ml-4">First Name</label>
+                  <input type="text" disabled className="w-full px-8 py-4 rounded-full bg-botanical-clay/10 border border-border focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 transition-all font-medium" />
                 </div>
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-widest mb-2">Last Name</label>
-                  <input type="text" className="w-full p-4 border-4 border-black font-bold focus:outline-none" />
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-botanical-forest/60 ml-4">Last Name</label>
+                  <input type="text" disabled className="w-full px-8 py-4 rounded-full bg-botanical-clay/10 border border-border focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 transition-all font-medium" />
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-black uppercase tracking-widest mb-2">Email Address</label>
-                <input type="email" className="w-full p-4 border-4 border-black font-bold focus:outline-none" />
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-botanical-forest/60 ml-4">Email Address</label>
+                <input type="email" disabled className="w-full px-8 py-4 rounded-full bg-botanical-clay/10 border border-border focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 transition-all font-medium" />
               </div>
-              <div>
-                <label className="block text-xs font-black uppercase tracking-widest mb-2">Password</label>
-                <input type="password" placeholder="Min 8 characters" className="w-full p-4 border-4 border-black font-bold focus:outline-none" />
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-botanical-forest/60 ml-4">Password</label>
+                <input type="password" disabled placeholder="Min 8 characters" className="w-full px-8 py-4 rounded-full bg-botanical-clay/10 border border-border focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 transition-all font-medium" />
               </div>
-              <div className="flex items-center gap-3">
-                <input type="checkbox" className="w-6 h-6 border-4 border-black rounded-none checked:bg-[#D02020]" />
-                <span className="text-xs font-bold uppercase tracking-widest">I agree to the terms of the manifest</span>
+              
+              <div className="flex items-center gap-4 px-4 py-2">
+                <input type="checkbox" checked readOnly className="w-5 h-5 rounded-full border-2 border-botanical-sage text-botanical-sage focus:ring-botanical-sage/30" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-botanical-forest/60">I agree to the botanical manifest</span>
               </div>
-              <BauhausButton variant="red" className="w-full" size="lg">START READING</BauhausButton>
+
+              <div className="space-y-4 pt-4">
+                <BauhausButton type="submit" variant="primary" className="w-full" size="lg" disabled={isUserLoading}>
+                  {isUserLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'START READING'}
+                </BauhausButton>
+                
+                <BauhausButton 
+                  onClick={handleDemoSignup}
+                  type="button" 
+                  variant="outline" 
+                  className="w-full" 
+                  size="lg"
+                  disabled={isUserLoading}
+                >
+                  INSTANT DEMO ACCESS
+                </BauhausButton>
+              </div>
             </form>
-            <div className="mt-8 text-center border-t-2 border-black pt-6">
-              <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                Already registered? <Link href="/login" className="text-[#D02020] underline hover:text-black">SIGN IN</Link>
+
+            <div className="mt-12 text-center border-t border-border/40 pt-10">
+              <p className="text-xs font-bold text-botanical-forest/50 uppercase tracking-widest">
+                Already registered? <Link href="/login" className="text-botanical-terracotta hover:underline">Sign In</Link>
               </p>
             </div>
           </BauhausCard>
