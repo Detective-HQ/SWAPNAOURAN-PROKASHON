@@ -1,19 +1,35 @@
 'use client';
 
+import { useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/layout/navbar';
 import { BauhausButton, GeometricShape } from '@/components/bauhaus/bauhaus-primitives';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
-import { Star, ShoppingCart, Zap, ShieldCheck, BookOpen, ArrowRight } from 'lucide-react';
+import { Star, ArrowRight } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useUser } from '@/firebase';
 
 export default function Home() {
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user && !isUserLoading) {
+      router.push('/dashboard');
+    }
+  }, [user, isUserLoading, router]);
+
   const featuredBooks = [
     { id: 1, title: 'The Silent Modernist', author: 'L. Van der Rohe', price: '$24.99', image: PlaceHolderImages[0].imageUrl },
     { id: 2, title: 'Primary Colors', author: 'K. Malevich', price: '$19.99', image: PlaceHolderImages[1].imageUrl },
     { id: 3, title: 'Form & Function', author: 'W. Gropius', price: '$32.00', image: PlaceHolderImages[2].imageUrl },
   ];
+
+  if (isUserLoading) {
+    return null; // Or a loading spinner
+  }
 
   return (
     <div className="min-h-screen flex flex-col">

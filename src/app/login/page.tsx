@@ -20,7 +20,7 @@ export default function LoginPage() {
     }
   }, [user, isUserLoading, router]);
 
-  const handleDemoLogin = (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (auth) {
       initiateAnonymousSignIn(auth);
@@ -45,50 +45,34 @@ export default function LoginPage() {
               <p className="text-xs uppercase tracking-[0.3em] font-bold text-botanical-sage">Enter your sanctuary</p>
             </div>
 
-            <form className="space-y-8" onSubmit={handleDemoLogin}>
+            <form className="space-y-8" onSubmit={handleLogin}>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-botanical-forest/60 ml-4">Email Address</label>
                 <input 
                   type="email" 
-                  disabled
                   className="w-full px-8 py-4 rounded-full bg-botanical-clay/10 border border-border focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 transition-all font-medium placeholder:opacity-30"
-                  placeholder="demo@swapnouran.com"
+                  placeholder="reader@swapnouran.com"
+                  required
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-botanical-forest/60 ml-4">Password</label>
                 <input 
                   type="password" 
-                  disabled
                   className="w-full px-8 py-4 rounded-full bg-botanical-clay/10 border border-border focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 transition-all font-medium placeholder:opacity-30"
                   placeholder="••••••••"
+                  required
                 />
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-4 pt-4">
                 <BauhausButton type="submit" variant="primary" className="w-full" size="lg" disabled={isUserLoading}>
                   {isUserLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'SIGN IN'}
-                </BauhausButton>
-                
-                <div className="relative py-4">
-                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border/60"></div></div>
-                  <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-bold"><span className="bg-white px-4 text-botanical-sage">or</span></div>
-                </div>
-
-                <BauhausButton 
-                  onClick={handleDemoLogin}
-                  type="button" 
-                  variant="terracotta" 
-                  className="w-full" 
-                  size="lg"
-                  disabled={isUserLoading}
-                >
-                  TRY DEMO ACCESS
                 </BauhausButton>
               </div>
             </form>
 
-            <div className="mt-12 text-center">
+            <div className="mt-12 text-center border-t border-border/40 pt-10">
               <p className="text-xs font-bold text-botanical-forest/50 uppercase tracking-widest">
                 New reader? <Link href="/signup" className="text-botanical-terracotta hover:underline">Create Account</Link>
               </p>

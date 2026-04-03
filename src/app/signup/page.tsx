@@ -20,7 +20,7 @@ export default function SignupPage() {
     }
   }, [user, isUserLoading, router]);
 
-  const handleDemoSignup = (e: React.FormEvent) => {
+  const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
     if (auth) {
       initiateAnonymousSignIn(auth);
@@ -42,45 +42,34 @@ export default function SignupPage() {
               <p className="text-xs uppercase tracking-[0.3em] font-bold text-botanical-sage">Begin your botanical journey</p>
             </div>
 
-            <form className="space-y-6" onSubmit={handleDemoSignup}>
+            <form className="space-y-6" onSubmit={handleSignup}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-botanical-forest/60 ml-4">First Name</label>
-                  <input type="text" disabled className="w-full px-8 py-4 rounded-full bg-botanical-clay/10 border border-border focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 transition-all font-medium" />
+                  <input type="text" required className="w-full px-8 py-4 rounded-full bg-botanical-clay/10 border border-border focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 transition-all font-medium" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-botanical-forest/60 ml-4">Last Name</label>
-                  <input type="text" disabled className="w-full px-8 py-4 rounded-full bg-botanical-clay/10 border border-border focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 transition-all font-medium" />
+                  <input type="text" required className="w-full px-8 py-4 rounded-full bg-botanical-clay/10 border border-border focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 transition-all font-medium" />
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-botanical-forest/60 ml-4">Email Address</label>
-                <input type="email" disabled className="w-full px-8 py-4 rounded-full bg-botanical-clay/10 border border-border focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 transition-all font-medium" />
+                <input type="email" required className="w-full px-8 py-4 rounded-full bg-botanical-clay/10 border border-border focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 transition-all font-medium" />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-botanical-forest/60 ml-4">Password</label>
-                <input type="password" disabled placeholder="Min 8 characters" className="w-full px-8 py-4 rounded-full bg-botanical-clay/10 border border-border focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 transition-all font-medium" />
+                <input type="password" required placeholder="Min 8 characters" className="w-full px-8 py-4 rounded-full bg-botanical-clay/10 border border-border focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 transition-all font-medium" />
               </div>
               
               <div className="flex items-center gap-4 px-4 py-2">
-                <input type="checkbox" checked readOnly className="w-5 h-5 rounded-full border-2 border-botanical-sage text-botanical-sage focus:ring-botanical-sage/30" />
+                <input type="checkbox" required className="w-5 h-5 rounded-full border-2 border-botanical-sage text-botanical-sage focus:ring-botanical-sage/30" />
                 <span className="text-[10px] font-bold uppercase tracking-widest text-botanical-forest/60">I agree to the botanical manifest</span>
               </div>
 
               <div className="space-y-4 pt-4">
                 <BauhausButton type="submit" variant="primary" className="w-full" size="lg" disabled={isUserLoading}>
                   {isUserLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'START READING'}
-                </BauhausButton>
-                
-                <BauhausButton 
-                  onClick={handleDemoSignup}
-                  type="button" 
-                  variant="outline" 
-                  className="w-full" 
-                  size="lg"
-                  disabled={isUserLoading}
-                >
-                  INSTANT DEMO ACCESS
                 </BauhausButton>
               </div>
             </form>
