@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
-import { AIRecommendations } from '@/components/shop/ai-recommendations';
+
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { TrendingUp, ShoppingBag, BookOpen, Star, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
@@ -54,7 +54,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         <div className="lg:col-span-2">
-           <AIRecommendations />
+           <div />
         </div>
         <div className="space-y-8">
            <BauhausCard className="bg-botanical-forest text-botanical-alabaster relative overflow-hidden">
