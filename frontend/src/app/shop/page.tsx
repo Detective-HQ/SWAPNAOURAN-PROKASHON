@@ -1,13 +1,63 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { Navbar } from '@/components/layout/navbar';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { ShoppingCart, Search, Filter, SlidersHorizontal } from 'lucide-react';
+import { useCart } from '@/lib/cart-context';
+import { ShoppingCart, Search, Filter, SlidersHorizontal, Check } from 'lucide-react';
+import { useState } from 'react';
+
+// Helper function to convert Bengali numerals to regular numbers
+const convertBengaliToEnglish = (str: string): string => {
+  const bengaliDigits: { [key: string]: string } = {
+    '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4',
+    '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9',
+  };
+  
+  return str.split('').map(char => bengaliDigits[char] || char).join('');
+};
+
+const convertDevanagariToEnglish = (str: string): string => {
+  const devanagariDigits: { [key: string]: string } = {
+    '०': '0', '१': '1', '२': '2', '३': '3', '४': '4',
+    '५': '5', '६': '6', '७': '7', '८': '8', '९': '9',
+  };
+  
+  return str.split('').map(char => devanagariDigits[char] || char).join('');
+};
 
 export default function ShopPage() {
+  const { addItem } = useCart();
+  const [addedItems, setAddedItems] = useState<number[]>([]);
+
+  const handleAddToCart = (book: any) => {
+    console.log("handleAddToCart called with:", book);
+    // Convert Devanagari numerals to English numerals, then parse
+    const englishPrice = convertDevanagariToEnglish(book.price);
+    const parsedPrice = parseFloat(englishPrice);
+
+    if (isNaN(parsedPrice)) {
+      console.error(`Invalid price for book ${book.id}: ${book.price}`);
+      return;
+    }
+
+    console.log("Calling addItem with price:", parsedPrice);
+    addItem({
+      id: book.id,
+      title: book.title,
+      author: book.author,
+      price: parsedPrice,
+      image: book.image,
+    });
+    setAddedItems((prev) => [...prev, book.id]);
+    setTimeout(() => {
+      setAddedItems((prev) => prev.filter((id) => id !== book.id));
+    }, 2000);
+  };
+
   const books = [
     {
       id: 1,
@@ -138,12 +188,22 @@ export default function ShopPage() {
                   </div>
                   <h2 className="text-xl font-headline font-bold mb-1 leading-tight">{book.title}</h2>
                   <p className="text-botanical-forest/40 font-medium text-xs mb-8 uppercase tracking-widest italic">{book.author}</p>
-                  <div className="flex justify-between items-center mt-auto pt-4 border-t border-border/10">
-                    <span className="text-2xl font-headline font-bold italic">${book.price}</span>
-                    <BauhausButton variant="secondary" size="sm" className="px-4">
-                      <ShoppingCart className="w-4 h-4" />
-                    </BauhausButton>
-                  </div>
+<div className="flex justify-between items-center mt-auto pt-4 border-t border-border/10">
+                      <span className="text-2xl font-headline font-bold italic">${book.price}</span>
+                      <BauhausButton 
+                        type="button"
+                        variant="secondary" 
+                        size="sm" 
+                        className="px-4"
+                        onClick={() => handleAddToCart(book)}
+                      >
+                        {addedItems.includes(book.id) ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          <ShoppingCart className="w-4 h-4" />
+                        )}
+                      </BauhausButton>
+                    </div>
                 </BauhausCard>
               </div>
             ))}
