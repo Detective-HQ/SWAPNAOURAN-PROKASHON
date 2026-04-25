@@ -1,24 +1,30 @@
 const prisma = require("../prisma/client");
 const ApiError = require("../utils/ApiError");
-const { verifyAccessToken } = require("../utils/jwt");
+const { clerkMiddleware, requireAuth } = require("@clerk/express");
 
-const authMiddleware = async (req, _res, next) => {
-  const authHeader = req.headers.authorization || "";
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+/**
+ * We wrap our logic inside a generic middleware handler.
+ * Clerk's requireAuth() ensures req.auth.userId exists.
+ */
+const clerkVerify = requireAuth();
 
-  if (!token) {
-    return next(new ApiError(401, "Unauthorized"));
-  }
-
+const mapClerkUser = async (req, res, next) => {
   try {
-    const decoded = verifyAccessToken(token);
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+    // req.auth.userId is the Clerk ID (e.g. user_...)
+    const clerkId = req.auth.userId;
+
+    // We can assume we need a user in our DB to maintain relations.
+    // Ideally, there should be a webhook creating users with this 'id' or 'email'.
+    // For now, if your DB uses `id: String`, we'll try to find by `id: clerkId`.
+    let user = await prisma.user.findUnique({
+      where: { id: clerkId },
       select: { id: true, email: true, role: true, name: true }
     });
 
     if (!user) {
-      return next(new ApiError(401, "Invalid token"));
+      // Auto-fallback mapping for active session missing from local db:
+      // (Normally this happens via a Clerk webhook. If we just want testing, we can dummy it or error.)
+      return next(new ApiError(401, "User exists in Clerk but not synced to the local database."));
     }
 
     req.user = user;
@@ -27,5 +33,11 @@ const authMiddleware = async (req, _res, next) => {
     return next(new ApiError(401, "Invalid or expired token"));
   }
 };
+
+// Export an array of middlewares to process the request sequentially:
+// 1. clerkMiddleware parses the token
+// 2. clerkVerify ensures it is valid
+// 3. mapClerkUser maps it to Prisma
+const authMiddleware = [clerkMiddleware(), clerkVerify, mapClerkUser];
 
 module.exports = authMiddleware;

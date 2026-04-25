@@ -18,6 +18,10 @@ app.use(
   })
 );
 app.use(morgan("dev"));
+const webhookRoutes = require("./routes/webhookRoutes");
+
+app.use("/api/webhooks", webhookRoutes);
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
