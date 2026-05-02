@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useUser } from '@clerk/nextjs';
 import { useCart } from '@/lib/cart-context';
+import { useApi } from '@/hooks/use-api';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -26,6 +27,7 @@ const loadRazorpayScript = () => {
 export default function OrdersPage() {
   const { user, isLoaded: userLoaded } = useUser();
   const { items: cartItems, removeItem, updateQty, clearCart, total: subtotal } = useCart();
+  const api = useApi();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingPayment, setProcessingPayment] = useState(false);
@@ -35,11 +37,8 @@ export default function OrdersPage() {
     async function fetchData() {
       if (!userLoaded) return;
       try {
-        const response = await fetch('/api/orders/my-orders');
-        if (response.ok) {
-          const data = await response.json();
-          setOrders(data.orders || []);
-        }
+        const data = await api.get('/orders/my');
+        setOrders(data.data || []);
       } catch (err) {
         console.error('Failed to fetch orders:', err);
       } finally {
@@ -47,7 +46,7 @@ export default function OrdersPage() {
       }
     }
     fetchData();
-  }, [userLoaded]);
+  }, [userLoaded, api]);
 
   const initiateRazorpayPayment = async () => {
     if (cartItems.length === 0) return;
@@ -56,80 +55,67 @@ export default function OrdersPage() {
     setError(null);
 
     try {
-      // Step 1: Create order from cart items
-      const createOrderResponse = await fetch('/api/orders/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: cartItems,
-          shippingAddress: {
-            name: user?.fullName || user?.firstName || '',
-            email: user?.emailAddresses[0]?.emailAddress || '',
-          }
-        })
+      // Step 1: Create order from cart items - map 'id' to 'bookId' for backend
+      const orderResponse = await api.post('/orders', {
+        items: cartItems.map(item => ({
+          bookId: String(item.id),
+          quantity: item.qty || 1
+        })),
+        shippingAddress: {
+          name: user?.fullName || user?.firstName || '',
+          email: user?.emailAddresses[0]?.emailAddress || '',
+          phone: user?.phoneNumbers?.[0]?.phoneNumber || '',
+          address: ''
+        }
       });
 
-      if (!createOrderResponse.ok) {
-        const error = await createOrderResponse.json();
-        throw new Error(error.error || 'Failed to create order');
+      const order = orderResponse.data;
+      const orderId = order?.id;
+      if (!orderId) {
+        throw new Error('Failed to create order - no order ID returned');
       }
 
-      const orderData = await createOrderResponse.json();
-      const orderId = orderData.order.id;
-      const amount = orderData.totalAmount * 100;
+      // Step 2: Initiate payment through backend
+      const paymentResponse = await api.post(`/orders/${orderId}/pay`);
+      const paymentData = paymentResponse.data;
 
-      // Step 2: Create Razorpay payment order
-      const paymentResponse = await fetch('/api/payments/create-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount, currency: 'INR' })
-      });
-      
-      const paymentData = await paymentResponse.json();
-      
-      if (!paymentResponse.ok) {
-        throw new Error(paymentData.error || 'Failed to create payment order');
-      }
-
+      // Step 3: Load and prepare Razorpay
       const Razorpay = await loadRazorpayScript() as any;
       if (!Razorpay) {
         throw new Error('Razorpay SDK failed to load. Are you online?');
       }
       
       const options = {
-        key: paymentData.razorpayKeyId,
-        amount: paymentData.amount,
-        currency: paymentData.currency,
+        key: paymentData.checkoutData.key,
+        amount: paymentData.checkoutData.amount,
+        currency: paymentData.checkoutData.currency,
         name: 'Swapno Uran Prakashan',
-        description: 'Book Purchase',
-        order_id: paymentData.orderId,
+        description: paymentData.checkoutData.description,
+        order_id: paymentData.checkoutData.orderId,
         handler: async (response: any) => {
-          // Step 3: Verify payment and link to order
-          const verifyResponse = await fetch('/api/payments/verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+          try {
+            // Step 4: Verify payment with backend
+            await api.post(`/orders/${orderId}/verify`, {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
-              razorpay_signature: response.razorpay_signature,
-              orderId: orderId // Link to the created order
-            })
-          });
-          
-          if (verifyResponse.ok) {
+              razorpay_signature: response.razorpay_signature
+            });
+            
             clearCart();
             window.location.href = '/dashboard/orders?payment=success';
-          } else {
-            const verifyError = await verifyResponse.json();
-            setError(verifyError.error || 'Payment verification failed');
+          } catch (verifyErr: any) {
+            console.error('Payment verification failed:', verifyErr);
+            setError(verifyErr.message || 'Payment verification failed');
+            setProcessingPayment(false);
           }
         },
         prefill: {
           name: user?.fullName || user?.firstName || '',
           email: user?.emailAddresses[0]?.emailAddress || '',
+          contact: user?.phoneNumbers?.[0]?.phoneNumber || '',
         },
         theme: {
-          color: '#1040C0'
+          color: '#2A4D2A'
         }
       };
 
@@ -137,8 +123,12 @@ export default function OrdersPage() {
       razorpay.open();
     } catch (err: any) {
       console.error('Payment error:', err);
-      setError(err.message || 'Payment failed. Please try again.');
-    } finally {
+      const message = err?.message || 'Payment failed. Please try again.';
+      if (/Some books are invalid or inactive/i.test(message)) {
+        setError('Some cart items are outdated. Please remove them and add books again from the Shop page.');
+      } else {
+        setError(message);
+      }
       setProcessingPayment(false);
     }
   };

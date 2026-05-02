@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+import { serverApi } from '@/lib/api-server';
 
 export async function POST(request: Request) {
   try {
@@ -14,7 +13,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const userId = user.id;
     const { items, shippingAddress } = await request.json();
 
     if (!items || items.length === 0) {
@@ -34,27 +32,15 @@ export async function POST(request: Request) {
 
     const totalAmount = items.reduce((sum: number, item: any) => sum + (item.price * item.qty), 0);
 
-    const response = await fetch(`${BASE_URL}/orders`, {
+    const createdOrderResponse = await serverApi('/orders', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-user-id': userId,
-      },
-      body: JSON.stringify({
+      data: {
         items: orderItems,
         shippingAddress: shippingAddress || {},
-      }),
+      },
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      return NextResponse.json(
-        { error: error.message || 'Failed to create order' },
-        { status: response.status }
-      );
-    }
-
-    const order = await response.json();
+    const order = createdOrderResponse?.data;
     return NextResponse.json({ 
       order,
       totalAmount 
