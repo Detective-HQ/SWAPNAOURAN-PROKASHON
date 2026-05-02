@@ -1,13 +1,11 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { Navbar } from '@/components/layout/navbar';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useCart } from '@/lib/cart-context';
-import { ShoppingCart, Search, Filter, SlidersHorizontal, Check } from 'lucide-react';
+import { ShoppingCart, Search, SlidersHorizontal, Check } from 'lucide-react';
 import { useState } from 'react';
 
 // Helper function to convert Bengali numerals to regular numbers
@@ -35,8 +33,10 @@ export default function ShopPage() {
 
   const handleAddToCart = (book: any) => {
     console.log("handleAddToCart called with:", book);
-    // Convert Devanagari numerals to English numerals, then parse
-    const englishPrice = convertDevanagariToEnglish(book.price);
+    // Convert localized numerals to English numerals, then parse.
+    const englishPrice = convertDevanagariToEnglish(
+      convertBengaliToEnglish(String(book.price))
+    ).replace(/,/g, "");
     const parsedPrice = parseFloat(englishPrice);
 
     if (isNaN(parsedPrice)) {

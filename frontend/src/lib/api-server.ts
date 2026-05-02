@@ -1,6 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const rawBaseUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const normalizedBaseUrl = rawBaseUrl.replace(/\/$/, "");
+const BASE_URL = normalizedBaseUrl.endsWith("/api")
+  ? normalizedBaseUrl
+  : `${normalizedBaseUrl}/api`;
 
 interface FetchOptions extends RequestInit {
   data?: any;
