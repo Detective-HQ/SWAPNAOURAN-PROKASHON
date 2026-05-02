@@ -1,18 +1,22 @@
 const { z } = require("zod");
 
 const orderItemSchema = z.object({
-  bookId: z.string().min(1),
+  bookId: z.coerce.string().min(1),
   quantity: z.number().int().positive().default(1)
 });
 
 const addressSchema = z
   .object({
-    line1: z.string().min(2),
+    name: z.string().optional(),
+    email: z.string().email().optional(),
+    phone: z.string().optional(),
+    address: z.string().optional(),
+    line1: z.string().min(2).optional(),
     line2: z.string().optional(),
-    city: z.string().min(2),
-    state: z.string().min(2),
-    postalCode: z.string().min(3),
-    country: z.string().min(2)
+    city: z.string().min(2).optional(),
+    state: z.string().min(2).optional(),
+    postalCode: z.string().min(3).optional(),
+    country: z.string().min(2).optional()
   })
   .optional();
 

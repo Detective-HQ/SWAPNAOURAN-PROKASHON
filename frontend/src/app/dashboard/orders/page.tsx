@@ -1,24 +1,157 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useUser } from '@clerk/nextjs';
+import { useCart } from '@/lib/cart-context';
+import { useApi } from '@/hooks/use-api';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { ShoppingBag, Trash2, ChevronRight, Package, CheckCircle2 } from 'lucide-react';
+import { ShoppingBag, Trash2, ChevronRight, Package, CheckCircle2, Loader2 } from 'lucide-react';
+
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) {
+      resolve((window as any).Razorpay);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve((window as any).Razorpay);
+    script.onerror = () => resolve(null);
+    document.body.appendChild(script);
+  });
+};
 
 export default function OrdersPage() {
-  const [cartItems, setCartItems] = useState([
-    { id: 1, title: 'The Silent Modernist', author: 'L. Van der Rohe', price: 1850, qty: 1, image: PlaceHolderImages[0].imageUrl },
-    { id: 2, title: 'Primary Colors', author: 'K. Malevich', price: 1499, qty: 1, image: PlaceHolderImages[1].imageUrl },
-  ]);
+  const { user, isLoaded: userLoaded } = useUser();
+  const { items: cartItems, removeItem, updateQty, clearCart, total: subtotal } = useCart();
+  const api = useApi();
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const orders = [
-    { id: 'ORD-8821', date: 'Oct 12, 2024', total: '₹3,200', status: 'Delivered', items: 3 },
-    { id: 'ORD-7640', date: 'Sept 28, 2024', total: '₹1,250', status: 'Processing', items: 1 },
-  ];
+  useEffect(() => {
+    async function fetchData() {
+      if (!userLoaded) return;
+      try {
+        const data = await api.get('/orders/my');
+        setOrders(data.data || []);
+      } catch (err) {
+        console.error('Failed to fetch orders:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [userLoaded, api]);
 
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.qty), 0);
+  const initiateRazorpayPayment = async () => {
+    if (cartItems.length === 0) return;
+    
+    setProcessingPayment(true);
+    setError(null);
+
+    try {
+      // Step 1: Create order from cart items - map 'id' to 'bookId' for backend
+      const orderResponse = await api.post('/orders', {
+        items: cartItems.map(item => ({
+          bookId: String(item.id),
+          quantity: item.qty || 1
+        })),
+        shippingAddress: {
+          name: user?.fullName || user?.firstName || '',
+          email: user?.emailAddresses[0]?.emailAddress || '',
+          phone: user?.phoneNumbers?.[0]?.phoneNumber || '',
+          address: ''
+        }
+      });
+
+      const order = orderResponse.data;
+      const orderId = order?.id;
+      if (!orderId) {
+        throw new Error('Failed to create order - no order ID returned');
+      }
+
+      // Step 2: Initiate payment through backend
+      const paymentResponse = await api.post(`/orders/${orderId}/pay`);
+      const paymentData = paymentResponse.data;
+
+      // Step 3: Load and prepare Razorpay
+      const Razorpay = await loadRazorpayScript() as any;
+      if (!Razorpay) {
+        throw new Error('Razorpay SDK failed to load. Are you online?');
+      }
+      
+      const options = {
+        key: paymentData.checkoutData.key,
+        amount: paymentData.checkoutData.amount,
+        currency: paymentData.checkoutData.currency,
+        name: 'Swapno Uran Prakashan',
+        description: paymentData.checkoutData.description,
+        order_id: paymentData.checkoutData.orderId,
+        handler: async (response: any) => {
+          try {
+            // Step 4: Verify payment with backend
+            await api.post(`/orders/${orderId}/verify`, {
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature
+            });
+            
+            clearCart();
+            window.location.href = '/dashboard/orders?payment=success';
+          } catch (verifyErr: any) {
+            console.error('Payment verification failed:', verifyErr);
+            setError(verifyErr.message || 'Payment verification failed');
+            setProcessingPayment(false);
+          }
+        },
+        prefill: {
+          name: user?.fullName || user?.firstName || '',
+          email: user?.emailAddresses[0]?.emailAddress || '',
+          contact: user?.phoneNumbers?.[0]?.phoneNumber || '',
+        },
+        theme: {
+          color: '#2A4D2A'
+        }
+      };
+
+      const razorpay = new Razorpay(options);
+      razorpay.open();
+    } catch (err: any) {
+      console.error('Payment error:', err);
+      const message = err?.message || 'Payment failed. Please try again.';
+      if (/Some books are invalid or inactive/i.test(message)) {
+        setError('Some cart items are outdated. Please remove them and add books again from the Shop page.');
+      } else {
+        setError(message);
+      }
+      setProcessingPayment(false);
+    }
+  };
+
+  if (!userLoaded || loading) {
+    return (
+      <div className="space-y-16 animate-fade-up">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-botanical-terracotta" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="space-y-16 animate-fade-up">
+        <BauhausCard>
+          <p className="text-center text-muted-foreground">Please sign in to view your orders.</p>
+        </BauhausCard>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-16 animate-fade-up">
@@ -59,12 +192,12 @@ export default function OrdersPage() {
                       
                       <div className="flex items-center justify-between pt-4">
                         <div className="flex items-center gap-4 bg-botanical-clay/10 rounded-full px-4 py-2 border border-border/40">
-                          <button className="text-botanical-forest font-bold hover:text-botanical-terracotta transition-colors">-</button>
+                          <button className="text-botanical-forest font-bold hover:text-botanical-terracotta transition-colors" onClick={() => updateQty(item.id, item.qty - 1)}>-</button>
                           <span className="text-sm font-bold w-6 text-center">{item.qty}</span>
-                          <button className="text-botanical-forest font-bold hover:text-botanical-terracotta transition-colors">+</button>
+                          <button className="text-botanical-forest font-bold hover:text-botanical-terracotta transition-colors" onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
                         </div>
                         <button 
-                          onClick={() => setCartItems(items => items.filter(i => i.id !== item.id))}
+                          onClick={() => removeItem(item.id)}
                           className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -100,9 +233,17 @@ export default function OrdersPage() {
                   <span className="text-2xl font-bold italic text-botanical-terracotta">₹{subtotal.toLocaleString()}</span>
                 </div>
               </div>
-              <BauhausButton variant="primary" className="w-full mt-10" size="lg">
-                CHECKOUT
+<BauhausButton variant="primary" className="w-full mt-10" size="lg" onClick={initiateRazorpayPayment} disabled={processingPayment}>
+                {processingPayment ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    Processing...
+                  </>
+                ) : (
+                  'CHECKOUT'
+                )}
               </BauhausButton>
+              {error && <p className="text-red-500 text-xs text-center mt-4">{error}</p>}
               <p className="text-[9px] font-bold text-botanical-forest/40 text-center mt-6 uppercase tracking-widest">
                 Safe and secure botanical payments
               </p>

@@ -2,17 +2,12 @@
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { BauhausButton } from "@/components/bauhaus/bauhaus-primitives";
+import { useCart } from "@/lib/cart-context";
 import { ShoppingBag, Trash2, ArrowRight } from "lucide-react";
-import { useState } from "react";
 import Link from 'next/link';
 
 export function CartDrawer() {
-  const [items, setItems] = useState([
-    { id: 1, title: 'The Silent Modernist', price: 1850, qty: 1 },
-    { id: 2, title: 'Primary Colors', price: 1499, qty: 1 }
-  ]);
-
-  const total = items.reduce((acc, item) => acc + (item.price * item.qty), 0);
+  const { items, removeItem, total } = useCart();
 
   return (
     <Sheet>
@@ -39,7 +34,7 @@ export function CartDrawer() {
                 <div className="flex justify-between items-center pt-4">
                   <span className="font-bold text-botanical-forest italic">₹{item.price.toLocaleString()}</span>
                   <div className="flex items-center gap-4">
-                    <button className="text-red-400 hover:text-red-600 transition-colors" onClick={() => setItems(items.filter(i => i.id !== item.id))}>
+                    <button className="text-red-400 hover:text-red-600 transition-colors" onClick={() => removeItem(item.id)}>
                       <Trash2 size={16} />
                     </button>
                     <span className="text-xs font-bold px-3 py-1 bg-botanical-clay/20 rounded-full">{item.qty}</span>
