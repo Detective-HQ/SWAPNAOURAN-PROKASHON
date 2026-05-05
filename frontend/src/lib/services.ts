@@ -14,23 +14,21 @@ export const ordersService = {
   createOrder: (data: any) => serverApi("/orders", { method: "POST", data }),
   updateOrder: (id: string, data: any) => serverApi(`/orders/${id}`, { method: "PUT", data }),
   deleteOrder: (id: string) => serverApi(`/orders/${id}`, { method: "DELETE" }),
-  getMyOrders: () => serverApi("/orders/my-orders"),
+  getMyOrders: () => serverApi("/orders/my"),
 };
 
 export const galleryService = {
   listGallery: () => serverApi("/gallery"),
-  uploadImage: (data: any) => serverApi("/gallery/upload", { method: "POST", data }),
+  uploadImage: (data: any) => serverApi("/gallery", { method: "POST", data }),
   deleteImage: (id: string) => serverApi(`/gallery/${id}`, { method: "DELETE" }),
 };
 
 export const ebookService = {
-  listMyEbooks: () => serverApi("/ebooks/my-access"),
-  checkAccess: (bookId: string) => serverApi(`/ebooks/access/${bookId}`),
-  grantAccess: (data: any) => serverApi("/ebooks/grant", { method: "POST", data }),
+  listMyEbooks: () => serverApi("/ebooks"),
+  readEbook: (id: string) => serverApi(`/ebooks/${id}/read`),
+  streamEbook: (id: string, token: string) => serverApi(`/ebooks/${id}/stream?token=${token}`),
 };
 
 export const qrService = {
-  generateQR: (data: any) => serverApi("/qr/generate", { method: "POST", data }),
-  scanQR: (id: string) => serverApi(`/qr/scan/${id}`, { method: "POST" }),
-  getQRById: (id: string) => serverApi(`/qr/${id}`),
+  verifyQR: (id: string) => serverApi(`/qr/verify/${id}`),
 };
