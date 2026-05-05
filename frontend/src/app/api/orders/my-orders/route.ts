@@ -24,9 +24,10 @@ export async function GET() {
     return NextResponse.json({ orders: ordersResponse?.data || [] });
   } catch (error: any) {
     console.error('Fetch orders error:', error);
+    const status = typeof error?.status === 'number' ? error.status : 500;
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch orders' },
-      { status: 500 }
+      { message: error?.message || 'Failed to fetch orders' },
+      { status }
     );
   }
 }

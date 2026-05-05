@@ -36,9 +36,14 @@ export default function OrdersPage() {
   useEffect(() => {
     async function fetchData() {
       if (!userLoaded) return;
+      if (!user) {
+        setOrders([]);
+        setLoading(false);
+        return;
+      }
       try {
-        const data = await api.get('/orders/my');
-        setOrders(data.data || []);
+        const data = await api.get('/orders/my-orders');
+        setOrders(data.orders || []);
       } catch (err) {
         console.error('Failed to fetch orders:', err);
       } finally {
@@ -46,7 +51,7 @@ export default function OrdersPage() {
       }
     }
     fetchData();
-  }, [userLoaded, api]);
+  }, [userLoaded, user, api]);
 
   const initiateRazorpayPayment = async () => {
     if (cartItems.length === 0) return;
