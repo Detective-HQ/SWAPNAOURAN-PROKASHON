@@ -5,10 +5,21 @@ const prisma = require("./prisma/client");
 
 const server = http.createServer(app);
 
-server.listen(env.port, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Server running on port ${env.port}`);
-});
+const startServer = async () => {
+  try {
+    await prisma.$connect();
+    console.log("✅ Database connected successfully");
+  } catch (error) {
+    console.error("❌ Database connection failed:", error.message);
+    process.exit(1);
+  }
+
+  server.listen(env.port, () => {
+    console.log(`🚀 Server running on port ${env.port}`);
+  });
+};
+
+startServer();
 
 const shutdown = async (signal) => {
   // eslint-disable-next-line no-console
