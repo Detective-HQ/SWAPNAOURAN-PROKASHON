@@ -5,9 +5,11 @@ import { GeometricShape, BauhausButton } from '@/components/bauhaus/bauhaus-prim
 import { CartDrawer } from '@/components/shop/cart-drawer';
 import { Menu, User as UserIcon } from 'lucide-react';
 import { useUser, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs';
+import { useAuth } from '@/context/auth-context';
 
 export function Navbar() {
   const { user, isLoaded } = useUser();
+  const { user: appUser } = useAuth();
 
   return (
     <nav className="bg-background/80 backdrop-blur-md sticky top-0 z-50 py-6 border-b border-border/40">
@@ -25,6 +27,9 @@ export function Navbar() {
             <Link href="/dashboard/ebooks" className="hover:text-botanical-terracotta transition-colors">Ebooks</Link>
             <Link href="/dashboard/photo-time" className="hover:text-botanical-terracotta transition-colors">Photo Time</Link>
             <Link href="/dashboard/orders" className="hover:text-botanical-terracotta transition-colors">My Orders</Link>
+            {appUser?.role === "ADMIN" ? (
+              <Link href="/admin" className="hover:text-botanical-terracotta transition-colors">Admin</Link>
+            ) : null}
           </div>
         )}
 

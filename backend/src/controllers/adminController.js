@@ -44,14 +44,47 @@ const getAdminOrders = async (_req, res) => {
   sendSuccess(res, 200, "Orders fetched", orders);
 };
 
+const updateAdminOrderStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  const order = await prisma.order.update({
+    where: { id },
+    data: { status }
+  });
+
+  sendSuccess(res, 200, "Order status updated", order);
+};
+
 const getAnalytics = async (_req, res) => {
   const analytics = await getAdminAnalytics();
   sendSuccess(res, 200, "Analytics fetched", analytics);
+};
+
+const getAdminStats = async (_req, res) => {
+  const [totalUsers, totalProducts, totalOrders, revenueAgg] = await Promise.all([
+    prisma.user.count(),
+    prisma.book.count(),
+    prisma.order.count(),
+    prisma.order.aggregate({
+      where: { status: "PAID" },
+      _sum: { totalAmount: true }
+    })
+  ]);
+
+  sendSuccess(res, 200, "Stats fetched", {
+    totalUsers,
+    totalProducts,
+    totalOrders,
+    totalRevenue: Number(revenueAgg._sum.totalAmount || 0)
+  });
 };
 
 module.exports = {
   getAdminUsers,
   getAdminBooks,
   getAdminOrders,
-  getAnalytics
+  getAnalytics,
+  getAdminStats,
+  updateAdminOrderStatus
 };

@@ -1,6 +1,7 @@
 const prisma = require("../prisma/client");
 const ApiError = require("../utils/ApiError");
 const { sendSuccess } = require("../utils/response");
+const { uploadBuffer } = require("../services/storageService");
 
 const publicBookSelect = {
   id: true,
@@ -76,6 +77,58 @@ const createBook = async (req, res) => {
   sendSuccess(res, 201, "Book created", created);
 };
 
+const createBookWithFiles = async (req, res) => {
+  const { title, description } = req.body;
+  const price = Number(req.body.price);
+  const type = req.body.type;
+
+  if (!title || !description || !Number.isFinite(price) || price <= 0 || !["PHYSICAL", "EBOOK"].includes(type)) {
+    throw new ApiError(400, "Invalid book payload");
+  }
+
+  let coverImageUrl = null;
+  let fileUrl = null;
+
+  if (req.files?.coverImage?.[0]) {
+    const coverFile = req.files.coverImage[0];
+    const uploadedCover = await uploadBuffer({
+      buffer: coverFile.buffer,
+      folder: "book-covers",
+      filename: `${Date.now()}-${coverFile.originalname}`,
+      mimetype: coverFile.mimetype
+    });
+    coverImageUrl = uploadedCover.url;
+  }
+
+  if (type === "EBOOK") {
+    const ebookFile = req.files?.file?.[0];
+    if (!ebookFile) {
+      throw new ApiError(400, "Ebook file is required for EBOOK");
+    }
+
+    const uploadedEbook = await uploadBuffer({
+      buffer: ebookFile.buffer,
+      folder: "ebooks",
+      filename: `${Date.now()}-${ebookFile.originalname}`,
+      mimetype: ebookFile.mimetype
+    });
+    fileUrl = uploadedEbook.url;
+  }
+
+  const created = await prisma.book.create({
+    data: {
+      title,
+      description,
+      price,
+      type,
+      coverImage: coverImageUrl,
+      fileUrl
+    }
+  });
+
+  sendSuccess(res, 201, "Book created", created);
+};
+
 const updateBook = async (req, res) => {
   const existing = await prisma.book.findUnique({
     where: { id: req.params.id }
@@ -114,6 +167,7 @@ module.exports = {
   listBooks,
   getBookById,
   createBook,
+  createBookWithFiles,
   updateBook,
   deleteBook
 };

@@ -7,7 +7,9 @@ const {
   getAdminUsers,
   getAdminBooks,
   getAdminOrders,
-  getAnalytics
+  getAnalytics,
+  getAdminStats,
+  updateAdminOrderStatus
 } = require("../controllers/adminController");
 
 const router = express.Router();
@@ -17,6 +19,8 @@ router.use(authMiddleware, adminMiddleware);
 router.get("/users", asyncHandler(getAdminUsers));
 router.get("/books", asyncHandler(getAdminBooks));
 router.get("/orders", asyncHandler(getAdminOrders));
+router.put("/orders/:id/status", asyncHandler(updateAdminOrderStatus));
+router.get("/stats", asyncHandler(getAdminStats));
 router.get("/analytics", asyncHandler(getAnalytics));
 
 module.exports = router;

@@ -36,7 +36,15 @@ export async function serverApi(endpoint: string, options: FetchOptions = {}) {
   const data = isJson ? await response.json() : await response.text();
 
   if (!response.ok) {
-    throw new Error(data.message || "Something went wrong server-side");
+    const message =
+      data?.message ||
+      data?.error ||
+      (typeof data === "string" && data.trim() ? data : null) ||
+      "Something went wrong server-side";
+    const error = new Error(message) as Error & { status?: number; details?: unknown };
+    error.status = response.status;
+    error.details = data;
+    throw error;
   }
 
   return data;

@@ -7,7 +7,8 @@ interface BauhausCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export const BauhausCard = React.forwardRef<HTMLDivElement, BauhausCardProps>(
-  ({ children, className, variant = 'white', ...props }, ref) => {
+  ({ children, className, variant = 'white', decorationColor, ...props }, ref) => {
+    void decorationColor;
     const variants = {
       white: 'bg-white',
       clay: 'bg-[#DCCFC2]',
