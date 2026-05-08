@@ -18,9 +18,13 @@ export function useApi() {
       headers.set("Authorization", `Bearer ${token}`);
     }
 
-    if (options.data) {
-      headers.set("Content-Type", "application/json");
-      options.body = JSON.stringify(options.data);
+    if (options.data !== undefined) {
+      if (options.data instanceof FormData) {
+        options.body = options.data;
+      } else {
+        headers.set("Content-Type", "application/json");
+        options.body = JSON.stringify(options.data);
+      }
     }
 
     const url = endpoint.startsWith("http") ? endpoint : `${BASE_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
