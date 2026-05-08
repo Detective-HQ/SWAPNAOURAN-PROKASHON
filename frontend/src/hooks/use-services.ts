@@ -21,7 +21,7 @@ export function useOrdersService() {
     createOrder: (data: any) => api.post("/orders", data),
     updateOrder: (id: string, data: any) => api.put(`/orders/${id}`, data),
     deleteOrder: (id: string) => api.del(`/orders/${id}`),
-    getMyOrders: () => api.get("/orders/my-orders"),
+    getMyOrders: () => api.get("/orders/my"),
   };
 }
 
@@ -30,7 +30,7 @@ export function useGalleryService() {
   
   return {
     listGallery: () => api.get("/gallery"),
-    uploadImage: (data: any) => api.post("/gallery/upload", data),
+    uploadImage: (data: any) => api.post("/gallery", data),
     deleteImage: (id: string) => api.del(`/gallery/${id}`),
   };
 }
@@ -39,9 +39,9 @@ export function useEbookService() {
   const api = useApi();
 
   return {
-    listMyEbooks: () => api.get("/ebooks/my-access"),
-    checkAccess: (bookId: string) => api.get(`/ebooks/access/${bookId}`),
-    grantAccess: (data: any) => api.post("/ebooks/grant", data),
+    listMyEbooks: () => api.get("/ebooks"),
+    readEbook: (id: string) => api.get(`/ebooks/${id}/read`),
+    streamEbook: (id: string, token: string) => api.get(`/ebooks/${id}/stream?token=${token}`),
   };
 }
 
@@ -49,8 +49,6 @@ export function useQRService() {
   const api = useApi();
 
   return {
-    generateQR: (data: any) => api.post("/qr/generate", data),
-    scanQR: (id: string) => api.post(`/qr/scan/${id}`, {}),
-    getQRById: (id: string) => api.get(`/qr/${id}`),
+    verifyQR: (id: string) => api.get(`/qr/verify/${id}`),
   };
 }

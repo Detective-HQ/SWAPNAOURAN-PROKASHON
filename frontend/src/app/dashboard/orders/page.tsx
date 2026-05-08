@@ -32,6 +32,29 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState({
+    name: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+  });
+  const [addressError, setAddressError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (userLoaded && user) {
+      setShippingAddress({
+        name: user?.fullName || user?.firstName || '',
+        phone: user?.phoneNumbers?.[0]?.phoneNumber || '',
+        address: '',
+        city: '',
+        state: '',
+        pincode: '',
+      });
+    }
+  }, [userLoaded, user]);
 
   useEffect(() => {
     async function fetchData() {
@@ -56,21 +79,30 @@ export default function OrdersPage() {
   const initiateRazorpayPayment = async () => {
     if (cartItems.length === 0) return;
     
+    if (!shippingAddress.name || !shippingAddress.phone || !shippingAddress.address || !shippingAddress.city || !shippingAddress.state || !shippingAddress.pincode) {
+      setAddressError('All address fields are required');
+      setShowAddressForm(true);
+      return;
+    }
+
     setProcessingPayment(true);
     setError(null);
+    setAddressError(null);
 
     try {
-      // Step 1: Create order from cart items - map 'id' to 'bookId' for backend
       const orderResponse = await api.post('/orders', {
         items: cartItems.map(item => ({
           bookId: String(item.id),
           quantity: item.qty || 1
         })),
         shippingAddress: {
-          name: user?.fullName || user?.firstName || '',
+          name: shippingAddress.name,
           email: user?.emailAddresses[0]?.emailAddress || '',
-          phone: user?.phoneNumbers?.[0]?.phoneNumber || '',
-          address: ''
+          phone: shippingAddress.phone,
+          address: shippingAddress.address,
+          city: shippingAddress.city,
+          state: shippingAddress.state,
+          pincode: shippingAddress.pincode,
         }
       });
 
@@ -238,6 +270,95 @@ export default function OrdersPage() {
                   <span className="text-2xl font-bold italic text-botanical-terracotta">₹{subtotal.toLocaleString()}</span>
                 </div>
               </div>
+
+              <div className="mt-6 pt-6 border-t border-botanical-forest/10">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-[11px] font-headline font-bold uppercase tracking-widest text-botanical-forest">Shipping Address</h4>
+                  <button
+                    onClick={() => setShowAddressForm(!showAddressForm)}
+                    className="text-[10px] font-bold text-botanical-terracotta hover:text-botanical-forest transition-colors uppercase tracking-widest"
+                  >
+                    {showAddressForm ? 'Hide' : 'Edit'}
+                  </button>
+                </div>
+
+                {showAddressForm && (
+                  <div className="space-y-4 mt-4">
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-widest text-botanical-forest/60 mb-1">Full Name *</label>
+                      <input
+                        type="text"
+                        value={shippingAddress.name}
+                        onChange={(e) => setShippingAddress({ ...shippingAddress, name: e.target.value })}
+                        className="w-full px-4 py-2 text-sm bg-white/50 border border-border/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-botanical-terracotta/50"
+                        placeholder="Your full name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-widest text-botanical-forest/60 mb-1">Phone *</label>
+                      <input
+                        type="tel"
+                        value={shippingAddress.phone}
+                        onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value })}
+                        className="w-full px-4 py-2 text-sm bg-white/50 border border-border/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-botanical-terracotta/50"
+                        placeholder="10-digit phone number"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-widest text-botanical-forest/60 mb-1">Address *</label>
+                      <textarea
+                        value={shippingAddress.address}
+                        onChange={(e) => setShippingAddress({ ...shippingAddress, address: e.target.value })}
+                        className="w-full px-4 py-2 text-sm bg-white/50 border border-border/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-botanical-terracotta/50 resize-none"
+                        rows={2}
+                        placeholder="Street address, locality"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[9px] font-bold uppercase tracking-widest text-botanical-forest/60 mb-1">City *</label>
+                        <input
+                          type="text"
+                          value={shippingAddress.city}
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
+                          className="w-full px-4 py-2 text-sm bg-white/50 border border-border/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-botanical-terracotta/50"
+                          placeholder="City"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold uppercase tracking-widest text-botanical-forest/60 mb-1">State *</label>
+                        <input
+                          type="text"
+                          value={shippingAddress.state}
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, state: e.target.value })}
+                          className="w-full px-4 py-2 text-sm bg-white/50 border border-border/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-botanical-terracotta/50"
+                          placeholder="State"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-widest text-botanical-forest/60 mb-1">PIN Code *</label>
+                      <input
+                        type="text"
+                        value={shippingAddress.pincode}
+                        onChange={(e) => setShippingAddress({ ...shippingAddress, pincode: e.target.value })}
+                        className="w-full px-4 py-2 text-sm bg-white/50 border border-border/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-botanical-terracotta/50"
+                        placeholder="6-digit PIN code"
+                        maxLength={6}
+                      />
+                    </div>
+                    {addressError && <p className="text-red-500 text-xs">{addressError}</p>}
+                  </div>
+                )}
+
+                {!showAddressForm && (
+                  <div className="text-xs text-botanical-forest/60 mt-2">
+                    <p className="font-medium">{shippingAddress.name}</p>
+                    <p>{shippingAddress.address ? `${shippingAddress.address}, ${shippingAddress.city}, ${shippingAddress.state} - ${shippingAddress.pincode}` : 'Not set'}</p>
+                    <p>{shippingAddress.phone}</p>
+                  </div>
+                )}
+              </div>
 <BauhausButton variant="primary" className="w-full mt-10" size="lg" onClick={initiateRazorpayPayment} disabled={processingPayment}>
                 {processingPayment ? (
                   <>
@@ -275,20 +396,20 @@ export default function OrdersPage() {
                 <div className="flex-grow p-8 grid grid-cols-2 lg:grid-cols-4 gap-8">
                   <div>
                     <span className="text-[9px] font-bold opacity-40 uppercase tracking-widest block mb-1">Placed On</span>
-                    <span className="font-medium">{order.date}</span>
+                    <span className="font-medium">{new Date(order.createdAt).toLocaleDateString()}</span>
                   </div>
                   <div>
                     <span className="text-[9px] font-bold opacity-40 uppercase tracking-widest block mb-1">Items</span>
-                    <span className="font-medium">{order.items} Books</span>
+                    <span className="font-medium">{order.items?.length || 0} Books</span>
                   </div>
                   <div>
                     <span className="text-[9px] font-bold opacity-40 uppercase tracking-widest block mb-1">Amount</span>
-                    <span className="font-bold italic">{order.total}</span>
+                    <span className="font-bold italic">₹{Number(order.totalAmount).toLocaleString()}</span>
                   </div>
                   <div>
                     <span className="text-[9px] font-bold opacity-40 uppercase tracking-widest block mb-1">Status</span>
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className={order.status === 'Delivered' ? 'text-green-500' : 'text-botanical-sage'} size={14} />
+                      <CheckCircle2 className={order.status === 'PAID' ? 'text-green-500' : order.status === 'FAILED' ? 'text-red-500' : 'text-botanical-sage'} size={14} />
                       <span className="font-bold uppercase tracking-widest text-[10px]">{order.status}</span>
                     </div>
                   </div>
