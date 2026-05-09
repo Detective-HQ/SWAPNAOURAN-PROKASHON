@@ -1,6 +1,6 @@
 const prisma = require("../prisma/client");
 const ApiError = require("../utils/ApiError");
-const { clerkMiddleware } = require("@clerk/express");
+const { clerkMiddleware, clerkClient } = require("@clerk/express");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const env = require("../config/env");
@@ -9,6 +9,10 @@ const env = require("../config/env");
  * Updated to use the new Clerk API
  * clerkMiddleware() parses the auth token
  * req.auth() returns the auth object (replaces deprecated req.auth property)
+ *
+ * When auto-provisioning a new user, fetches the full user profile from
+ * Clerk's Backend API (via clerkClient) so real email / name are stored
+ * instead of placeholder values.
  */
 const mapClerkUser = async (req, res, next) => {
   try {
@@ -20,40 +24,79 @@ const mapClerkUser = async (req, res, next) => {
     }
 
     const clerkId = auth.userId;
-    const sessionClaims = auth.sessionClaims || {};
-    const emailFromClaims =
-      sessionClaims.email ||
-      sessionClaims.email_address ||
-      sessionClaims.primaryEmail ||
-      null;
-    const firstName = sessionClaims.given_name || "";
-    const lastName = sessionClaims.family_name || "";
-    const fullNameFromClaims = sessionClaims.name || `${firstName} ${lastName}`.trim();
 
-    // Try by Clerk ID first.
+    // ── 1. Look up by Clerk ID ──────────────────────────────────────────
     let user = await prisma.user.findUnique({
       where: { id: clerkId },
       select: { id: true, email: true, role: true, name: true }
     });
 
-    // Fallback: if local account already exists with same email, use it.
-    if (!user && emailFromClaims) {
+    if (user) {
+      req.user = user;
+      return next();
+    }
+
+    // ── 2. Fetch full profile from Clerk Backend API ────────────────────
+    //    Session claims do NOT include email/name by default, so we call
+    //    the Clerk Backend API to get the authoritative user data.
+    let clerkEmail = null;
+    let clerkName = null;
+
+    try {
+      const clerkUser = await clerkClient.users.getUser(clerkId);
+
+      // Primary email
+      if (clerkUser.emailAddresses && clerkUser.emailAddresses.length > 0) {
+        const primary = clerkUser.emailAddresses.find(
+          (e) => e.id === clerkUser.primaryEmailAddressId
+        );
+        clerkEmail = primary
+          ? primary.emailAddress
+          : clerkUser.emailAddresses[0].emailAddress;
+      }
+
+      // Full name
+      const first = clerkUser.firstName || "";
+      const last = clerkUser.lastName || "";
+      clerkName = `${first} ${last}`.trim() || null;
+    } catch (clerkApiErr) {
+      console.error("Failed to fetch Clerk user profile:", clerkApiErr.message);
+      // Continue with whatever info we have from session claims
+      const sessionClaims = auth.sessionClaims || {};
+      clerkEmail =
+        sessionClaims.email ||
+        sessionClaims.email_address ||
+        sessionClaims.primaryEmail ||
+        null;
+      const firstName = sessionClaims.given_name || "";
+      const lastName = sessionClaims.family_name || "";
+      clerkName = sessionClaims.name || `${firstName} ${lastName}`.trim() || null;
+    }
+
+    // ── 3. Check if a local account already exists with same email ──────
+    if (clerkEmail) {
       user = await prisma.user.findUnique({
-        where: { email: emailFromClaims },
+        where: { email: clerkEmail },
         select: { id: true, email: true, role: true, name: true }
       });
     }
 
+    // ── 4. Auto-provision the user ──────────────────────────────────────
     if (!user) {
-      const provisionedEmail = emailFromClaims || `${clerkId}@clerk.local`;
-      const provisionedName = fullNameFromClaims || `Clerk User ${clerkId.slice(-6)}`;
+      const provisionedEmail = clerkEmail || `${clerkId}@clerk.local`;
+      const provisionedName = clerkName || `Clerk User ${clerkId.slice(-6)}`;
       const placeholderPassword = await bcrypt.hash(
         `clerk:${crypto.randomUUID()}`,
         env.bcryptSaltRounds
       );
 
-      user = await prisma.user.create({
-        data: {
+      user = await prisma.user.upsert({
+        where: { id: clerkId },
+        update: {
+          name: provisionedName,
+          email: provisionedEmail,
+        },
+        create: {
           id: clerkId,
           name: provisionedName,
           email: provisionedEmail,
@@ -62,6 +105,8 @@ const mapClerkUser = async (req, res, next) => {
         },
         select: { id: true, email: true, role: true, name: true }
       });
+
+      console.log(`✅ Auto-provisioned Clerk user ${clerkId} → ${provisionedEmail}`);
     }
 
     req.user = user;
