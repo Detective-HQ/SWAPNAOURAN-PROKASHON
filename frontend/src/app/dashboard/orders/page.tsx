@@ -8,7 +8,8 @@ import { useApi } from '@/hooks/use-api';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { ShoppingBag, Trash2, ChevronRight, Package, CheckCircle2, Loader2 } from 'lucide-react';
+import { ShoppingBag, Trash2, ChevronRight, Package, CheckCircle2, Loader2, FileText } from 'lucide-react';
+import InvoiceModal from '@/components/shop/invoice-modal';
 
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
@@ -33,6 +34,7 @@ export default function OrdersPage() {
   const [processingPayment, setProcessingPayment] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
+  const [invoiceOrderId, setInvoiceOrderId] = useState<string | null>(null);
   const [shippingAddress, setShippingAddress] = useState({
     name: '',
     phone: '',
@@ -65,8 +67,8 @@ export default function OrdersPage() {
         return;
       }
       try {
-        const data = await api.get('/orders/my-orders');
-        setOrders(data.orders || []);
+        const data = await api.get('/orders/my');
+        setOrders(data.data || []);
       } catch (err) {
         console.error('Failed to fetch orders:', err);
       } finally {
@@ -414,7 +416,14 @@ export default function OrdersPage() {
                     </div>
                   </div>
                 </div>
-                <div className="p-8 md:border-l border-border/40 flex items-center justify-center">
+                <div className="p-8 md:border-l border-border/40 flex items-center gap-2">
+                  <button
+                    onClick={() => setInvoiceOrderId(order.id)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-botanical-terracotta hover:bg-botanical-clay/20 transition-colors border border-botanical-terracotta/20"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Invoice
+                  </button>
                   <button className="p-3 rounded-full hover:bg-botanical-clay/20 transition-colors text-botanical-sage">
                     <ChevronRight />
                   </button>
@@ -424,6 +433,11 @@ export default function OrdersPage() {
           ))}
         </div>
       </section>
+      <InvoiceModal
+        orderId={invoiceOrderId || ''}
+        open={!!invoiceOrderId}
+        onClose={() => setInvoiceOrderId(null)}
+      />
     </div>
   );
 }

@@ -115,11 +115,12 @@ const mapClerkUser = async (req, res, next) => {
     console.error("Auth middleware error:", error);
 
     const errorMessage = String(error?.message || "");
-    const isDatabaseInitFailure =
+    const isDatabaseFailure =
       error?.name === "PrismaClientInitializationError" ||
-      /Authentication failed against database server|Can't reach database server|P1000|P1001/.test(errorMessage);
+      error?.code === "P2024" ||
+      /Authentication failed against database server|Can't reach database server|P1000|P1001|P2024/.test(errorMessage);
 
-    if (isDatabaseInitFailure) {
+    if (isDatabaseFailure) {
       return next(
         new ApiError(
           503,
