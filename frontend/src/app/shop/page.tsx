@@ -5,52 +5,78 @@ import { Navbar } from '@/components/layout/navbar';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
 import { useCart } from '@/lib/cart-context';
-import { ShoppingCart, Search, SlidersHorizontal, Check } from 'lucide-react';
-import { useState } from 'react';
+import { useApi } from '@/hooks/use-api';
+import { ShoppingCart, Search, SlidersHorizontal, Check, X } from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
 
-// Helper function to convert Bengali numerals to regular numbers
-const convertBengaliToEnglish = (str: string): string => {
-  const bengaliDigits: { [key: string]: string } = {
-    '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4',
-    '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9',
-  };
-  
-  return str.split('').map(char => bengaliDigits[char] || char).join('');
-};
-
-const convertDevanagariToEnglish = (str: string): string => {
-  const devanagariDigits: { [key: string]: string } = {
-    '०': '0', '१': '1', '२': '2', '३': '3', '४': '4',
-    '५': '5', '६': '6', '७': '7', '८': '8', '९': '9',
-  };
-  
-  return str.split('').map(char => devanagariDigits[char] || char).join('');
+type Book = {
+  id: string;
+  title: string;
+  description?: string;
+  price: number | string;
+  coverImage?: string;
+  type: string;
 };
 
 export default function ShopPage() {
   const { addItem } = useCart();
-  const [addedItems, setAddedItems] = useState<number[]>([]);
+  const api = useApi();
+  const [addedItems, setAddedItems] = useState<string[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high'>('newest');
 
-  const handleAddToCart = (book: any) => {
-    console.log("handleAddToCart called with:", book);
-    // Convert localized numerals to English numerals, then parse.
-    const englishPrice = convertDevanagariToEnglish(
-      convertBengaliToEnglish(String(book.price))
-    ).replace(/,/g, "");
-    const parsedPrice = parseFloat(englishPrice);
+  useEffect(() => {
+    let mounted = true;
+    const fetchBooks = async () => {
+      try {
+        const response = await api.get('/books?type=PHYSICAL&limit=100');
+        if (!mounted) return;
+        setBooks(response?.data?.items || []);
+      } catch (err) {
+        if (!mounted) return;
+        console.error('Failed to load books:', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    fetchBooks();
+    return () => { mounted = false; };
+  }, [api]);
 
-    if (isNaN(parsedPrice)) {
-      console.error(`Invalid price for book ${book.id}: ${book.price}`);
-      return;
+  const parsePrice = (price: number | string) => {
+    if (typeof price === 'number') return price;
+    return parseFloat(String(price).replace(/,/g, ''));
+  };
+
+  const filteredBooks = useMemo(() => {
+    let result = [...books];
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(b =>
+        b.title.toLowerCase().includes(q) ||
+        (b.description && b.description.toLowerCase().includes(q))
+      );
     }
+    switch (sortBy) {
+      case 'price-low': result.sort((a, b) => parsePrice(a.price) - parsePrice(b.price)); break;
+      case 'price-high': result.sort((a, b) => parsePrice(b.price) - parsePrice(a.price)); break;
+      default: result.sort((a, b) => String(a.id).localeCompare(String(b.id))); break;
+    }
+    return result;
+  }, [books, searchQuery, sortBy]);
 
-    console.log("Calling addItem with price:", parsedPrice);
+  const handleAddToCart = (book: Book) => {
+    const parsedPrice = parsePrice(book.price);
+    if (isNaN(parsedPrice)) return;
     addItem({
       id: book.id,
       title: book.title,
-      author: book.author,
+      author: 'Swapno Uran Prakashan',
       price: parsedPrice,
-      image: book.image,
+      image: book.coverImage || '',
     });
     setAddedItems((prev) => [...prev, book.id]);
     setTimeout(() => {
@@ -58,90 +84,10 @@ export default function ShopPage() {
     }, 2000);
   };
 
-  const books = [
-    {
-      id: 1,
-      title: "আত্মকথা ও কবিতা",
-      author: "স্বপ্নউড়ান",
-      price: "২৫০.০০",
-      image: "/atmakatha and kobita.jpeg"
-    },
-    {
-      id: 2,
-      title: "বিনি সুতোর মেলা",
-      author: "স্বপ্নউড়ান",
-      price: "১৮০.০০",
-      image: "/bini sutor mala.jpeg"
-    },
-    {
-      id: 3,
-      title: "বিশ্ব ছাড়িয়ে",
-      author: "স্বপ্নউড়ান",
-      price: "৩০০.০০",
-      image: "/biswa chariye.jpeg"
-    },
-    {
-      id: 4,
-      title: "ক্লাসরুমের কবিতা",
-      author: "স্বপ্নউড়ান",
-      price: "১৫০.০০",
-      image: "/classroomer kobita.jpeg"
-    },
-    {
-      id: 5,
-      title: "দক্ষিণজঙ্গলের লোকদেবতারে",
-      author: "স্বপ্নউড়ান",
-      price: "২০০.০০",
-      image: "/dakhinjangaler lokdebtare.jpeg"
-    },
-    {
-      id: 6,
-      title: "মেঘপিওনের ডাকচিঠি",
-      author: "স্বপ্নউড়ান",
-      price: "১২০.০০",
-      image: "/meghpioner dakchithi.jpeg"
-    },
-    {
-      id: 7,
-      title: "প্রলাপ",
-      author: "স্বপ্নউড়ান",
-      price: "৩৫০.০০",
-      image: "/pralap.jpeg"
-    },
-    {
-      id: 8,
-      title: "রহস্যময় পদ্মনাভস্বামী",
-      author: "স্বপ্নউড়ান",
-      price: "৪০০.০০",
-      image: "/rahasyamoy padmanabhasami.jpeg"
-    },
-    {
-      id: 9,
-      title: "শারদ উৎসব ২০২৫",
-      author: "স্বপ্নউড়ান",
-      price: "১০০.০০",
-      image: "/sarad utsab2025.jpeg"
-    },
-    {
-      id: 10,
-      title: "স্মৃতির এশ্রাদ্ধ",
-      author: "স্বপ্নউড়ান",
-      price: "২০০.০০",
-      image: "/smritir esrad.jpeg"
-    },
-    {
-      id: 11,
-      title: "উড়ান",
-      author: "স্বপ্নউড়ান",
-      price: "২৫০.০০",
-      image: "/uran.jpeg"
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       <header className="py-24 px-6 lg:px-12 bg-white border-b border-border/40">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-end gap-12">
           <div className="space-y-6">
@@ -151,67 +97,110 @@ export default function ShopPage() {
             </div>
             <h1 className="text-6xl font-headline font-bold text-botanical-forest leading-none">Curated <br /> <span className="italic font-normal">Physical Library</span></h1>
           </div>
-          
+
           <div className="flex w-full md:w-auto gap-4">
             <div className="relative flex-grow md:w-96">
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-botanical-forest/30 w-5 h-5" />
-              <input 
-                type="text" 
-                placeholder="Find your story..." 
+              <input
+                type="text"
+                placeholder="Find your story..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-16 pr-8 py-5 rounded-full bg-botanical-clay/10 border border-border font-medium focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 transition-all"
               />
             </div>
-            <BauhausButton variant="ghost" className="p-5 border border-border">
+            <BauhausButton variant="ghost" className="p-5 border border-border" onClick={() => setShowFilters(!showFilters)}>
               <SlidersHorizontal className="w-5 h-5" />
             </BauhausButton>
           </div>
         </div>
+
+        {showFilters && (
+          <div className="max-w-7xl mx-auto mt-8 flex items-center gap-4 p-4 bg-botanical-clay/10 rounded-2xl border border-border/40">
+            <span className="text-xs font-bold uppercase tracking-widest text-botanical-sage">Sort by:</span>
+            {(['newest', 'price-low', 'price-high'] as const).map((opt) => (
+              <button
+                key={opt}
+                onClick={() => setSortBy(opt)}
+                className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
+                  sortBy === opt
+                    ? 'bg-botanical-forest text-white'
+                    : 'bg-white border border-border text-botanical-forest/60 hover:text-botanical-forest'
+                }`}
+              >
+                {opt === 'newest' ? 'Newest' : opt === 'price-low' ? 'Price: Low' : 'Price: High'}
+              </button>
+            ))}
+            <button onClick={() => setShowFilters(false)} className="ml-auto p-2 text-botanical-forest/40 hover:text-botanical-forest">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </header>
 
       <main className="py-24 px-6 lg:px-12">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12">
-            {books.map((book) => (
-              <div key={book.id} className="staggered-card">
-                <BauhausCard>
-                  <div className="aspect-[3/4] relative mb-8 rounded-[40px] overflow-hidden group">
-                    <Image 
-                      src={book.image} 
-                      alt={book.title} 
-                      fill 
-                      className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
-                      data-ai-hint="book cover"
-                    />
-                    <div className="absolute top-4 left-4 bg-botanical-terracotta text-white px-4 py-1.5 rounded-full font-bold text-[10px] tracking-widest uppercase">
-                      #{book.id}
+          {loading ? (
+            <div className="text-center text-botanical-forest/60 py-20">Loading collection...</div>
+          ) : filteredBooks.length === 0 ? (
+            <div className="text-center text-botanical-forest/40 py-20">
+              <p className="text-xl font-medium">No books found</p>
+              <p className="text-sm mt-2">Try adjusting your search or filters.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 lg:gap-10">
+              {filteredBooks.map((book) => (
+                <div key={book.id} className="group">
+                  <div className="relative rounded-[32px] bg-white border border-border/40 overflow-hidden transition-all duration-500 hover:shadow-xl hover:-translate-y-1.5">
+                    <div className="aspect-[3/4] relative overflow-hidden bg-botanical-clay/10">
+                      <Image
+                        src={book.coverImage || '/placeholder-book.jpg'}
+                        alt={book.title}
+                        fill
+                        className="object-cover transition-all duration-700 group-hover:scale-105"
+                        data-ai-hint="book cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                        <button
+                          onClick={() => handleAddToCart(book)}
+                          className="w-full py-3 rounded-2xl bg-white/90 backdrop-blur-sm text-botanical-forest font-bold text-[11px] uppercase tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-lg"
+                        >
+                          {addedItems.includes(book.id) ? (
+                            <><Check className="w-4 h-4" /> Added</>
+                          ) : (
+                            <><ShoppingCart className="w-4 h-4" /> Add to Cart</>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-5 space-y-3">
+                      <div>
+                        <h3 className="text-base font-headline font-bold text-botanical-forest leading-tight line-clamp-2">{book.title}</h3>
+                        <p className="text-[10px] font-medium text-botanical-sage uppercase tracking-widest mt-1 italic">Swapno Uran Prakashan</p>
+                      </div>
+                      {book.description && (
+                        <p className="text-xs text-botanical-forest/50 leading-relaxed line-clamp-2">{book.description}</p>
+                      )}
+                      <div className="flex items-center justify-between pt-2 border-t border-border/10">
+                        <span className="text-xl font-headline font-bold text-botanical-terracotta">₹{parsePrice(book.price).toLocaleString()}</span>
+                        <button
+                          onClick={() => handleAddToCart(book)}
+                          className="sm:hidden p-2.5 rounded-xl bg-botanical-clay/20 text-botanical-forest hover:bg-botanical-clay/40 transition-colors"
+                        >
+                          {addedItems.includes(book.id) ? (
+                            <Check className="w-4 h-4" />
+                          ) : (
+                            <ShoppingCart className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  <h2 className="text-xl font-headline font-bold mb-1 leading-tight">{book.title}</h2>
-                  <p className="text-botanical-forest/40 font-medium text-xs mb-8 uppercase tracking-widest italic">{book.author}</p>
-<div className="flex justify-between items-center mt-auto pt-4 border-t border-border/10">
-                      <span className="text-2xl font-headline font-bold italic">${book.price}</span>
-                      <BauhausButton 
-                        type="button"
-                        variant="secondary" 
-                        size="sm" 
-                        className="px-4"
-                        onClick={() => handleAddToCart(book)}
-                      >
-                        {addedItems.includes(book.id) ? (
-                          <Check className="w-4 h-4" />
-                        ) : (
-                          <ShoppingCart className="w-4 h-4" />
-                        )}
-                      </BauhausButton>
-                    </div>
-                </BauhausCard>
-              </div>
-            ))}
-          </div>
-          
-          <div className="mt-32 text-center">
-            <BauhausButton variant="outline" size="lg">Load More Treasures</BauhausButton>
-          </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>
