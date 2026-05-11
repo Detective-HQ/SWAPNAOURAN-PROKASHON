@@ -38,7 +38,7 @@ export default function DashboardPage() {
             <div className="w-8 h-px bg-botanical-sage" />
             Home Base
           </div>
-          <h1 className="text-6xl font-headline font-bold text-botanical-forest italic leading-[1.1]">Welcome Back, <br /><span className="not-italic text-botanical-terracotta">Reader.</span></h1>
+          <h1 className="text-6xl font-headline font-bold text-botanical-forest italic leading-[1.1]">Welcome Back, <br /><span className="not-italic text-botanical-terracotta">{user?.firstName || 'Reader'}.</span></h1>
         </div>
         <div className="flex gap-4">
            <div className="bg-white border border-border/40 rounded-[32px] p-6 flex flex-col items-center organic-shadow w-32">
