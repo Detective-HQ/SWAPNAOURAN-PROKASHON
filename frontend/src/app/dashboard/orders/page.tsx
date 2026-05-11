@@ -44,6 +44,8 @@ export default function OrdersPage() {
     pincode: '',
   });
   const [addressError, setAddressError] = useState<string | null>(null);
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
 
   useEffect(() => {
     if (userLoaded && user) {
@@ -67,16 +69,48 @@ export default function OrdersPage() {
         return;
       }
       try {
-        const data = await api.get('/orders/my');
-        setOrders(data.data || []);
+        const [ordersRes, addressesRes] = await Promise.all([
+          api.get('/orders/my'),
+          api.get('/addresses')
+        ]);
+        setOrders(ordersRes.data || []);
+        
+        const addresses = addressesRes.data || [];
+        setSavedAddresses(addresses);
+        
+        if (addresses.length > 0) {
+          const defaultAddr = addresses.find((a: any) => a.isDefault) || addresses[0];
+          setSelectedAddressId(defaultAddr.id);
+          setShippingAddress({
+            name: defaultAddr.name,
+            phone: defaultAddr.phone,
+            address: defaultAddr.address,
+            city: defaultAddr.city,
+            state: defaultAddr.state,
+            pincode: defaultAddr.pincode,
+          });
+        }
       } catch (err) {
-        console.error('Failed to fetch orders:', err);
+        console.error('Failed to fetch data:', err);
       } finally {
         setLoading(false);
       }
     }
     fetchData();
   }, [userLoaded, user, api]);
+
+  const handleAddressSelect = (addr: any) => {
+    setSelectedAddressId(addr.id);
+    setShippingAddress({
+      name: addr.name,
+      phone: addr.phone,
+      address: addr.address,
+      city: addr.city,
+      state: addr.state,
+      pincode: addr.pincode,
+    });
+    setShowAddressForm(false);
+  };
 
   const initiateRazorpayPayment = async () => {
     if (cartItems.length === 0) return;
@@ -280,9 +314,28 @@ export default function OrdersPage() {
                     onClick={() => setShowAddressForm(!showAddressForm)}
                     className="text-[10px] font-bold text-botanical-terracotta hover:text-botanical-forest transition-colors uppercase tracking-widest"
                   >
-                    {showAddressForm ? 'Hide' : 'Edit'}
+                    {showAddressForm ? 'Cancel New Address' : 'Add New Address'}
                   </button>
                 </div>
+
+                {!showAddressForm && savedAddresses.length > 0 && (
+                  <div className="space-y-3 mb-4">
+                    {savedAddresses.map((addr) => (
+                      <div 
+                        key={addr.id} 
+                        onClick={() => handleAddressSelect(addr)}
+                        className={`p-3 border rounded-lg cursor-pointer transition-colors ${selectedAddressId === addr.id ? 'border-botanical-terracotta bg-botanical-terracotta/5' : 'border-border/40 hover:border-botanical-terracotta/50'}`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <p className="font-bold text-sm">{addr.name}</p>
+                          {selectedAddressId === addr.id && <CheckCircle2 className="w-4 h-4 text-botanical-terracotta" />}
+                        </div>
+                        <p className="text-xs text-botanical-forest/70">{addr.address}</p>
+                        <p className="text-xs text-botanical-forest/70">{addr.city}, {addr.state} - {addr.pincode}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {showAddressForm && (
                   <div className="space-y-4 mt-4">
@@ -353,11 +406,9 @@ export default function OrdersPage() {
                   </div>
                 )}
 
-                {!showAddressForm && (
-                  <div className="text-xs text-botanical-forest/60 mt-2">
-                    <p className="font-medium">{shippingAddress.name}</p>
-                    <p>{shippingAddress.address ? `${shippingAddress.address}, ${shippingAddress.city}, ${shippingAddress.state} - ${shippingAddress.pincode}` : 'Not set'}</p>
-                    <p>{shippingAddress.phone}</p>
+                {!showAddressForm && savedAddresses.length === 0 && (
+                  <div className="text-xs text-botanical-forest/60 mt-2 p-4 text-center border border-dashed border-border/40 rounded-lg">
+                    <p>No saved addresses.</p>
                   </div>
                 )}
               </div>
