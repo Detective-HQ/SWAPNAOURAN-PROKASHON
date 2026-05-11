@@ -26,6 +26,7 @@ export default function AdminOrdersPage() {
   const api = useApi();
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -101,10 +102,16 @@ export default function AdminOrdersPage() {
             <input 
               type="text" 
               placeholder="Search by Order ID..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-botanical-alabaster border border-botanical-sage/30 text-botanical-forest rounded-lg pl-9 pr-4 py-2 focus:outline-none focus:ring-1 focus:ring-botanical-terracotta w-full sm:w-64 transition-all"
             />
           </div>
-          <button className="flex items-center justify-center p-2 bg-white border border-botanical-sage/30 text-botanical-forest rounded-lg hover:bg-botanical-alabaster transition-all">
+          <button
+            onClick={() => setSearchQuery('')}
+            className="flex items-center justify-center p-2 bg-white border border-botanical-sage/30 text-botanical-forest rounded-lg hover:bg-botanical-alabaster transition-all"
+            title="Clear filter"
+          >
             <Filter size={18} />
           </button>
         </div>
@@ -128,7 +135,9 @@ export default function AdminOrdersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {orders.map((order) => (
+            {orders
+              .filter((o) => !searchQuery.trim() || o.id.toLowerCase().includes(searchQuery.toLowerCase()))
+              .map((order) => (
               <TableRow key={order.id} className="border-b border-botanical-sage/10 hover:bg-botanical-alabaster/40 transition-colors group">
                 <TableCell className="font-mono text-botanical-forest/60 text-xs py-3">
                   {order.id.substring(0, 8)}...{order.id.substring(order.id.length - 4)}
@@ -173,10 +182,10 @@ export default function AdminOrdersPage() {
                 </TableCell>
               </TableRow>
             ))}
-            {orders.length === 0 && (
+            {orders.filter((o) => !searchQuery.trim() || o.id.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} className="h-32 text-center text-botanical-forest/50">
-                  No orders found in the system.
+                  {searchQuery ? 'No orders match your search.' : 'No orders found in the system.'}
                 </TableCell>
               </TableRow>
             )}
