@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { BauhausButton } from "@/components/bauhaus/bauhaus-primitives";
 import { useCart } from "@/lib/cart-context";
@@ -8,9 +9,10 @@ import Link from 'next/link';
 
 export function CartDrawer() {
   const { items, removeItem, total } = useCart();
+  const [open, setOpen] = useState(false);
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <button className="relative p-3 rounded-full bg-botanical-clay/20 hover:bg-botanical-clay/40 transition-colors group">
           <ShoppingBag className="w-5 h-5 text-botanical-forest transition-transform group-hover:scale-110" />
@@ -55,7 +57,7 @@ export function CartDrawer() {
             <span className="text-[10px] font-bold uppercase tracking-widest text-botanical-sage">Estimated Total</span>
             <span className="text-3xl font-bold italic text-botanical-forest">₹{total.toLocaleString()}</span>
           </div>
-          <Link href="/dashboard/orders" className="block">
+          <Link href="/dashboard/orders" className="block" onClick={() => setOpen(false)}>
             <BauhausButton variant="primary" className="w-full group" size="lg">
               PROCEED TO CHECKOUT
               <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
