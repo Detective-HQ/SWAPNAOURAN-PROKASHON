@@ -4,6 +4,7 @@ import { useUser } from '@clerk/nextjs';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
 import { User, Mail, Shield, TrendingUp, DollarSign, Package } from 'lucide-react';
+import { AddressManager } from '@/components/profile/address-manager';
 
 export default function ProfilePage() {
   const { user, isLoaded } = useUser();
@@ -97,6 +98,10 @@ export default function ProfilePage() {
            <p className="text-xs font-black uppercase tracking-widest opacity-80 mb-2">Reading Velocity</p>
            <p className="text-4xl font-black">4.2/mo</p>
         </BauhausCard>
+      </div>
+
+      <div className="mt-12">
+        <AddressManager />
       </div>
     </div>
   );

@@ -32,8 +32,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className={`${playfair.variable} ${sourceSans.variable} font-body antialiased selection:bg-botanical-terracotta/30 selection:text-botanical-forest`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${playfair.variable} ${sourceSans.variable} font-body antialiased selection:bg-botanical-terracotta/30 selection:text-botanical-forest`} suppressHydrationWarning>
 <ClerkProvider>
           <AuthProvider>
             <CartProvider>

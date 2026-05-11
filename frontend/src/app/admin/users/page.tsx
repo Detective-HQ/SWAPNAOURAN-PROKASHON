@@ -19,6 +19,7 @@ export default function AdminUsersPage() {
   const api = useApi();
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -64,6 +65,8 @@ export default function AdminUsersPage() {
             <input 
               type="text" 
               placeholder="Search users..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-botanical-alabaster border border-botanical-sage/30 text-botanical-forest rounded-lg pl-9 pr-4 py-2 focus:outline-none focus:ring-1 focus:ring-botanical-terracotta w-full sm:w-64 transition-all"
             />
           </div>
@@ -87,7 +90,13 @@ export default function AdminUsersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user, i) => (
+            {users
+              .filter((u) => {
+                if (!searchQuery.trim()) return true;
+                const q = searchQuery.toLowerCase();
+                return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+              })
+              .map((user, i) => (
               <TableRow key={user.id} className="border-b border-botanical-sage/10 hover:bg-botanical-alabaster/40 transition-colors group">
                 <TableCell className="font-medium text-botanical-forest py-3 flex items-center gap-3">
                   <div className="h-8 w-8 rounded-full bg-botanical-clay text-botanical-forest flex items-center justify-center text-xs font-semibold">
@@ -111,10 +120,10 @@ export default function AdminUsersPage() {
                 <TableCell className="text-botanical-forest/50 text-sm">{new Date(user.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</TableCell>
               </TableRow>
             ))}
-            {users.length === 0 && (
+            {users.filter((u) => !searchQuery.trim() || u.name.toLowerCase().includes(searchQuery.toLowerCase()) || u.email.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
               <TableRow>
                 <TableCell colSpan={5} className="h-32 text-center text-botanical-forest/50">
-                  No users found in the system.
+                  {searchQuery ? 'No users match your search.' : 'No users found in the system.'}
                 </TableCell>
               </TableRow>
             )}

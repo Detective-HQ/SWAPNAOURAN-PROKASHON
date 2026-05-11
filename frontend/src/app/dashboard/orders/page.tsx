@@ -31,6 +31,7 @@ export default function OrdersPage() {
   const api = useApi();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const paidOrders = orders.filter((o) => o.status === 'PAID');
   const [processingPayment, setProcessingPayment] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -44,6 +45,8 @@ export default function OrdersPage() {
     pincode: '',
   });
   const [addressError, setAddressError] = useState<string | null>(null);
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
 
   useEffect(() => {
     if (userLoaded && user) {
@@ -67,16 +70,48 @@ export default function OrdersPage() {
         return;
       }
       try {
-        const data = await api.get('/orders/my');
-        setOrders(data.data || []);
+        const [ordersRes, addressesRes] = await Promise.all([
+          api.get('/orders/my'),
+          api.get('/addresses')
+        ]);
+        setOrders(ordersRes.data || []);
+        
+        const addresses = addressesRes.data || [];
+        setSavedAddresses(addresses);
+        
+        if (addresses.length > 0) {
+          const defaultAddr = addresses.find((a: any) => a.isDefault) || addresses[0];
+          setSelectedAddressId(defaultAddr.id);
+          setShippingAddress({
+            name: defaultAddr.name,
+            phone: defaultAddr.phone,
+            address: defaultAddr.address,
+            city: defaultAddr.city,
+            state: defaultAddr.state,
+            pincode: defaultAddr.pincode,
+          });
+        }
       } catch (err) {
-        console.error('Failed to fetch orders:', err);
+        console.error('Failed to fetch data:', err);
       } finally {
         setLoading(false);
       }
     }
     fetchData();
   }, [userLoaded, user, api]);
+
+  const handleAddressSelect = (addr: any) => {
+    setSelectedAddressId(addr.id);
+    setShippingAddress({
+      name: addr.name,
+      phone: addr.phone,
+      address: addr.address,
+      city: addr.city,
+      state: addr.state,
+      pincode: addr.pincode,
+    });
+    setShowAddressForm(false);
+  };
 
   const initiateRazorpayPayment = async () => {
     if (cartItems.length === 0) return;
@@ -131,6 +166,11 @@ export default function OrdersPage() {
         name: 'Swapno Uran Prakashan',
         description: paymentData.checkoutData.description,
         order_id: paymentData.checkoutData.orderId,
+        modal: {
+          ondismiss: () => {
+            setProcessingPayment(false);
+          },
+        },
         handler: async (response: any) => {
           try {
             // Step 4: Verify payment with backend
@@ -280,9 +320,28 @@ export default function OrdersPage() {
                     onClick={() => setShowAddressForm(!showAddressForm)}
                     className="text-[10px] font-bold text-botanical-terracotta hover:text-botanical-forest transition-colors uppercase tracking-widest"
                   >
-                    {showAddressForm ? 'Hide' : 'Edit'}
+                    {showAddressForm ? 'Cancel New Address' : 'Add New Address'}
                   </button>
                 </div>
+
+                {!showAddressForm && savedAddresses.length > 0 && (
+                  <div className="space-y-3 mb-4">
+                    {savedAddresses.map((addr) => (
+                      <div 
+                        key={addr.id} 
+                        onClick={() => handleAddressSelect(addr)}
+                        className={`p-3 border rounded-lg cursor-pointer transition-colors ${selectedAddressId === addr.id ? 'border-botanical-terracotta bg-botanical-terracotta/5' : 'border-border/40 hover:border-botanical-terracotta/50'}`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <p className="font-bold text-sm">{addr.name}</p>
+                          {selectedAddressId === addr.id && <CheckCircle2 className="w-4 h-4 text-botanical-terracotta" />}
+                        </div>
+                        <p className="text-xs text-botanical-forest/70">{addr.address}</p>
+                        <p className="text-xs text-botanical-forest/70">{addr.city}, {addr.state} - {addr.pincode}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {showAddressForm && (
                   <div className="space-y-4 mt-4">
@@ -353,11 +412,9 @@ export default function OrdersPage() {
                   </div>
                 )}
 
-                {!showAddressForm && (
-                  <div className="text-xs text-botanical-forest/60 mt-2">
-                    <p className="font-medium">{shippingAddress.name}</p>
-                    <p>{shippingAddress.address ? `${shippingAddress.address}, ${shippingAddress.city}, ${shippingAddress.state} - ${shippingAddress.pincode}` : 'Not set'}</p>
-                    <p>{shippingAddress.phone}</p>
+                {!showAddressForm && savedAddresses.length === 0 && (
+                  <div className="text-xs text-botanical-forest/60 mt-2 p-4 text-center border border-dashed border-border/40 rounded-lg">
+                    <p>No saved addresses.</p>
                   </div>
                 )}
               </div>
@@ -380,58 +437,101 @@ export default function OrdersPage() {
         </div>
       </section>
 
-      {/* Flipkart Style Order History Section */}
+      {/* Order History Section */}
       <section className="space-y-8 pt-16 border-t border-border/40">
         <header className="flex items-center gap-4">
           <Package className="text-botanical-sage w-6 h-6" />
           <h2 className="text-3xl font-headline font-bold text-botanical-forest">Order <span className="italic font-normal">History</span></h2>
+          {paidOrders.length > 0 && (
+            <span className="bg-botanical-clay/30 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-botanical-forest ml-auto">
+              {paidOrders.length} Total
+            </span>
+          )}
         </header>
 
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <BauhausCard key={order.id} className="p-0 overflow-hidden hover:-translate-y-1 transition-all border border-border/40">
-              <div className="flex flex-col md:flex-row md:items-center">
-                <div className="p-8 md:w-48 bg-botanical-clay/10 flex flex-col justify-center">
-                  <span className="text-[9px] font-bold opacity-40 uppercase tracking-widest mb-1">Order ID</span>
-                  <span className="font-bold text-botanical-forest">{order.id}</span>
-                </div>
-                <div className="flex-grow p-8 grid grid-cols-2 lg:grid-cols-4 gap-8">
-                  <div>
-                    <span className="text-[9px] font-bold opacity-40 uppercase tracking-widest block mb-1">Placed On</span>
-                    <span className="font-medium">{new Date(order.createdAt).toLocaleDateString()}</span>
-                  </div>
-                  <div>
-                    <span className="text-[9px] font-bold opacity-40 uppercase tracking-widest block mb-1">Items</span>
-                    <span className="font-medium">{order.items?.length || 0} Books</span>
-                  </div>
-                  <div>
-                    <span className="text-[9px] font-bold opacity-40 uppercase tracking-widest block mb-1">Amount</span>
-                    <span className="font-bold italic">₹{Number(order.totalAmount).toLocaleString()}</span>
-                  </div>
-                  <div>
-                    <span className="text-[9px] font-bold opacity-40 uppercase tracking-widest block mb-1">Status</span>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className={order.status === 'PAID' ? 'text-green-500' : order.status === 'FAILED' ? 'text-red-500' : 'text-botanical-sage'} size={14} />
-                      <span className="font-bold uppercase tracking-widest text-[10px]">{order.status}</span>
+        {paidOrders.length === 0 ? (
+          <div className="p-20 text-center bg-botanical-clay/10 rounded-[40px] border border-dashed border-border">
+            <Package className="w-12 h-12 mx-auto text-botanical-forest/20 mb-4" />
+            <p className="text-botanical-forest/40 font-bold uppercase tracking-[0.2em] text-xs italic">No paid orders yet</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {paidOrders.map((order) => {
+              const statusColors = {
+                PAID: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                PENDING: 'bg-amber-100 text-amber-700 border-amber-200',
+                FAILED: 'bg-rose-100 text-rose-700 border-rose-200',
+              } as Record<string, string>;
+              const statusIcon = order.status === 'PAID' ? CheckCircle2 : order.status === 'FAILED' ? Package : Package;
+              const StatusIcon = statusIcon;
+
+              return (
+                <BauhausCard key={order.id} className="p-0 overflow-hidden hover:shadow-lg transition-all duration-300 border border-border/40 group">
+                  {/* Top: Order meta */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-botanical-clay/5 border-b border-border/20">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-xl bg-botanical-forest/5 flex items-center justify-center">
+                        <Package className="w-5 h-5 text-botanical-forest/40" />
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-botanical-forest/40">Order ID</p>
+                        <p className="font-mono text-sm font-bold text-botanical-forest">#{order.id.substring(0, 8)}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
+                      <div className="text-right">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-botanical-forest/40">Placed On</p>
+                        <p className="text-sm font-medium">{new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-botanical-forest/40">Total</p>
+                        <p className="text-lg font-bold italic text-botanical-terracotta">₹{Number(order.totalAmount).toLocaleString()}</p>
+                      </div>
+                      <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${statusColors[order.status] || 'bg-botanical-alabaster text-botanical-forest/60 border-botanical-sage/20'}`}>
+                        <StatusIcon size={12} />
+                        {order.status}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="p-8 md:border-l border-border/40 flex items-center gap-2">
-                  <button
-                    onClick={() => setInvoiceOrderId(order.id)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-botanical-terracotta hover:bg-botanical-clay/20 transition-colors border border-botanical-terracotta/20"
-                  >
-                    <FileText className="w-4 h-4" />
-                    Invoice
-                  </button>
-                  <button className="p-3 rounded-full hover:bg-botanical-clay/20 transition-colors text-botanical-sage">
-                    <ChevronRight />
-                  </button>
-                </div>
-              </div>
-            </BauhausCard>
-          ))}
-        </div>
+
+                  {/* Middle: Order items preview */}
+                  {order.items && order.items.length > 0 && (
+                    <div className="px-6 py-4 flex items-center gap-3 overflow-x-auto">
+                      {order.items.slice(0, 5).map((item: any, idx: number) => (
+                        <div key={idx} className="flex items-center gap-3 shrink-0 bg-botanical-alabaster/50 rounded-xl px-3 py-2 border border-border/20">
+                          {item.book?.coverImage ? (
+                            <Image src={item.book.coverImage} alt="" width={28} height={40} className="rounded object-cover" />
+                          ) : (
+                            <div className="w-7 h-10 rounded bg-botanical-clay/20" />
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-botanical-forest truncate max-w-[120px]">{item.book?.title || 'Book'}</p>
+                            <p className="text-[9px] text-botanical-forest/50 uppercase tracking-wider">x{item.quantity || 1}</p>
+                          </div>
+                        </div>
+                      ))}
+                      {order.items.length > 5 && (
+                        <span className="text-[10px] font-bold text-botanical-sage shrink-0">+{order.items.length - 5} more</span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Bottom: Actions */}
+                  <div className="px-6 py-3 bg-botanical-clay/5 border-t border-border/20 flex items-center justify-end gap-3">
+                    <button
+                      onClick={() => setInvoiceOrderId(order.id)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest text-botanical-terracotta hover:bg-botanical-terracotta/10 transition-colors border border-botanical-terracotta/20"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      Invoice
+                    </button>
+                  </div>
+                </BauhausCard>
+              );
+            })}
+          </div>
+        )}
       </section>
       <InvoiceModal
         orderId={invoiceOrderId || ''}

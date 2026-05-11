@@ -49,6 +49,7 @@ model User {
   ebookAccesses EbookAccess[]
   qrCodes       QRCode[]
   galleryImages Gallery[]     @relation("GalleryUploader")
+  addresses     Address[]
 
   @@index([role])
 }
@@ -170,4 +171,21 @@ model Gallery {
 
   @@index([uploadedById])
   @@index([createdAt])
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  phone     String
+  address   String
+  city      String
+  state     String
+  pincode   String
+  isDefault Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
