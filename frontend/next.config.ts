@@ -28,6 +28,18 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '5000',
+        pathname: '/**',
+      },
     ],
   },
   async rewrites() {
@@ -37,6 +49,13 @@ const nextConfig: NextConfig = {
         destination: 'http://localhost:5000/api/:path*', // Proxy to Backend
       },
     ];
+  },
+  webpack: (config, { dev }) => {
+    if (dev) {
+      // Disable filesystem caching to prevent OneDrive file lock/ENOENT issues
+      config.cache = false;
+    }
+    return config;
   },
 };
 
