@@ -7,7 +7,12 @@ import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { BookOpen, Loader2 } from 'lucide-react';
 import { useApi } from '@/hooks/use-api';
-import { SecurePdfViewer } from '@/components/ebooks/secure-pdf-viewer';
+import dynamic from 'next/dynamic';
+
+const SecurePdfViewer = dynamic(
+  () => import('@/components/ebooks/secure-pdf-viewer').then(mod => mod.SecurePdfViewer),
+  { ssr: false }
+);
 
 export default function EbooksPage() {
   const [readingEbook, setReadingEbook] = useState<any | null>(null);

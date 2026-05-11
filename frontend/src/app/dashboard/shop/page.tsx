@@ -24,6 +24,9 @@ export default function ShopPage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high'>('newest');
 
   useEffect(() => {
     let mounted = true;
@@ -73,6 +76,16 @@ export default function ShopPage() {
     }, 2000);
   };
 
+  const filteredBooks = books.filter((b) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return b.title.toLowerCase().includes(q) || (b.description && b.description.toLowerCase().includes(q));
+  }).sort((a, b) => {
+    if (sortBy === 'price-low') return parsePrice(a.price) - parsePrice(b.price);
+    if (sortBy === 'price-high') return parsePrice(b.price) - parsePrice(a.price);
+    return 0;
+  });
+
   return (
     <div className="space-y-12 animate-fade-up">
       <header className="flex flex-col md:flex-row justify-between items-end gap-8 pb-8 border-b border-border/40">
@@ -88,59 +101,94 @@ export default function ShopPage() {
           <div className="relative flex-grow md:w-72">
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-botanical-forest/30 w-4 h-4" />
             <input
+              suppressHydrationWarning
               type="text"
               placeholder="Search library..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-6 py-3.5 rounded-full bg-botanical-clay/10 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 transition-all"
             />
           </div>
-          <BauhausButton variant="outline" className="p-3 w-12 h-12 flex items-center justify-center">
-            <SlidersHorizontal className="w-4 h-4" />
+          <BauhausButton suppressHydrationWarning variant="outline" className="p-3 w-12 h-12 flex items-center justify-center" onClick={() => setShowFilters(!showFilters)}>
+            <SlidersHorizontal suppressHydrationWarning className="w-4 h-4" />
           </BauhausButton>
         </div>
       </header>
 
+      {showFilters && (
+        <div className="flex items-center gap-3 p-4 bg-botanical-clay/10 rounded-2xl border border-border/40 -mt-6">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-botanical-sage">Sort:</span>
+          {(['newest', 'price-low', 'price-high'] as const).map((opt) => (
+            <button
+              key={opt}
+              onClick={() => setSortBy(opt)}
+              className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
+                sortBy === opt
+                  ? 'bg-botanical-forest text-white'
+                  : 'bg-white border border-border text-botanical-forest/60'
+              }`}
+            >
+              {opt === 'newest' ? 'Newest' : opt === 'price-low' ? 'Low Price' : 'High Price'}
+            </button>
+          ))}
+        </div>
+      )}
+
       {loading ? <div className="text-sm text-botanical-forest/60">Loading books...</div> : null}
       {error ? <div className="text-sm text-red-500">{error}</div> : null}
-      {!loading && !error && books.length === 0 ? (
-        <div className="text-sm text-botanical-forest/60">No physical books are available right now.</div>
+      {!loading && !error && filteredBooks.length === 0 ? (
+        <div className="text-sm text-botanical-forest/60">No books match your search.</div>
       ) : null}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {books.map((book, i) => (
-          <div key={book.id} className={i % 2 !== 0 ? 'md:translate-y-8' : ''}>
-            <BauhausCard className="h-full flex flex-col group">
-              <div className="aspect-[3/4] relative mb-6 rounded-3xl overflow-hidden shadow-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+        {filteredBooks.map((book, i) => (
+          <div key={book.id} className="group">
+            <div className="relative rounded-[32px] bg-white border border-border/40 overflow-hidden transition-all duration-500 hover:shadow-lg hover:-translate-y-1.5">
+              <div className="aspect-[3/4] relative overflow-hidden bg-botanical-clay/10">
                 <Image
                   src={book.coverImage || PlaceHolderImages[i % PlaceHolderImages.length].imageUrl}
                   alt={book.title}
                   fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  className="object-cover transition-all duration-700 group-hover:scale-105"
                   data-ai-hint="book cover"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                  <button
+                    onClick={() => handleAddToCart(book)}
+                    className="w-full py-3 rounded-2xl bg-white/90 backdrop-blur-sm text-botanical-forest font-bold text-[11px] uppercase tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-lg"
+                  >
+                    {addedItems.includes(book.id) ? (
+                      <><Check className="w-4 h-4" /> Added</>
+                    ) : (
+                      <><ShoppingCart className="w-4 h-4" /> Add to Cart</>
+                    )}
+                  </button>
+                </div>
               </div>
-              <h2 className="text-xl font-headline font-bold text-botanical-forest mb-1">{book.title}</h2>
-              <p className="text-botanical-sage font-bold text-[10px] uppercase tracking-widest mb-4 italic">Swapno Uran Prakashan</p>
-              <p className="text-sm text-botanical-forest/60 font-medium mb-8 flex-grow leading-relaxed">
-                {book.description || 'Curated physical edition from our collection.'}
-              </p>
-              <div className="flex justify-between items-center pt-4 border-t border-border/40">
-                <span className="text-xl font-bold italic text-botanical-forest">₹{parsePrice(book.price).toLocaleString()}</span>
-                <BauhausButton
-                  type="button"
-                  variant="terracotta"
-                  size="sm"
-                  className="px-5"
-                  onClick={() => handleAddToCart(book)}
-                >
-                  {addedItems.includes(book.id) ? (
-                    <Check className="w-4 h-4 mr-2" />
-                  ) : (
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                  )}
-                  {addedItems.includes(book.id) ? 'ADDED' : 'ADD'}
-                </BauhausButton>
+              <div className="p-5 space-y-3">
+                <div>
+                  <h3 className="text-base font-headline font-bold text-botanical-forest leading-tight line-clamp-2">{book.title}</h3>
+                  <p className="text-[10px] font-medium text-botanical-sage uppercase tracking-widest mt-1 italic">Swapno Uran Prakashan</p>
+                </div>
+                {book.description && (
+                  <p className="text-xs text-botanical-forest/50 leading-relaxed line-clamp-2">{book.description}</p>
+                )}
+                <div className="flex items-center justify-between pt-2 border-t border-border/10">
+                  <span className="text-xl font-headline font-bold text-botanical-terracotta">₹{parsePrice(book.price).toLocaleString()}</span>
+                  <button
+                    onClick={() => handleAddToCart(book)}
+                    className="sm:hidden p-2.5 rounded-xl bg-botanical-clay/20 text-botanical-forest hover:bg-botanical-clay/40 transition-colors"
+                  >
+                    {addedItems.includes(book.id) ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <ShoppingCart className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
               </div>
-            </BauhausCard>
+            </div>
           </div>
         ))}
       </div>
