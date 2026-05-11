@@ -7,6 +7,7 @@ const ebookRoutes = require("./ebookRoutes");
 const adminRoutes = require("./adminRoutes");
 const galleryRoutes = require("./galleryRoutes");
 const qrRoutes = require("./qrRoutes");
+const addressRoutes = require("./addressRoutes");
 
 const router = express.Router();
 
@@ -24,5 +25,6 @@ router.use("/ebooks", ebookRoutes);
 router.use("/admin", adminRoutes);
 router.use("/gallery", galleryRoutes);
 router.use("/qr", qrRoutes);
+router.use("/addresses", addressRoutes);
 
 module.exports = router;
