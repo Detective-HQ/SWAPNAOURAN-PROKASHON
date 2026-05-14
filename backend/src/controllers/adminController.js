@@ -56,6 +56,21 @@ const updateAdminOrderStatus = async (req, res) => {
   sendSuccess(res, 200, "Order status updated", order);
 };
 
+const updateAdminOrderTracking = async (req, res) => {
+  const { id } = req.params;
+  const { trackingNumber, deliveryStatus } = req.body;
+
+  const order = await prisma.order.update({
+    where: { id },
+    data: {
+      ...(trackingNumber ? { trackingNumber } : {}),
+      ...(deliveryStatus ? { deliveryStatus } : {})
+    }
+  });
+
+  sendSuccess(res, 200, "Order tracking updated", order);
+};
+
 const getAnalytics = async (_req, res) => {
   const analytics = await getAdminAnalytics();
   sendSuccess(res, 200, "Analytics fetched", analytics);
@@ -86,5 +101,6 @@ module.exports = {
   getAdminOrders,
   getAnalytics,
   getAdminStats,
-  updateAdminOrderStatus
+  updateAdminOrderStatus,
+  updateAdminOrderTracking
 };

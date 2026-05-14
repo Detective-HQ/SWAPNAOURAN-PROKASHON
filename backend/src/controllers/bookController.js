@@ -10,14 +10,15 @@ const publicBookSelect = {
   price: true,
   type: true,
   coverImage: true,
+  sampleChapterUrl: true,
   isActive: true,
   createdAt: true,
   updatedAt: true
 };
 
 const listBooks = async (req, res) => {
-  const page = req.query.page || 1;
-  const limit = req.query.limit || 10;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
   const { type, search } = req.query;
 
@@ -115,6 +116,18 @@ const createBookWithFiles = async (req, res) => {
     fileUrl = uploadedEbook.url;
   }
 
+  let sampleChapterUrl = null;
+  const sampleChapterFile = req.files?.sampleChapter?.[0];
+  if (sampleChapterFile) {
+    const uploadedSample = await uploadBuffer({
+      buffer: sampleChapterFile.buffer,
+      folder: "samples",
+      filename: `${Date.now()}-${sampleChapterFile.originalname}`,
+      mimetype: sampleChapterFile.mimetype
+    });
+    sampleChapterUrl = uploadedSample.url;
+  }
+
   const created = await prisma.book.create({
     data: {
       title,
@@ -122,7 +135,8 @@ const createBookWithFiles = async (req, res) => {
       price,
       type,
       coverImage: coverImageUrl,
-      fileUrl
+      fileUrl,
+      sampleChapterUrl
     }
   });
 
@@ -163,11 +177,25 @@ const deleteBook = async (req, res) => {
   sendSuccess(res, 200, "Book deleted");
 };
 
+const getBookSample = async (req, res) => {
+  const book = await prisma.book.findUnique({
+    where: { id: req.params.id },
+    select: { id: true, title: true, sampleChapterUrl: true, isActive: true }
+  });
+
+  if (!book || !book.isActive || !book.sampleChapterUrl) {
+    throw new ApiError(404, "Sample not available");
+  }
+
+  res.redirect(book.sampleChapterUrl);
+};
+
 module.exports = {
   listBooks,
   getBookById,
   createBook,
   createBookWithFiles,
   updateBook,
-  deleteBook
+  deleteBook,
+  getBookSample
 };
