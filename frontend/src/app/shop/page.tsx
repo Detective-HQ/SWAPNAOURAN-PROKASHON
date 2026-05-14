@@ -127,36 +127,36 @@ export default function ShopPage() {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <header className="py-24 px-6 lg:px-12 bg-white border-b border-border/40">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-end gap-12">
+      <header className="bg-white px-4 py-14 sm:px-6 md:py-20 lg:px-12 lg:py-24 border-b border-border/40">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between md:items-end gap-8 md:gap-12">
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 text-botanical-sage uppercase tracking-[0.3em] text-xs font-bold">
-              <div className="w-12 h-px bg-botanical-sage" />
+              <div className="h-px w-8 bg-botanical-sage sm:w-12" />
               The Collection
             </div>
-            <h1 className="text-6xl font-headline font-bold text-botanical-forest leading-none">Curated <br /> <span className="italic font-normal">Physical Library</span></h1>
+            <h1 className="font-headline text-4xl font-bold leading-none text-botanical-forest sm:text-5xl lg:text-6xl">Curated <br /> <span className="italic font-normal">Physical Library</span></h1>
           </div>
 
-          <div className="flex w-full md:w-auto gap-4">
-            <div className="relative flex-grow md:w-96">
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-botanical-forest/30 w-5 h-5" />
+          <div className="flex w-full gap-3 md:w-auto md:gap-4">
+            <div className="relative min-w-0 flex-grow md:w-96">
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-botanical-forest/30 sm:left-6" />
               <input
                 type="text"
                 placeholder="Find your story..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-16 pr-8 py-5 rounded-full bg-botanical-clay/10 border border-border font-medium focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 transition-all"
+                className="w-full rounded-full border border-border bg-botanical-clay/10 py-4 pl-12 pr-5 font-medium transition-all focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 sm:py-5 sm:pl-16 sm:pr-8"
               />
             </div>
-            <BauhausButton variant="ghost" className="p-5 border border-border" onClick={() => setShowFilters(!showFilters)}>
+            <BauhausButton variant="ghost" className="shrink-0 border border-border p-4 sm:p-5" onClick={() => setShowFilters(!showFilters)}>
               <SlidersHorizontal className="w-5 h-5" />
             </BauhausButton>
           </div>
         </div>
 
         {showFilters && (
-          <div className="max-w-7xl mx-auto mt-8 flex items-center gap-4 p-4 bg-botanical-clay/10 rounded-2xl border border-border/40">
-            <span className="text-xs font-bold uppercase tracking-widest text-botanical-sage">Sort by:</span>
+          <div className="max-w-7xl mx-auto mt-8 flex flex-wrap items-center gap-3 p-4 bg-botanical-clay/10 rounded-2xl border border-border/40">
+            <span className="w-full text-xs font-bold uppercase tracking-widest text-botanical-sage sm:w-auto">Sort by:</span>
             {(['newest', 'price-low', 'price-high'] as const).map((opt) => (
               <button
                 key={opt}
@@ -177,7 +177,7 @@ export default function ShopPage() {
         )}
       </header>
 
-      <main className="py-24 px-6 lg:px-12">
+      <main className="px-4 py-14 sm:px-6 md:py-20 lg:px-12 lg:py-24">
         <div className="max-w-7xl mx-auto">
           {loading ? (
             <div className="text-center text-botanical-forest/60 py-20">Loading collection...</div>

@@ -39,19 +39,19 @@ export function FeaturedProductsSection() {
   return (
     <section id="products" className="bg-background">
       {/* Section Title */}
-      <div className="px-6 py-20 text-center md:px-12 md:py-28 lg:px-20 lg:py-32 lg:pb-20">
-        <h2 className="text-3xl font-medium tracking-tight text-foreground md:text-4xl lg:text-5xl">
+      <div className="px-4 py-16 md:px-12 md:py-28 lg:px-20 lg:py-32 text-center">
+        <h2 className="text-2xl font-medium tracking-tight text-foreground md:text-3xl lg:text-4xl">
           আমাদের বিশেষ প্রকাশনা সমূহ
           <br />
           অক্ষরের মায়ায় সাজানো ভুবন
         </h2>
-        <p className="mx-auto mt-6 max-w-md text-sm text-muted-foreground uppercase tracking-widest">
+        <p className="mx-auto mt-4 md:mt-6 max-w-md text-xs md:text-sm text-muted-foreground uppercase tracking-widest">
           নির্বাচিত বই
         </p>
       </div>
 
       {/* Features Grid */}
-      <div className="grid grid-cols-1 gap-4 px-6 pb-20 md:grid-cols-3 md:px-12 lg:px-20">
+      <div className="grid grid-cols-1 gap-3 md:gap-4 px-4 pb-16 md:px-12 md:pb-20 lg:px-20 md:grid-cols-3 lg:gap-6">
         {features.map((feature) => (
           <div key={feature.title} className="group">
             {/* Image */}

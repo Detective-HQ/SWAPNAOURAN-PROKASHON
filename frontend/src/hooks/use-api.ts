@@ -1,7 +1,10 @@
 import { useAuth } from "@clerk/nextjs";
 import { useCallback, useMemo } from "react";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+const BASE_URL =
+  process.env.NODE_ENV === "development"
+    ? "/backend-api"
+    : process.env.NEXT_PUBLIC_API_URL || "/api";
 
 interface FetchOptions extends RequestInit {
   data?: any;
