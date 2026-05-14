@@ -11,7 +11,8 @@ const {
   createBook,
   createBookWithFiles,
   updateBook,
-  deleteBook
+  deleteBook,
+  getBookSample
 } = require("../controllers/bookController");
 const {
   createBookSchema,
@@ -25,13 +26,15 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 router.get("/", validate({ query: listBooksQuerySchema }), asyncHandler(listBooks));
 router.get("/:id", validate({ params: bookIdParamsSchema }), asyncHandler(getBookById));
+router.get("/:id/sample", validate({ params: bookIdParamsSchema }), asyncHandler(getBookSample));
 router.post(
   "/with-files",
   authMiddleware,
   adminMiddleware,
   upload.fields([
     { name: "coverImage", maxCount: 1 },
-    { name: "file", maxCount: 1 }
+    { name: "file", maxCount: 1 },
+    { name: "sampleChapter", maxCount: 1 }
   ]),
   asyncHandler(createBookWithFiles)
 );
