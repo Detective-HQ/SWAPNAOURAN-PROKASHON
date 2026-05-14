@@ -39,9 +39,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="h-screen flex bg-background overflow-hidden">
-      <div className="flex-grow flex flex-col md:flex-row">
+      <div className="flex-grow flex flex-row">
         {/* Sidebar */}
-        <aside className="w-full md:w-72 bg-white border-r border-border/40 p-6 space-y-10 flex-shrink-0 h-screen overflow-y-auto sticky top-0">
+        <aside className="w-72 bg-white border-r border-border/40 p-6 space-y-10 flex-shrink-0 h-screen overflow-y-auto sticky top-0">
           <div className="space-y-4">
             <h2 className="text-[10px] uppercase tracking-[0.3em] font-bold text-botanical-sage px-4">Sanctuary Menu</h2>
             <div className="h-px bg-border/50 mx-4" />
