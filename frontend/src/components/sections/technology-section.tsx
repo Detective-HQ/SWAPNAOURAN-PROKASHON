@@ -36,7 +36,7 @@ function ScrollRevealText({ text }: { text: string }) {
   return (
     <p
       ref={containerRef}
-      className="text-3xl font-semibold leading-snug md:text-4xl lg:text-5xl"
+      className="text-lg md:text-2xl lg:text-4xl font-semibold leading-relaxed md:leading-snug lg:leading-relaxed"
     >
       {words.map((word, index) => {
         const wordProgress = index / words.length;
@@ -90,15 +90,20 @@ export function TechnologySection() {
   const textSectionRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [textProgress, setTextProgress] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
   
   const descriptionText = "স্বপ্নউড়ান প্রকাশন প্রতিটি বইয়ের গুণগত মান নিশ্চিত করতে সর্বাধুনিক মুদ্রণ প্রযুক্তি এবং শৈল্পিক প্রচ্ছদ সজ্জা ব্যবহার করে। আমাদের প্রতিটি প্রকাশনা পাঠকের হৃদয়ে স্থান করে নিতে বদ্ধপরিকর। আমরা কেবল বই ছাপাই না, আমরা একটি অভিজ্ঞতা তৈরি করি যা প্রজন্মের পর প্রজন্ম বেঁচে থাকে।";
 
   useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
     const handleScroll = () => {
       if (!sectionRef.current) return;
       
       const rect = sectionRef.current.getBoundingClientRect();
-      const scrollableHeight = window.innerHeight * 2;
+      const scrollableHeight = isMobile ? window.innerHeight : window.innerHeight * 2;
       const scrolled = -rect.top;
       const progress = Math.max(0, Math.min(1, scrolled / scrollableHeight));
       
@@ -125,24 +130,25 @@ export function TechnologySection() {
     
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", checkMobile);
     };
-  }, []);
+  }, [isMobile]);
 
   // Title fades out first (0 to 0.2)
-  const titleOpacity = Math.max(0, 1 - (scrollProgress / 0.2));
+  const titleOpacity = Math.max(0, 1 - (scrollProgress / (isMobile ? 0.3 : 0.2)));
   
   // Image transforms start after title fades (0.2 to 1)
-  const imageProgress = Math.max(0, Math.min(1, (scrollProgress - 0.2) / 0.8));
+  const imageProgress = Math.max(0, Math.min(1, (scrollProgress - (isMobile ? 0.3 : 0.2)) / (isMobile ? 0.7 : 0.8)));
   
-  // Smooth interpolations
-  const centerWidth = 100 - (imageProgress * 58); // 100% to 42%
-  const centerHeight = 100 - (imageProgress * 30); // 100% to 70%
-  const sideWidth = imageProgress * 22; // 0% to 22%
-  const sideOpacity = imageProgress;
+  // Mobile-responsive interpolations
+  const centerWidth = isMobile ? 100 : 100 - (imageProgress * 58); // 100% to 42%
+  const centerHeight = isMobile ? 100 : 100 - (imageProgress * 30); // 100% to 70%
+  const sideWidth = isMobile ? 0 : imageProgress * 22; // 0% to 22%
+  const sideOpacity = isMobile ? 0 : imageProgress;
   const sideTranslateLeft = -100 + (imageProgress * 100); // -100% to 0%
   const sideTranslateRight = 100 - (imageProgress * 100); // 100% to 0%
-  const borderRadius = imageProgress * 24; // 0px to 24px
-  const gap = imageProgress * 16; // 0px to 16px
+  const borderRadius = isMobile ? 12 : imageProgress * 24; // 0px to 24px
+  const gap = isMobile ? 6 : imageProgress * 16; // 0px to 16px
 
   // Calculate grayscale for text section based on textProgress
   const grayscaleAmount = Math.round((1 - textProgress) * 100);
@@ -150,24 +156,25 @@ export function TechnologySection() {
   return (
     <section ref={sectionRef} className="relative bg-foreground">
       {/* Sticky container for scroll animation */}
-      <div className="sticky top-0 h-screen overflow-hidden">
+      <div className={isMobile ? "relative h-[100svh] overflow-hidden" : "sticky top-0 h-screen overflow-hidden"}>
         <div className="flex h-full w-full items-center justify-center">
           {/* Bento Grid Container */}
           <div 
             className="relative flex h-full w-full items-stretch justify-center"
-            style={{ gap: `${gap}px`, padding: `${imageProgress * 16}px` }}
+            style={{ gap: `${gap}px`, padding: `${isMobile ? 6 : imageProgress * 16}px` }}
           >
             
-            {/* Left Column */}
-            <div 
-              className="flex flex-col will-change-transform"
-              style={{
-                width: `${sideWidth}%`,
-                gap: `${gap}px`,
-                transform: `translateX(${sideTranslateLeft}%)`,
-                opacity: sideOpacity,
-              }}
-            >
+            {/* Left Column - Hidden on Mobile */}
+            {!isMobile && (
+              <div 
+                className="flex flex-col will-change-transform"
+                style={{
+                  width: `${sideWidth}%`,
+                  gap: `${gap}px`,
+                  transform: `translateX(${sideTranslateLeft}%)`,
+                  opacity: sideOpacity,
+                }}
+              >
               {sideImages.filter(img => img.position === "left").map((img, idx) => (
                 <div 
                   key={idx} 
@@ -185,7 +192,8 @@ export function TechnologySection() {
                   />
                 </div>
               ))}
-            </div>
+              </div>
+            )}
 
             {/* Main Center Image */}
             <div 
@@ -207,9 +215,9 @@ export function TechnologySection() {
               
               {/* Title Text - Fades out word by word with blur */}
               <div 
-                className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center"
+                className="absolute inset-0 flex flex-col items-center justify-center px-4 md:px-6 text-center"
               >
-                <h2 className="max-w-3xl font-medium leading-tight tracking-tight text-white md:text-5xl lg:text-7xl text-5xl">
+                <h2 className="max-w-3xl font-medium leading-tight tracking-tight text-white text-3xl md:text-5xl lg:text-7xl">
                   {["সৃজনশীলতা", "ও", "প্রকাশনা।"].map((word, index) => {
                     // Each word fades out sequentially based on scrollProgress
                     const wordFadeStart = index * 0.07;
@@ -238,16 +246,17 @@ export function TechnologySection() {
               </div>
             </div>
 
-            {/* Right Column */}
-            <div 
-              className="flex flex-col will-change-transform"
-              style={{
-                width: `${sideWidth}%`,
-                gap: `${gap}px`,
-                transform: `translateX(${sideTranslateRight}%)`,
-                opacity: sideOpacity,
-              }}
-            >
+            {/* Right Column - Hidden on Mobile */}
+            {!isMobile && (
+              <div 
+                className="flex flex-col will-change-transform"
+                style={{
+                  width: `${sideWidth}%`,
+                  gap: `${gap}px`,
+                  transform: `translateX(${sideTranslateRight}%)`,
+                  opacity: sideOpacity,
+                }}
+              >
               {sideImages.filter(img => img.position === "right").map((img, idx) => (
                 <div 
                   key={idx} 
@@ -265,19 +274,20 @@ export function TechnologySection() {
                   />
                 </div>
               ))}
-            </div>
+              </div>
+            )}
 
           </div>
         </div>
       </div>
 
-      {/* Scroll space to enable animation */}
-      <div className="h-[200vh]" />
+      {/* Scroll space to enable animation - reduced on mobile */}
+      {!isMobile && <div className="h-[200vh]" />}
 
       {/* Description Section with Background Image and Scroll Reveal */}
       <div 
         ref={textSectionRef}
-        className="relative overflow-hidden bg-background px-6 py-24 md:px-12 md:py-32 lg:px-20 lg:py-40"
+        className="relative overflow-hidden bg-background px-4 md:px-12 md:py-32 lg:px-20 lg:py-40 py-20"
       >
         {/* Background Image with Grayscale Filter */}
         

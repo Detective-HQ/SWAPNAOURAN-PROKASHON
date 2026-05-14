@@ -35,7 +35,7 @@ export function FooterSection() {
     if (!email.trim()) return;
     setNewsletterStatus("loading");
     try {
-      const res = await fetch("/api/newsletter/subscribe", {
+      const res = await fetch("/backend-api/newsletter/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim() })
@@ -55,26 +55,26 @@ export function FooterSection() {
   return (
     <footer className="bg-background">
       {/* Newsletter Section */}
-      <div className="border-t border-border px-6 py-12 md:px-12 lg:px-20 bg-botanical-forest/5">
-        <div className="max-w-4xl mx-auto text-center space-y-4">
-          <Mail className="w-8 h-8 mx-auto text-botanical-terracotta" />
-          <h3 className="text-2xl font-headline font-bold text-botanical-forest">Join the <span className="italic font-normal">Bloomsletter</span></h3>
-          <p className="text-sm text-botanical-forest/60 max-w-lg mx-auto">Get a free sample chapter, exclusive author insights, and early access to new releases.</p>
-          <form onSubmit={handleNewsletter} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+      <div className="border-t border-border px-4 md:px-12 lg:px-20 py-10 md:py-12 bg-botanical-forest/5">
+        <div className="max-w-4xl mx-auto text-center space-y-3 md:space-y-4">
+          <Mail className="w-6 md:w-8 h-6 md:h-8 mx-auto text-botanical-terracotta" />
+          <h3 className="text-xl md:text-2xl font-headline font-bold text-botanical-forest">Join the <span className="italic font-normal">Bloomsletter</span></h3>
+          <p className="text-xs md:text-sm text-botanical-forest/60 max-w-lg mx-auto">Get a free sample chapter, exclusive author insights, and early access to new releases.</p>
+          <form onSubmit={handleNewsletter} className="flex flex-col gap-2 md:flex-row md:gap-3 max-w-md mx-auto w-full">
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               required
-              className="flex-1 px-5 py-3 rounded-full bg-white border border-border/40 focus:outline-none focus:ring-2 focus:ring-botanical-terracotta/50 text-sm"
+              className="flex-1 px-4 md:px-5 py-2 md:py-3 rounded-full bg-white border border-border/40 focus:outline-none focus:ring-2 focus:ring-botanical-terracotta/50 text-sm"
             />
             <button
               type="submit"
               disabled={newsletterStatus === "loading"}
-              className="px-8 py-3 rounded-full bg-botanical-forest text-white font-bold text-sm uppercase tracking-widest hover:bg-botanical-forest/90 transition-all disabled:opacity-50"
+              className="px-6 md:px-8 py-2 md:py-3 rounded-full bg-botanical-forest text-white font-bold text-xs md:text-sm uppercase tracking-widest hover:bg-botanical-forest/90 transition-all disabled:opacity-50 w-full md:w-auto"
             >
-              {newsletterStatus === "loading" ? <Loader2 className="w-4 h-4 animate-spin" /> : "Subscribe"}
+              {newsletterStatus === "loading" ? <Loader2 className="w-4 h-4 animate-spin inline" /> : "Subscribe"}
             </button>
           </form>
           {newsletterMsg && (
@@ -87,27 +87,27 @@ export function FooterSection() {
       </div>
 
       {/* Main Footer Content */}
-      <div className="border-t border-border px-6 py-16 md:px-12 md:py-20 lg:px-20">
-        <div className="grid grid-cols-2 gap-12 md:grid-cols-4 lg:grid-cols-5">
+      <div className="border-t border-border px-4 md:px-12 md:py-20 lg:px-20 py-12">
+        <div className="grid grid-cols-2 gap-6 md:gap-12 md:grid-cols-4 lg:grid-cols-5">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1 lg:col-span-2">
-            <Link href="/" className="text-lg font-medium text-foreground">
-              SWAPNAOURAN PROKASHON
+            <Link href="/" className="text-sm md:text-lg font-medium text-foreground">
+              SWAPNAOURAN<br/>PROKASHON
             </Link>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-3 md:mt-4 max-w-xs text-xs md:text-sm leading-relaxed text-muted-foreground">
               স্বপ্নউড়ান প্রকাশন - সাহিত্যের নতুন আকাশ। আমরা প্রতিটি পাণ্ডুলিপিকে যত্নে সাজিয়ে তুলি।
             </p>
           </div>
 
           {/* Explore */}
           <div>
-            <h4 className="mb-4 text-sm font-medium text-foreground">Explore</h4>
-            <ul className="space-y-3">
+            <h4 className="mb-2 md:mb-4 text-xs md:text-sm font-medium text-foreground uppercase">Explore</h4>
+            <ul className="space-y-2 md:space-y-3">
               {footerLinks.explore.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    className="text-xs md:text-sm text-muted-foreground transition-colors hover:text-foreground"
                   >
                     {link.label}
                   </Link>
@@ -118,13 +118,13 @@ export function FooterSection() {
 
           {/* About */}
           <div>
-            <h4 className="mb-4 text-sm font-medium text-foreground">About</h4>
-            <ul className="space-y-3">
+            <h4 className="mb-2 md:mb-4 text-xs md:text-sm font-medium text-foreground uppercase">About</h4>
+            <ul className="space-y-2 md:space-y-3">
               {footerLinks.about.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    className="text-xs md:text-sm text-muted-foreground transition-colors hover:text-foreground"
                   >
                     {link.label}
                   </Link>
@@ -135,13 +135,13 @@ export function FooterSection() {
 
           {/* Service */}
           <div>
-            <h4 className="mb-4 text-sm font-medium text-foreground">Service</h4>
-            <ul className="space-y-3">
+            <h4 className="mb-2 md:mb-4 text-xs md:text-sm font-medium text-foreground uppercase">Service</h4>
+            <ul className="space-y-2 md:space-y-3">
               {footerLinks.service.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    className="text-xs md:text-sm text-muted-foreground transition-colors hover:text-foreground"
                   >
                     {link.label}
                   </Link>

@@ -35,13 +35,19 @@ const sideImages = [
 export function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    // Check if mobile
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
     const handleScroll = () => {
       if (!sectionRef.current) return;
       
       const rect = sectionRef.current.getBoundingClientRect();
-      const scrollableHeight = window.innerHeight * 2;
+      const scrollableHeight = isMobile ? window.innerHeight : window.innerHeight * 2;
       const scrolled = -rect.top;
       const progress = Math.max(0, Math.min(1, scrolled / scrollableHeight));
       
@@ -53,24 +59,25 @@ export function HeroSection() {
     
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", checkMobile);
     };
-  }, []);
+  }, [isMobile]);
 
   // Text fades out first (0 to 0.2)
-  const textOpacity = Math.max(0, 1 - (scrollProgress / 0.2));
+  const textOpacity = Math.max(0, 1 - (scrollProgress / (isMobile ? 0.3 : 0.2)));
   
   // Image transforms start after text fades (0.2 to 1)
-  const imageProgress = Math.max(0, Math.min(1, (scrollProgress - 0.2) / 0.8));
+  const imageProgress = Math.max(0, Math.min(1, (scrollProgress - (isMobile ? 0.3 : 0.2)) / (isMobile ? 0.7 : 0.8)));
   
-  // Smooth interpolations
-  const centerWidth = 100 - (imageProgress * 58); // 100% to 42%
-  const centerHeight = 100 - (imageProgress * 30); // 100% to 70%
-  const sideWidth = imageProgress * 22; // 0% to 22%
-  const sideOpacity = imageProgress;
+  // Mobile-responsive interpolations
+  const centerWidth = isMobile ? 100 : 100 - (imageProgress * 58); // 100% to 42%
+  const centerHeight = isMobile ? 100 : 100 - (imageProgress * 30); // 100% to 70%
+  const sideWidth = isMobile ? 0 : imageProgress * 22; // 0% to 22%
+  const sideOpacity = isMobile ? 0 : imageProgress;
   const sideTranslateLeft = -100 + (imageProgress * 100); // -100% to 0%
   const sideTranslateRight = 100 - (imageProgress * 100); // 100% to 0%
-  const borderRadius = imageProgress * 24; // 0px to 24px
-  const gap = imageProgress * 16; // 0px to 16px
+  const borderRadius = isMobile ? 16 : imageProgress * 24; // 0px to 24px
+  const gap = isMobile ? 8 : imageProgress * 16; // 0px to 16px
   
   // Vertical offset for side columns to move them up on mobile
   const sideTranslateY = -(imageProgress * 15); // Move up by 15% when fully expanded
@@ -78,24 +85,25 @@ export function HeroSection() {
   return (
     <section ref={sectionRef} className="relative bg-background">
       {/* Sticky container for scroll animation */}
-      <div className="sticky top-0 h-screen overflow-hidden">
+      <div className={isMobile ? "relative h-[100svh] overflow-hidden" : "sticky top-0 h-screen overflow-hidden"}>
         <div className="flex h-full w-full items-center justify-center">
           {/* Bento Grid Container */}
           <div 
             className="relative flex h-full w-full items-stretch justify-center"
-            style={{ gap: `${gap}px`, padding: `${imageProgress * 16}px`, paddingBottom: `${60 + (imageProgress * 40)}px` }}
+            style={{ gap: `${gap}px`, padding: `${isMobile ? 8 : imageProgress * 16}px`, paddingBottom: `${isMobile ? 20 : 60 + (imageProgress * 40)}px` }}
           >
             
-            {/* Left Column */}
-            <div 
-              className="flex flex-col will-change-transform"
-              style={{
-                width: `${sideWidth}%`,
-                gap: `${gap}px`,
-                transform: `translateX(${sideTranslateLeft}%) translateY(${sideTranslateY}%)`,
-                opacity: sideOpacity,
-              }}
-            >
+            {/* Left Column - Hidden on Mobile */}
+            {!isMobile && (
+              <div 
+                className="flex flex-col will-change-transform"
+                style={{
+                  width: `${sideWidth}%`,
+                  gap: `${gap}px`,
+                  transform: `translateX(${sideTranslateLeft}%) translateY(${sideTranslateY}%)`,
+                  opacity: sideOpacity,
+                }}
+              >
               {sideImages.filter(img => img.position === "left").map((img, idx) => (
                 <div 
                   key={idx} 
@@ -113,7 +121,8 @@ export function HeroSection() {
                   />
                 </div>
               ))}
-            </div>
+              </div>
+            )}
 
             {/* Main Hero Image - Center */}
             <div 
@@ -135,10 +144,10 @@ export function HeroSection() {
               
               {/* Overlay Text - Fades out first */}
               <div 
-                className="absolute inset-0 flex items-end overflow-hidden px-4"
+                className="absolute inset-0 flex items-end overflow-hidden px-4 md:px-6"
                 style={{ opacity: textOpacity }}
               >
-                <h1 className="w-full text-[20vw] md:text-[18vw] font-medium leading-[0.8] tracking-tighter text-white">
+                <h1 className="w-full break-words text-[16vw] font-medium leading-[0.85] tracking-tight text-white sm:text-[13vw] md:text-[14vw] md:tracking-tighter lg:text-[16vw]">
                   {word.split("").map((letter, index) => (
                     <span
                       key={index}
@@ -155,30 +164,31 @@ export function HeroSection() {
                 </h1>
               </div>
 
-              {/* Added Website Name */}
+              {/* Tagline */}
               <div 
                 className="absolute inset-0 flex items-center justify-center pointer-events-none"
                 style={{ 
                   opacity: textOpacity,
-                  transform: `translateY(18%)` // Slightly lower on mobile
                 }}
               >
-                <h2 className="text-white text-[5vw] md:text-[3vw] font-bold tracking-[0.2em] uppercase drop-shadow-lg opacity-90 text-center px-4">
-                  SWAPNAOURAN PROKASHON
+                <h2 className="text-white text-[3vw] md:text-[2.5vw] font-bold tracking-widest uppercase drop-shadow-lg opacity-80 text-center px-4">
+                  <span className="text-xs md:text-sm block mb-2">স্বপ্নউড়ান</span>
+                  <span className="text-[2.5vw] md:text-[2vw]">প্রকাশন</span>
                 </h2>
               </div>
             </div>
 
-            {/* Right Column */}
-            <div 
-              className="flex flex-col will-change-transform"
-              style={{
-                width: `${sideWidth}%`,
-                gap: `${gap}px`,
-                transform: `translateX(${sideTranslateRight}%) translateY(${sideTranslateY}%)`,
-                opacity: sideOpacity,
-              }}
-            >
+            {/* Right Column - Hidden on Mobile */}
+            {!isMobile && (
+              <div 
+                className="flex flex-col will-change-transform"
+                style={{
+                  width: `${sideWidth}%`,
+                  gap: `${gap}px`,
+                  transform: `translateX(${sideTranslateRight}%) translateY(${sideTranslateY}%)`,
+                  opacity: sideOpacity,
+                }}
+              >
               {sideImages.filter(img => img.position === "right").map((img, idx) => (
                 <div 
                   key={idx} 
@@ -196,21 +206,20 @@ export function HeroSection() {
                   />
                 </div>
               ))}
-            </div>
+              </div>
+            )}
 
           </div>
         </div>
       </div>
 
-      {/* Scroll space to enable animation */}
-      <div className="h-[200vh]" />
+      {/* Scroll space to enable animation - reduced on mobile */}
+      {!isMobile && <div className="h-[200vh]" />}
 
       {/* Tagline Section */}
-      <div className="px-6 pt-32 pb-28 md:pt-48 md:px-12 md:pb-36 lg:px-20 lg:pt-56 lg:pb-44">
-        <p className="mx-auto max-w-2xl text-center text-2xl leading-relaxed text-muted-foreground md:text-3xl lg:text-[2.5rem] lg:leading-snug">
+      <div className="px-4 py-16 md:px-12 md:py-28 lg:px-20 lg:py-36">
+        <p className="mx-auto max-w-2xl text-center text-lg leading-relaxed text-muted-foreground md:text-2xl lg:text-3xl">
           গল্প, কবিতা আর মননশীলতার এক অনন্য ঠিকানা
-          <br />
-          স্বপ্নউড়ান প্রকাশন
         </p>
       </div>
     </section>

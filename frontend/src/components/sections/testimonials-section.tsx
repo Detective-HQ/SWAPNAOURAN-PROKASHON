@@ -6,8 +6,8 @@ export function TestimonialsSection() {
   return (
     <section id="about" className="bg-background">
       {/* Large Text Statement */}
-      <div className="px-6 py-24 md:px-12 md:py-32 lg:px-20 lg:py-40">
-        <p className="mx-auto max-w-5xl text-2xl leading-relaxed text-foreground md:text-3xl lg:text-[2.5rem] lg:leading-snug">
+      <div className="px-4 py-16 md:px-12 md:py-32 lg:px-20 lg:py-40">
+        <p className="mx-auto max-w-5xl text-lg leading-relaxed text-foreground md:text-2xl lg:text-3xl lg:leading-snug">
           স্বপ্নউড়ান প্রকাশন প্রতিটি সৃজনশীল মানুষের ঘর। আমরা বিশ্বাস করি আপনার গল্পটি বিশ্বের কাছে পৌঁছে দেওয়ার দায়িত্ব আমাদের। 
           গুণগত মান এবং শৈল্পিক উৎকর্ষতা আমাদের প্রতিটি কাজের বৈশিষ্ট্য।
         </p>

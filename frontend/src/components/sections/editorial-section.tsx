@@ -24,12 +24,12 @@ export function EditorialSection() {
         {specs.map((spec) => (
           <div
             key={spec.label}
-            className="border-b border-r border-border p-8 text-center last:border-r-0 md:border-b-0"
+            className="border-b border-r border-border p-4 md:p-8 text-center last:border-r-0 md:border-b-0"
           >
             <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">
               {spec.label}
             </p>
-            <p className="font-medium text-foreground text-4xl">
+            <p className="font-medium text-foreground text-2xl md:text-4xl">
               {spec.value}
             </p>
           </div>
@@ -37,7 +37,7 @@ export function EditorialSection() {
       </div>
 
       {/* Full-width Video */}
-      <div className="relative aspect-[16/9] w-full md:aspect-[21/9]">
+      <div className="relative aspect-video md:aspect-[21/9] w-full">
         <video
           autoPlay
           loop
