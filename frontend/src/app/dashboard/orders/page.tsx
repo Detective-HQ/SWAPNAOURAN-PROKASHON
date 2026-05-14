@@ -5,10 +5,11 @@ import Image from 'next/image';
 import { useUser } from '@clerk/nextjs';
 import { useCart } from '@/lib/cart-context';
 import { useApi } from '@/hooks/use-api';
+import { useToast } from '@/hooks/use-toast';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { ShoppingBag, Trash2, ChevronRight, Package, CheckCircle2, Loader2, FileText } from 'lucide-react';
+import { ShoppingBag, Trash2, ChevronRight, Package, CheckCircle2, Loader2, FileText, Truck, RotateCcw } from 'lucide-react';
 import InvoiceModal from '@/components/shop/invoice-modal';
 
 const loadRazorpayScript = () => {
@@ -34,8 +35,39 @@ export default function OrdersPage() {
   const paidOrders = orders.filter((o) => o.status === 'PAID');
   const [processingPayment, setProcessingPayment] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [returnError, setReturnError] = useState<string | null>(null);
+
+  const handleReturnRequest = async () => {
+    if (!returnModal || !returnReason.trim()) {
+      setReturnError('Please provide a reason');
+      return;
+    }
+    if (returnReason.trim().length < 10) {
+      setReturnError('Reason must be at least 10 characters');
+      return;
+    }
+    setSubmittingReturn(true);
+    setReturnError(null);
+    try {
+      await api.post('/returns', {
+        orderId: returnModal.orderId,
+        bookId: returnModal.bookId,
+        reason: returnReason.trim()
+      });
+      setReturnModal(null);
+      setReturnReason('');
+      toast({ title: 'Return Requested', description: 'Your return request has been submitted.' });
+    } catch (err: any) {
+      setReturnError(err.message || 'Failed to submit return request');
+    } finally {
+      setSubmittingReturn(false);
+    }
+  };
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [invoiceOrderId, setInvoiceOrderId] = useState<string | null>(null);
+  const [returnModal, setReturnModal] = useState<{ orderId: string; bookId: string; bookTitle: string } | null>(null);
+  const [returnReason, setReturnReason] = useState('');
+  const [submittingReturn, setSubmittingReturn] = useState(false);
   const [shippingAddress, setShippingAddress] = useState({
     name: '',
     phone: '',
@@ -45,6 +77,7 @@ export default function OrdersPage() {
     pincode: '',
   });
   const [addressError, setAddressError] = useState<string | null>(null);
+  const { toast } = useToast();
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
 
@@ -517,6 +550,26 @@ export default function OrdersPage() {
                     </div>
                   )}
 
+                  {/* Tracking Info */}
+                  {(order.trackingNumber || order.deliveryStatus) && (
+                    <div className="px-6 py-3 bg-botanical-clay/5 border-t border-border/20">
+                      <div className="flex items-center gap-3 text-xs text-botanical-forest/70">
+                        <Truck className="w-4 h-4 text-botanical-sage" />
+                        {order.trackingNumber && <span>Tracking: <strong>{order.trackingNumber}</strong></span>}
+                        {order.deliveryStatus && (
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${
+                            order.deliveryStatus === 'DELIVERED' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                            order.deliveryStatus === 'IN_TRANSIT' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                            order.deliveryStatus === 'SHIPPED' ? 'bg-purple-100 text-purple-700 border-purple-200' :
+                            'bg-amber-100 text-amber-700 border-amber-200'
+                          }`}>
+                            {order.deliveryStatus.replace(/_/g, ' ')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Bottom: Actions */}
                   <div className="px-6 py-3 bg-botanical-clay/5 border-t border-border/20 flex items-center justify-end gap-3">
                     <button
@@ -526,6 +579,20 @@ export default function OrdersPage() {
                       <FileText className="w-3.5 h-3.5" />
                       Invoice
                     </button>
+                    {order.items?.map((item: any) => item.book?.type === 'PHYSICAL' && (
+                      <button
+                        key={item.id}
+                        onClick={() => setReturnModal({
+                          orderId: order.id,
+                          bookId: item.bookId,
+                          bookTitle: item.book?.title || 'Book'
+                        })}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest text-amber-600 hover:bg-amber-50 transition-colors border border-amber-200"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        Return
+                      </button>
+                    ))}
                   </div>
                 </BauhausCard>
               );
@@ -538,6 +605,38 @@ export default function OrdersPage() {
         open={!!invoiceOrderId}
         onClose={() => setInvoiceOrderId(null)}
       />
+
+      {/* Return Request Modal */}
+      {returnModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => !submittingReturn && setReturnModal(null)}>
+          <div className="bg-white rounded-[32px] max-w-md w-full p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-2xl font-headline font-bold text-botanical-forest mb-2">Return Request</h3>
+            <p className="text-sm text-botanical-forest/60 mb-6">{returnModal.bookTitle}</p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-botanical-forest/60 mb-2">Reason for Return *</label>
+                <textarea
+                  value={returnReason}
+                  onChange={(e) => setReturnReason(e.target.value)}
+                  placeholder="Tell us why you're returning this item (min 10 characters)..."
+                  className="w-full px-4 py-3 text-sm bg-botanical-clay/10 border border-border/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-botanical-terracotta/50 resize-none"
+                  rows={4}
+                  maxLength={1000}
+                />
+              </div>
+              {returnError && <p className="text-red-500 text-xs">{returnError}</p>}
+              <div className="flex gap-3">
+                <BauhausButton variant="ghost" className="flex-1" onClick={() => { setReturnModal(null); setReturnReason(''); setReturnError(null); }} disabled={submittingReturn}>
+                  Cancel
+                </BauhausButton>
+                <BauhausButton variant="primary" className="flex-1" onClick={handleReturnRequest} disabled={submittingReturn}>
+                  {submittingReturn ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Submit Request'}
+                </BauhausButton>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

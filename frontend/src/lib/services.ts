@@ -32,3 +32,26 @@ export const ebookService = {
 export const qrService = {
   verifyQR: (id: string) => serverApi(`/qr/verify/${id}`),
 };
+
+export const reviewService = {
+  getBookReviews: (bookId: string, params = "") => serverApi(`/reviews/book/${bookId}${params}`),
+  createReview: (data: any) => serverApi("/reviews", { method: "POST", data }),
+  deleteReview: (id: string) => serverApi(`/reviews/${id}`, { method: "DELETE" }),
+};
+
+export const wishlistService = {
+  getMyWishlist: () => serverApi("/wishlist"),
+  checkWishlist: (bookId: string) => serverApi(`/wishlist/check/${bookId}`),
+  addToWishlist: (data: any) => serverApi("/wishlist", { method: "POST", data }),
+  removeFromWishlist: (bookId: string) => serverApi(`/wishlist/${bookId}`, { method: "DELETE" }),
+};
+
+export const returnService = {
+  getMyReturns: () => serverApi("/returns"),
+  createReturn: (data: any) => serverApi("/returns", { method: "POST", data }),
+};
+
+export const newsletterService = {
+  subscribe: (email: string) => serverApi("/newsletter/subscribe", { method: "POST", data: { email } }),
+  unsubscribe: (email: string) => serverApi("/newsletter/unsubscribe", { method: "POST", data: { email } }),
+};

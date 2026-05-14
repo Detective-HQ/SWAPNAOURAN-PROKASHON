@@ -46,9 +46,15 @@ const verifyPaymentSchema = z.object({
   razorpaySignature: z.string().optional()
 });
 
+const updateOrderTrackingSchema = z.object({
+  trackingNumber: z.string().min(1),
+  deliveryStatus: z.enum(["PROCESSING", "SHIPPED", "IN_TRANSIT", "DELIVERED"]).optional()
+});
+
 module.exports = {
   createOrderSchema,
   orderIdParamsSchema,
   payOrderParamsSchema,
-  verifyPaymentSchema
+  verifyPaymentSchema,
+  updateOrderTrackingSchema
 };

@@ -24,6 +24,20 @@ enum OrderStatus {
   FAILED
 }
 
+enum DeliveryStatus {
+  PROCESSING
+  SHIPPED
+  IN_TRANSIT
+  DELIVERED
+}
+
+enum ReturnStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REFUNDED
+}
+
 enum PaymentStatus {
   CREATED
   SUCCESS
@@ -50,24 +64,31 @@ model User {
   qrCodes       QRCode[]
   galleryImages Gallery[]     @relation("GalleryUploader")
   addresses     Address[]
+  reviews       Review[]
+  wishlistItems WishlistItem[]
+  returnRequests ReturnRequest[]
 
   @@index([role])
 }
 
 model Book {
-  id            String        @id @default(cuid())
-  title         String
-  description   String
-  price         Decimal       @db.Decimal(10, 2)
-  type          BookType
-  coverImage    String?
-  fileUrl       String?
-  isActive      Boolean       @default(true)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  orderItems    OrderItem[]
-  ebookAccesses EbookAccess[]
-  qrCodes       QRCode[]
+  id               String        @id @default(cuid())
+  title            String
+  description      String
+  price            Decimal       @db.Decimal(10, 2)
+  type             BookType
+  coverImage       String?
+  fileUrl          String?
+  sampleChapterUrl String?
+  isActive         Boolean       @default(true)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  orderItems       OrderItem[]
+  ebookAccesses    EbookAccess[]
+  qrCodes          QRCode[]
+  reviews          Review[]
+  wishlistItems    WishlistItem[]
+  returnRequests   ReturnRequest[]
 
   @@index([type])
   @@index([isActive])
@@ -75,19 +96,22 @@ model Book {
 }
 
 model Order {
-  id              String        @id @default(cuid())
+  id              String          @id @default(cuid())
   userId          String
-  status          OrderStatus   @default(PENDING)
-  totalAmount     Decimal       @db.Decimal(10, 2)
+  status          OrderStatus     @default(PENDING)
+  totalAmount     Decimal         @db.Decimal(10, 2)
   shippingAddress Json?
-  invoiceNumber   String?       @unique
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoiceNumber   String?         @unique
+  trackingNumber  String?
+  deliveryStatus  DeliveryStatus?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   items           OrderItem[]
   payment         Payment?
   ebookAccesses   EbookAccess[]
   qrCodes         QRCode[]
+  returnRequests  ReturnRequest[]
 
   @@index([userId])
   @@index([status])
@@ -171,6 +195,64 @@ model Gallery {
 
   @@index([uploadedById])
   @@index([createdAt])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  bookId    String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+  @@index([bookId])
+  @@index([userId])
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  bookId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+  @@index([userId])
+  @@index([bookId])
+}
+
+model ReturnRequest {
+  id             String       @id @default(cuid())
+  orderId        String
+  userId         String
+  bookId         String
+  reason         String
+  status         ReturnStatus @default(PENDING)
+  adminNote      String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  order          Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book           Book         @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([status])
+}
+
+model Newsletter {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  unsubscribedAt DateTime?
+
+  @@index([email])
 }
 
 model Address {

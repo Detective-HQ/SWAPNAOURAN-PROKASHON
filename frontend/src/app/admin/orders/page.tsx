@@ -19,14 +19,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, Truck, PackageCheck, ChevronDown, ChevronUp } from "lucide-react";
 
 export default function AdminOrdersPage() {
   const api = useApi();
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const [trackingInputs, setTrackingInputs] = useState<Record<string, { number: string; status: string }>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -126,7 +130,8 @@ export default function AdminOrdersPage() {
         <Table>
           <TableHeader className="bg-botanical-alabaster/60">
             <TableRow className="border-b border-botanical-sage/20 hover:bg-transparent">
-              <TableHead className="text-botanical-forest/70 font-semibold py-4">Order ID</TableHead>
+              <TableHead className="text-botanical-forest/70 font-semibold py-4 w-8"></TableHead>
+              <TableHead className="text-botanical-forest/70 font-semibold">Order ID</TableHead>
               <TableHead className="text-botanical-forest/70 font-semibold">Buyer</TableHead>
               <TableHead className="text-botanical-forest/70 font-semibold">Amount</TableHead>
               <TableHead className="text-botanical-forest/70 font-semibold">Date</TableHead>
@@ -138,53 +143,122 @@ export default function AdminOrdersPage() {
             {orders
               .filter((o) => !searchQuery.trim() || o.id.toLowerCase().includes(searchQuery.toLowerCase()))
               .map((order) => (
-              <TableRow key={order.id} className="border-b border-botanical-sage/10 hover:bg-botanical-alabaster/40 transition-colors group">
-                <TableCell className="font-mono text-botanical-forest/60 text-xs py-3">
-                  {order.id.substring(0, 8)}...{order.id.substring(order.id.length - 4)}
-                </TableCell>
-                <TableCell className="text-botanical-forest">
-                  {order.user ? (
-                    <div className="flex flex-col">
-                      <span className="font-medium text-sm">{order.user.name}</span>
-                      <span className="text-[11px] text-botanical-forest/50">{order.user.email}</span>
-                    </div>
-                  ) : (
-                    <span className="text-botanical-forest/50 italic">Unknown</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <span className="text-botanical-terracotta font-semibold tracking-wide">
-                    ₹{order.totalAmount || 0}
-                  </span>
-                </TableCell>
-                <TableCell className="text-botanical-forest/60 text-sm">
-                  {new Date(order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={`border text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 ${getStatusColor(order.status)}`}>
-                    {order.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right pr-6">
-                  <Select
-                    defaultValue={order.status}
-                    onValueChange={(val) => handleStatusChange(order.id, val)}
-                  >
-                    <SelectTrigger className="w-[130px] ml-auto h-8 bg-botanical-alabaster border-botanical-sage/30 hover:border-botanical-terracotta/50 text-botanical-forest rounded-md focus:ring-1 focus:ring-botanical-terracotta transition-all text-xs">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-botanical-sage/20 text-botanical-forest rounded-lg shadow-md">
-                      <SelectItem value="PAID" className="text-xs focus:bg-botanical-alabaster cursor-pointer">Paid</SelectItem>
-                      <SelectItem value="PENDING" className="text-xs focus:bg-botanical-alabaster cursor-pointer">Pending</SelectItem>
-                      <SelectItem value="FAILED" className="text-xs focus:bg-botanical-alabaster cursor-pointer">Failed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </TableCell>
-              </TableRow>
+              <>
+                <TableRow key={order.id} className="border-b border-botanical-sage/10 hover:bg-botanical-alabaster/40 transition-colors group cursor-pointer" onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}>
+                  <TableCell className="py-3">
+                    {expandedOrder === order.id ? <ChevronUp size={16} className="text-botanical-forest/40" /> : <ChevronDown size={16} className="text-botanical-forest/40" />}
+                  </TableCell>
+                  <TableCell className="font-mono text-botanical-forest/60 text-xs py-3">
+                    {order.id.substring(0, 8)}...{order.id.substring(order.id.length - 4)}
+                  </TableCell>
+                  <TableCell className="text-botanical-forest">
+                    {order.user ? (
+                      <div className="flex flex-col">
+                        <span className="font-medium text-sm">{order.user.name}</span>
+                        <span className="text-[11px] text-botanical-forest/50">{order.user.email}</span>
+                      </div>
+                    ) : (
+                      <span className="text-botanical-forest/50 italic">Unknown</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-botanical-terracotta font-semibold tracking-wide">
+                      ₹{order.totalAmount || 0}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-botanical-forest/60 text-sm">
+                    {new Date(order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={`border text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 ${getStatusColor(order.status)}`}>
+                      {order.status}
+                    </Badge>
+                    {order.deliveryStatus && (
+                      <Badge variant="outline" className="ml-1 border-purple-200 bg-purple-50 text-purple-700 text-[9px] uppercase font-bold">
+                        {order.deliveryStatus.replace(/_/g, ' ')}
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right pr-6">
+                    <Select
+                      defaultValue={order.status}
+                      onValueChange={(val) => handleStatusChange(order.id, val)}
+                    >
+                      <SelectTrigger className="w-[130px] ml-auto h-8 bg-botanical-alabaster border-botanical-sage/30 hover:border-botanical-terracotta/50 text-botanical-forest rounded-md focus:ring-1 focus:ring-botanical-terracotta transition-all text-xs">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-botanical-sage/20 text-botanical-forest rounded-lg shadow-md">
+                        <SelectItem value="PAID" className="text-xs focus:bg-botanical-alabaster cursor-pointer">Paid</SelectItem>
+                        <SelectItem value="PENDING" className="text-xs focus:bg-botanical-alabaster cursor-pointer">Pending</SelectItem>
+                        <SelectItem value="FAILED" className="text-xs focus:bg-botanical-alabaster cursor-pointer">Failed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                </TableRow>
+                {expandedOrder === order.id && (
+                  <TableRow key={`${order.id}-tracking`}>
+                    <TableCell colSpan={7} className="bg-botanical-alabaster/30 p-4">
+                      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+                        <div className="flex-1 space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-botanical-forest/60">Tracking Number</label>
+                          <Input
+                            placeholder="Enter tracking number..."
+                            value={trackingInputs[order.id]?.number || order.trackingNumber || ''}
+                            onChange={(e) => setTrackingInputs((prev) => ({ ...prev, [order.id]: { ...prev[order.id], number: e.target.value } }))}
+                            className="bg-white border-botanical-sage/30 text-botanical-forest text-sm"
+                          />
+                        </div>
+                        <div className="w-full sm:w-44 space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-botanical-forest/60">Delivery Status</label>
+                          <Select
+                            value={trackingInputs[order.id]?.status || order.deliveryStatus || ''}
+                            onValueChange={(val) => setTrackingInputs((prev) => ({ ...prev, [order.id]: { ...prev[order.id], status: val } }))}
+                          >
+                            <SelectTrigger className="bg-white border-botanical-sage/30 text-botanical-forest text-xs h-10">
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border-botanical-sage/20 text-botanical-forest rounded-lg">
+                              <SelectItem value="PROCESSING" className="text-xs cursor-pointer">Processing</SelectItem>
+                              <SelectItem value="SHIPPED" className="text-xs cursor-pointer">Shipped</SelectItem>
+                              <SelectItem value="IN_TRANSIT" className="text-xs cursor-pointer">In Transit</SelectItem>
+                              <SelectItem value="DELIVERED" className="text-xs cursor-pointer">Delivered</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          size="sm"
+                          className="bg-botanical-forest hover:bg-botanical-forest/90 text-white h-10"
+                          onClick={async () => {
+                            try {
+                              await api.put(`/admin/orders/${order.id}/tracking`, {
+                                trackingNumber: trackingInputs[order.id]?.number || order.trackingNumber,
+                                deliveryStatus: trackingInputs[order.id]?.status || order.deliveryStatus
+                              });
+                              setOrders((prev) => prev.map((o) => o.id === order.id ? {
+                                ...o,
+                                trackingNumber: trackingInputs[order.id]?.number || o.trackingNumber,
+                                deliveryStatus: trackingInputs[order.id]?.status || o.deliveryStatus
+                              } : o));
+                              toast({ title: "Tracking Updated", description: "Order tracking information saved." });
+                            } catch (err: any) {
+                              toast({ title: "Error", description: err.message, variant: "destructive" });
+                            }
+                          }}
+                        >
+                          <Truck className="w-4 h-4 mr-1" /> Update
+                        </Button>
+                      </div>
+                      {order.trackingNumber && (
+                        <p className="text-xs text-botanical-forest/50 mt-2">Current: {order.trackingNumber}</p>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </>
             ))}
             {orders.filter((o) => !searchQuery.trim() || o.id.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="h-32 text-center text-botanical-forest/50">
+                <TableCell colSpan={7} className="h-32 text-center text-botanical-forest/50">
                   {searchQuery ? 'No orders match your search.' : 'No orders found in the system.'}
                 </TableCell>
               </TableRow>

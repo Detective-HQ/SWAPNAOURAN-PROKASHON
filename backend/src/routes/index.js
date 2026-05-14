@@ -8,6 +8,10 @@ const adminRoutes = require("./adminRoutes");
 const galleryRoutes = require("./galleryRoutes");
 const qrRoutes = require("./qrRoutes");
 const addressRoutes = require("./addressRoutes");
+const reviewRoutes = require("./reviewRoutes");
+const wishlistRoutes = require("./wishlistRoutes");
+const returnRoutes = require("./returnRoutes");
+const newsletterRoutes = require("./newsletterRoutes");
 
 const router = express.Router();
 
@@ -26,5 +30,9 @@ router.use("/admin", adminRoutes);
 router.use("/gallery", galleryRoutes);
 router.use("/qr", qrRoutes);
 router.use("/addresses", addressRoutes);
+router.use("/reviews", reviewRoutes);
+router.use("/wishlist", wishlistRoutes);
+router.use("/returns", returnRoutes);
+router.use("/newsletter", newsletterRoutes);
 
 module.exports = router;

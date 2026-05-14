@@ -1,12 +1,14 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { Navbar } from '@/components/layout/navbar';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
 import { useCart } from '@/lib/cart-context';
 import { useApi } from '@/hooks/use-api';
-import { ShoppingCart, Search, SlidersHorizontal, Check, X } from 'lucide-react';
+import { useUser } from '@clerk/nextjs';
+import { ShoppingCart, Search, SlidersHorizontal, Check, X, BookOpen, Heart, Loader2 } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 
 type Book = {
@@ -16,12 +18,14 @@ type Book = {
   price: number | string;
   coverImage?: string;
   type: string;
+  sampleChapterUrl?: string;
 };
 
 export default function ShopPage() {
   const { addItem } = useCart();
   const api = useApi();
   const [addedItems, setAddedItems] = useState<string[]>([]);
+  const [wishlistedIds, setWishlistedIds] = useState<string[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,6 +71,41 @@ export default function ShopPage() {
     }
     return result;
   }, [books, searchQuery, sortBy]);
+
+  // Fetch wishlist status for all books
+  const { isLoaded: userLoaded, isSignedIn } = useUser();
+  const [wishlistLoading, setWishlistLoading] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!isSignedIn || books.length === 0) return;
+    const ids = books.map(b => b.id);
+    if (ids.length === 0) return;
+    Promise.all(ids.map(id =>
+      api.get(`/wishlist/check/${id}`).then(r => {
+        if (r.data?.isWishlisted) setWishlistedIds(prev => [...prev, id]);
+      }).catch(() => {})
+    ));
+  }, [isSignedIn, books]);
+
+  const handleToggleWishlist = async (e: React.MouseEvent, bookId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isSignedIn) return;
+    setWishlistLoading(prev => [...prev, bookId]);
+    try {
+      if (wishlistedIds.includes(bookId)) {
+        await api.del(`/wishlist/${bookId}`);
+        setWishlistedIds(prev => prev.filter(id => id !== bookId));
+      } else {
+        await api.post('/wishlist', { bookId });
+        setWishlistedIds(prev => [...prev, bookId]);
+      }
+    } catch (err) {
+      console.error('Wishlist error:', err);
+    } finally {
+      setWishlistLoading(prev => prev.filter(id => id !== bookId));
+    }
+  };
 
   const handleAddToCart = (book: Book) => {
     const parsedPrice = parsePrice(book.price);
@@ -151,52 +190,86 @@ export default function ShopPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 lg:gap-10">
               {filteredBooks.map((book) => (
                 <div key={book.id} className="group">
-                  <div className="relative rounded-[32px] bg-white border border-border/40 overflow-hidden transition-all duration-500 hover:shadow-xl hover:-translate-y-1.5">
-                    <div className="aspect-[3/4] relative overflow-hidden bg-botanical-clay/10">
-                      <Image
-                        src={book.coverImage || '/placeholder-book.jpg'}
-                        alt={book.title}
-                        fill
-                        className="object-cover transition-all duration-700 group-hover:scale-105"
-                        data-ai-hint="book cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-500">
-                        <button
-                          onClick={() => handleAddToCart(book)}
-                          className="w-full py-3 rounded-2xl bg-white/90 backdrop-blur-sm text-botanical-forest font-bold text-[11px] uppercase tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-lg"
-                        >
-                          {addedItems.includes(book.id) ? (
-                            <><Check className="w-4 h-4" /> Added</>
-                          ) : (
-                            <><ShoppingCart className="w-4 h-4" /> Add to Cart</>
+                  <Link href={`/shop/${book.id}`}>
+                    <div className="relative rounded-[32px] bg-white border border-border/40 overflow-hidden transition-all duration-500 hover:shadow-xl hover:-translate-y-1.5">
+                      <div className="aspect-[3/4] relative overflow-hidden bg-botanical-clay/10">
+                        <Image
+                          src={book.coverImage || '/placeholder-book.jpg'}
+                          alt={book.title}
+                          fill
+                          className="object-cover transition-all duration-700 group-hover:scale-105"
+                          data-ai-hint="book cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-500 space-y-2">
+                          <button
+                            onClick={(e) => { e.preventDefault(); handleAddToCart(book); }}
+                            className="w-full py-3 rounded-2xl bg-white/90 backdrop-blur-sm text-botanical-forest font-bold text-[11px] uppercase tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-lg"
+                          >
+                            {addedItems.includes(book.id) ? (
+                              <><Check className="w-4 h-4" /> Added</>
+                            ) : (
+                              <><ShoppingCart className="w-4 h-4" /> Add to Cart</>
+                            )}
+                          </button>
+                          {book.sampleChapterUrl && (
+                            <Link
+                              href={`/shop/${book.id}`}
+                              className="block w-full py-2.5 rounded-2xl bg-black/70 backdrop-blur-sm text-white font-bold text-[9px] uppercase tracking-widest hover:bg-black/90 transition-all text-center"
+                            >
+                              <BookOpen className="w-3 h-3 inline mr-1" /> Read Sample
+                            </Link>
                           )}
-                        </button>
+                        </div>
+                      </div>
+                      <div className="p-5 space-y-3">
+                        <div>
+                          <h3 className="text-base font-headline font-bold text-botanical-forest leading-tight line-clamp-2">{book.title}</h3>
+                          <p className="text-[10px] font-medium text-botanical-sage uppercase tracking-widest mt-1 italic">Swapno Uran Prakashan</p>
+                        </div>
+                        {book.description && (
+                          <p className="text-xs text-botanical-forest/50 leading-relaxed line-clamp-2">{book.description}</p>
+                        )}
+                        <div className="flex items-center justify-between pt-2 border-t border-border/10">
+                          <span className="text-xl font-headline font-bold text-botanical-terracotta">₹{parsePrice(book.price).toLocaleString()}</span>
+                          <div className="flex gap-1.5">
+                            {isSignedIn && (
+                              <button
+                                onClick={(e) => handleToggleWishlist(e, book.id)}
+                                disabled={wishlistLoading.includes(book.id)}
+                                className={`p-2.5 rounded-xl border transition-all ${
+                                  wishlistedIds.includes(book.id)
+                                    ? 'bg-red-50 border-red-200 text-red-500'
+                                    : 'border-border/40 text-botanical-forest/40 hover:text-red-400 hover:border-red-200'
+                                }`}
+                                title={wishlistedIds.includes(book.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                              >
+                                {wishlistLoading.includes(book.id) ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Heart className={`w-4 h-4 ${wishlistedIds.includes(book.id) ? 'fill-red-500' : ''}`} />
+                                )}
+                              </button>
+                            )}
+                            <button
+                              onClick={(e) => { e.preventDefault(); handleAddToCart(book); }}
+                              className={`p-2.5 rounded-xl transition-colors ${
+                                addedItems.includes(book.id)
+                                  ? 'bg-botanical-forest text-white'
+                                  : 'bg-botanical-clay/20 text-botanical-forest hover:bg-botanical-clay/40'
+                              }`}
+                            >
+                              {addedItems.includes(book.id) ? (
+                                <Check className="w-4 h-4" />
+                              ) : (
+                                <ShoppingCart className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="p-5 space-y-3">
-                      <div>
-                        <h3 className="text-base font-headline font-bold text-botanical-forest leading-tight line-clamp-2">{book.title}</h3>
-                        <p className="text-[10px] font-medium text-botanical-sage uppercase tracking-widest mt-1 italic">Swapno Uran Prakashan</p>
-                      </div>
-                      {book.description && (
-                        <p className="text-xs text-botanical-forest/50 leading-relaxed line-clamp-2">{book.description}</p>
-                      )}
-                      <div className="flex items-center justify-between pt-2 border-t border-border/10">
-                        <span className="text-xl font-headline font-bold text-botanical-terracotta">₹{parsePrice(book.price).toLocaleString()}</span>
-                        <button
-                          onClick={() => handleAddToCart(book)}
-                          className="sm:hidden p-2.5 rounded-xl bg-botanical-clay/20 text-botanical-forest hover:bg-botanical-clay/40 transition-colors"
-                        >
-                          {addedItems.includes(book.id) ? (
-                            <Check className="w-4 h-4" />
-                          ) : (
-                            <ShoppingCart className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  </Link>
                 </div>
               ))}
             </div>

@@ -21,41 +21,43 @@ export default function EbooksPage() {
   const api = useApi();
 
   useEffect(() => {
-    fetchEbooks();
-  }, [api]);
+    let mounted = true;
 
-  const fetchEbooks = async () => {
-    try {
-      const res = await api.get('/orders/my');
-      const orders = res.data || [];
-      const purchasedEbooks = new Map();
-      
-      orders.forEach((order: any) => {
-        if (order.status === 'PAID') {
-          order.items?.forEach((item: any) => {
-            if (item.book && item.book.type === 'EBOOK') {
-              purchasedEbooks.set(item.book.id, item.book);
-            }
-          });
-        }
-      });
-      
-      setEbooks(Array.from(purchasedEbooks.values()));
-    } catch (err) {
-      console.error('Failed to fetch purchased ebooks:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchEbooks = async () => {
+      try {
+        const res = await api.get('/books?type=EBOOK&limit=100');
+        if (!mounted) return;
+
+        const items = Array.isArray(res?.data?.items)
+          ? res.data.items
+          : Array.isArray((res as any)?.items)
+            ? (res as any).items
+            : [];
+        setEbooks(items);
+      } catch (err) {
+        if (!mounted) return;
+        console.error('Failed to fetch ebooks:', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchEbooks();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleReadNow = async (book: any) => {
     try {
       const res = await api.get(`/ebooks/${book.id}/read`);
-      if (res.data && res.data.streamUrl) {
+      const payload = (res as any)?.data ?? res;
+      if (payload && payload.streamUrl) {
         setReadingEbook({
           id: book.id,
           title: book.title,
-          url: res.data.streamUrl
+          url: payload.streamUrl
         });
       }
     } catch (err: any) {

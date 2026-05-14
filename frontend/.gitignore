@@ -14,7 +14,7 @@
 /coverage
 
 # Next.js
-/.next/
+/.next-local/
 /out/
 /build/
 

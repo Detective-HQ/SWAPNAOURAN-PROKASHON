@@ -15,7 +15,9 @@ import {
   ShoppingCart,
   Home,
   Leaf,
-  Shield
+  Shield,
+  Heart,
+  RotateCcw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -30,6 +32,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { icon: FileText, label: 'Ebooks', href: '/dashboard/ebooks' },
     { icon: Camera, label: 'Photo Time', href: '/dashboard/photo-time' },
     { icon: ShoppingCart, label: 'My Orders', href: '/dashboard/orders' },
+    { icon: Heart, label: 'Wishlist', href: '/dashboard/wishlist' },
+    { icon: RotateCcw, label: 'Returns', href: '/dashboard/returns' },
     { icon: User, label: 'Profile', href: '/dashboard/profile' },
   ];
 

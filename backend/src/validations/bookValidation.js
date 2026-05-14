@@ -9,6 +9,7 @@ const baseBookSchema = z.object({
   type: z.enum(bookTypes),
   coverImage: z.string().url().optional(),
   fileUrl: z.string().url().optional(),
+  sampleChapterUrl: z.string().url().optional(),
   isActive: z.boolean().optional()
 });
 
