@@ -11,6 +11,8 @@ import {
   LogOut,
   ChevronLeft,
   BookOpen,
+  RotateCcw,
+  Mail,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { useState } from "react";
@@ -20,7 +22,9 @@ const navItems = [
   { label: "Overview", href: "/admin", icon: LayoutDashboard },
   { label: "Products", href: "/admin/products", icon: Package },
   { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
+  { label: "Returns", href: "/admin/returns", icon: RotateCcw },
   { label: "Users", href: "/admin/users", icon: Users },
+  { label: "Newsletter", href: "/admin/newsletter", icon: Mail },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
 ];
 

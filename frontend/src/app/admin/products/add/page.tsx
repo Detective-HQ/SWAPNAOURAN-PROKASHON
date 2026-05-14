@@ -15,7 +15,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { motion } from "framer-motion";
-import { ArrowLeft, Upload, FileText, ImageIcon, Loader2 } from "lucide-react";
+import { ArrowLeft, Upload, FileText, ImageIcon, Loader2, BookOpen } from "lucide-react";
 import Link from "next/link";
 
 export default function AddProductPage() {
@@ -29,6 +29,7 @@ export default function AddProductPage() {
   });
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [ebookFile, setEbookFile] = useState<File | null>(null);
+  const [sampleChapterFile, setSampleChapterFile] = useState<File | null>(null);
   const [previews, setPreviews] = useState<{ cover: string | null }>({ cover: null });
 
   const { toast } = useToast();
@@ -43,7 +44,7 @@ export default function AddProductPage() {
     setFormData((prev) => ({ ...prev, type: value }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: "cover" | "ebook") => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: "cover" | "ebook" | "sample") => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -54,8 +55,10 @@ export default function AddProductPage() {
         setPreviews((prev) => ({ ...prev, cover: reader.result as string }));
       };
       reader.readAsDataURL(file);
-    } else {
+    } else if (field === "ebook") {
       setEbookFile(file);
+    } else {
+      setSampleChapterFile(file);
     }
   };
 
@@ -78,6 +81,10 @@ export default function AddProductPage() {
         data.append("file", ebookFile);
       } else if (formData.type === "EBOOK" && !ebookFile) {
         throw new Error("Please upload an ebook file");
+      }
+
+      if (sampleChapterFile) {
+        data.append("sampleChapter", sampleChapterFile);
       }
 
       await api.post("/books/with-files", data);
@@ -158,9 +165,9 @@ export default function AddProductPage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-botanical-forest/80">Book Type</label>
-              <Select onValueChange={handleTypeChange} defaultValue={formData.type}>
+              <Select value={formData.type} onValueChange={handleTypeChange}>
                 <SelectTrigger className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus:ring-botanical-terracotta">
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-botanical-sage/20 text-botanical-forest">
                   <SelectItem value="PHYSICAL" className="hover:bg-botanical-alabaster focus:bg-botanical-alabaster cursor-pointer">Physical Book</SelectItem>
@@ -237,6 +244,37 @@ export default function AddProductPage() {
               </div>
             </motion.div>
           )}
+
+          {/* Sample Chapter Upload */}
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="space-y-2"
+          >
+            <label className="text-sm font-medium text-botanical-forest/80">Sample Chapter (PDF) — Optional</label>
+            <div
+              className="border-2 border-dashed border-botanical-sage/30 rounded-xl p-4 flex items-center gap-4 bg-botanical-alabaster hover:bg-botanical-sage/10 transition-colors cursor-pointer"
+              onClick={() => document.getElementById("sample-upload")?.click()}
+            >
+              <div className="p-2 rounded-lg bg-botanical-sage/20 text-botanical-forest">
+                <BookOpen size={20} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-botanical-forest truncate">
+                  {sampleChapterFile ? sampleChapterFile.name : "Upload a sample chapter PDF"}
+                </p>
+                <p className="text-xs text-botanical-forest/60">Let readers preview before buying</p>
+              </div>
+              <Upload size={16} className="text-botanical-forest/50" />
+              <input
+                id="sample-upload"
+                type="file"
+                accept=".pdf"
+                className="hidden"
+                onChange={(e) => handleFileChange(e, "sample")}
+              />
+            </div>
+          </motion.div>
 
           <div className="pt-4">
             <Button 

@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Navbar } from '@/components/layout/navbar';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { BookOpen, ShieldCheck, Zap, Loader2 } from 'lucide-react';
+import { BookOpen, ShieldCheck, Zap, Loader2, Eye } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { useApi } from '@/hooks/use-api';
 
@@ -19,19 +20,32 @@ export default function EbooksPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchEbooks();
-  }, [api]);
+    let mounted = true;
 
-  const fetchEbooks = async () => {
-    try {
-      const res = await api.get('/books?type=EBOOK&limit=100');
-      setEbooks(res.data?.items || []);
-    } catch (err) {
-      console.error('Failed to fetch ebooks:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchEbooks = async () => {
+      try {
+        const res = await api.get('/books?type=EBOOK&limit=100');
+        if (!mounted) return;
+        const items = Array.isArray(res?.data?.items)
+          ? res.data.items
+          : Array.isArray((res as any)?.items)
+            ? (res as any).items
+            : [];
+        setEbooks(items);
+      } catch (err) {
+        if (!mounted) return;
+        console.error('Failed to fetch ebooks:', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchEbooks();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleBuyNow = (book: any) => {
     const price = typeof book.price === 'number' ? book.price : parseFloat(String(book.price).replace(/,/g, ''));
@@ -90,22 +104,31 @@ export default function EbooksPage() {
             ) : (
               ebooks.map((ebook, i) => (
                 <BauhausCard key={ebook.id} decorationColor="blue">
-                  <div className="aspect-[4/5] relative mb-6 border-2 border-black group overflow-hidden bg-white">
-                    <Image 
-                      src={ebook.coverImage || PlaceHolderImages[i % PlaceHolderImages.length].imageUrl} 
-                      alt={ebook.title} 
-                      fill 
-                      className="object-cover group-hover:scale-110 transition-transform duration-500"
-                      data-ai-hint="digital book cover"
-                    />
-                    <div className="absolute inset-0 bg-[#1040C0]/20 mix-blend-multiply"></div>
-                  </div>
-                  <h2 className="text-xl font-black mb-6">{ebook.title}</h2>
-                  <div className="flex justify-between items-center">
+                  <Link href={`/shop/${ebook.id}`}>
+                    <div className="aspect-[4/5] relative mb-6 border-2 border-black group overflow-hidden bg-white">
+                      <Image 
+                        src={ebook.coverImage || PlaceHolderImages[i % PlaceHolderImages.length].imageUrl} 
+                        alt={ebook.title} 
+                        fill 
+                        className="object-cover group-hover:scale-110 transition-transform duration-500"
+                        data-ai-hint="digital book cover"
+                      />
+                      <div className="absolute inset-0 bg-[#1040C0]/20 mix-blend-multiply"></div>
+                    </div>
+                  </Link>
+                  <Link href={`/shop/${ebook.id}`}>
+                    <h2 className="text-xl font-black mb-6 hover:text-[#1040C0] transition-colors">{ebook.title}</h2>
+                  </Link>
+                  <div className="flex flex-wrap gap-2 justify-between items-center">
                     <span className="text-3xl font-black">₹{ebook.price}</span>
-                    <BauhausButton variant="terracotta" size="sm" onClick={() => handleBuyNow(ebook)}>
-                      BUY NOW
-                    </BauhausButton>
+                    <div className="flex gap-2">
+                      <BauhausButton variant="outline" size="sm" onClick={() => router.push(`/shop/${ebook.id}`)}>
+                        <Eye className="w-4 h-4" />
+                      </BauhausButton>
+                      <BauhausButton variant="terracotta" size="sm" onClick={() => handleBuyNow(ebook)}>
+                        BUY NOW
+                      </BauhausButton>
+                    </div>
                   </div>
                 </BauhausCard>
               ))

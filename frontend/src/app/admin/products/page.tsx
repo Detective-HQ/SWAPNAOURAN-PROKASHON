@@ -12,8 +12,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { Search, Package, IndianRupee, Eye, EyeOff } from "lucide-react";
+import { Search, Package, IndianRupee, Eye, EyeOff, Plus } from "lucide-react";
 
 export default function AdminProductsPage() {
   const api = useApi();
@@ -87,6 +88,12 @@ export default function AdminProductsPage() {
         </div>
 
         <div className="flex gap-3">
+          <Link href="/admin/products/add">
+            <button className="flex items-center gap-2 px-5 py-2 bg-botanical-forest text-white rounded-lg hover:bg-botanical-forest/90 transition-all text-sm font-semibold shadow-sm">
+              <Plus size={18} />
+              Add Product
+            </button>
+          </Link>
           <div className="relative group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-botanical-forest/50" size={16} />
             <input

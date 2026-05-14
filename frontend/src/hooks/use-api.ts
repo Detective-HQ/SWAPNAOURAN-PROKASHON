@@ -11,7 +11,13 @@ export function useApi() {
   const { getToken } = useAuth();
 
   const customFetch = useCallback(async (endpoint: string, options: FetchOptions = {}) => {
-    const token = await getToken();
+    let token: string | null = null;
+    try {
+      token = await getToken();
+    } catch {
+      // Public endpoints should still work even if auth token lookup is not ready.
+      token = null;
+    }
     const headers = new Headers(options.headers);
 
     if (token) {
@@ -29,8 +35,12 @@ export function useApi() {
 
     const url = endpoint.startsWith("http") ? endpoint : `${BASE_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
 
+    const method = (options.method || "GET").toUpperCase();
     const response = await fetch(url, {
       ...options,
+      // Prevent conditional-cache 304 responses for API calls,
+      // which would otherwise be treated as errors by response.ok checks.
+      cache: options.cache ?? (method === "GET" ? "no-store" : undefined),
       headers,
     });
 
