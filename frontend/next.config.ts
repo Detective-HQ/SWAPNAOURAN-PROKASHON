@@ -1,5 +1,11 @@
 import type { NextConfig } from 'next';
 
+const rawBackendUrl =
+  process.env.API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  'http://localhost:8000';
+const backendUrl = rawBackendUrl.replace(/\/$/, '').replace(/\/api$/, '');
+
 const nextConfig: NextConfig = {
   distDir: ".next",
   outputFileTracingRoot: __dirname,
@@ -38,18 +44,24 @@ const nextConfig: NextConfig = {
       {
         protocol: 'http',
         hostname: 'localhost',
-        port: '5000',
+        port: '8000',
         pathname: '/**',
       },
     ],
   },
   async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:5000/api/:path*', // Proxy to Backend
-      },
-    ];
+    return {
+      afterFiles: [
+        {
+          source: '/backend-api/:path*',
+          destination: `${backendUrl}/api/:path*`,
+        },
+        {
+          source: '/api/:path*',
+          destination: `${backendUrl}/api/:path*`,
+        },
+      ],
+    };
   },
   webpack: (config, { dev }) => {
     if (dev) {

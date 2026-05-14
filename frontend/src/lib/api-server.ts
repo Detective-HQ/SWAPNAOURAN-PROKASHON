@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 
-const rawBaseUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const rawBaseUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const normalizedBaseUrl = rawBaseUrl.replace(/\/$/, "");
 const BASE_URL = normalizedBaseUrl.endsWith("/api")
   ? normalizedBaseUrl

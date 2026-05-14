@@ -8,8 +8,8 @@ export function GallerySection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [sectionHeight, setSectionHeight] = useState("100vh");
   const [translateX, setTranslateX] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
   const rafRef = useRef<number | null>(null);
-  const lastScrollRef = useRef(0);
 
   const images = [
     { src: "/atmakatha and kobita.jpeg", alt: "Atmakatha and Kobita" },
@@ -30,6 +30,13 @@ export function GallerySection() {
   useEffect(() => {
     const calculateHeight = () => {
       if (!containerRef.current) return;
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) {
+        setSectionHeight("auto");
+        setTranslateX(0);
+        return;
+      }
       const containerWidth = containerRef.current.scrollWidth;
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
@@ -49,6 +56,7 @@ export function GallerySection() {
 
   const updateTransform = useCallback(() => {
     if (!galleryRef.current || !containerRef.current) return;
+    if (isMobile) return;
     
     const rect = galleryRef.current.getBoundingClientRect();
     const containerWidth = containerRef.current.scrollWidth;
@@ -67,7 +75,7 @@ export function GallerySection() {
     const newTranslateX = progress * -totalScrollDistance;
     
     setTranslateX(newTranslateX);
-  }, []);
+  }, [isMobile]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -92,50 +100,72 @@ export function GallerySection() {
   }, [updateTransform]);
 
   return (
-    <section 
+    <section
       id="gallery"
       ref={galleryRef}
       className="relative bg-background"
       style={{ height: sectionHeight }}
     >
-      {/* Sticky container */}
-      <div className="sticky top-0 h-screen overflow-hidden">
-        <div className="flex h-full items-center">
-          {/* Horizontal scrolling container */}
-          <div 
+      {isMobile ? (
+        <div className="overflow-hidden py-12">
+          <div
             ref={containerRef}
-            className="flex gap-4 md:gap-6 px-4 md:px-6"
-            style={{
-              transform: `translate3d(${translateX}px, 0, 0)`,
-              WebkitTransform: `translate3d(${translateX}px, 0, 0)`,
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden',
-              perspective: 1000,
-              WebkitPerspective: 1000,
-              touchAction: 'pan-y',
-            }}
+            className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 scrollbar-hide"
           >
             {images.map((image, index) => (
               <div
                 key={index}
-                className="relative h-[65vh] md:h-[70vh] w-[90vw] md:w-[60vw] lg:w-[45vw] flex-shrink-0 overflow-hidden rounded-[2rem] md:rounded-2xl"
-                style={{
-                  transform: 'translateZ(0)',
-                  WebkitTransform: 'translateZ(0)',
-                }}
+                className="relative h-[62svh] w-[82vw] flex-shrink-0 snap-center overflow-hidden rounded-2xl"
               >
                 <Image
                   src={image.src || "/placeholder.svg"}
                   alt={image.alt}
                   fill
-                  className="object-cover hover:scale-105 transition-transform duration-700"
-                  priority={index < 3}
+                  className="object-cover"
+                  priority={index < 2}
                 />
               </div>
             ))}
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="sticky top-0 h-screen overflow-hidden">
+          <div className="flex h-full items-center">
+            <div
+              ref={containerRef}
+              className="flex gap-3 px-3 md:gap-4 md:px-6 lg:gap-6"
+              style={{
+                transform: `translate3d(${translateX}px, 0, 0)`,
+                WebkitTransform: `translate3d(${translateX}px, 0, 0)`,
+                backfaceVisibility: "hidden",
+                WebkitBackfaceVisibility: "hidden",
+                perspective: 1000,
+                WebkitPerspective: 1000,
+                touchAction: "pan-y",
+              }}
+            >
+              {images.map((image, index) => (
+                <div
+                  key={index}
+                  className="relative h-[70vh] w-[60vw] flex-shrink-0 overflow-hidden rounded-2xl lg:w-[45vw]"
+                  style={{
+                    transform: "translateZ(0)",
+                    WebkitTransform: "translateZ(0)",
+                  }}
+                >
+                  <Image
+                    src={image.src || "/placeholder.svg"}
+                    alt={image.alt}
+                    fill
+                    className="object-cover transition-transform duration-700 hover:scale-105"
+                    priority={index < 3}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

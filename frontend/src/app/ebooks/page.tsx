@@ -81,18 +81,18 @@ export default function EbooksPage() {
     <div className="min-h-screen bg-[#F0F0F0]">
       <Navbar />
       
-      <header className="bg-[#F0C020] border-b-4 border-black py-24 px-4 overflow-hidden relative">
-        <div className="absolute top-0 right-0 p-12 opacity-10">
-           <div className="w-96 h-96 bg-black rounded-full"></div>
+      <header className="bg-[#F0C020] border-b-4 border-black py-16 md:py-24 px-4 overflow-hidden relative">
+        <div className="absolute top-0 right-0 p-8 md:p-12 opacity-10">
+           <div className="h-56 w-56 rounded-full bg-black md:h-96 md:w-96"></div>
         </div>
         <div className="max-w-7xl mx-auto relative z-10">
-          <h1 className="text-6xl lg:text-9xl font-black mb-6">EBOOKS</h1>
-          <p className="text-2xl font-bold uppercase tracking-widest max-w-2xl">High-quality digital blueprints for the modern reader. Pure information. Zero weight.</p>
+          <h1 className="mb-6 text-5xl font-black sm:text-6xl lg:text-9xl">EBOOKS</h1>
+          <p className="max-w-2xl text-base font-bold uppercase tracking-widest sm:text-xl md:text-2xl">High-quality digital blueprints for the modern reader. Pure information. Zero weight.</p>
         </div>
       </header>
 
       <section className="bg-white py-12 px-4 border-b-4 border-black">
-        <div className="max-w-7xl mx-auto flex flex-wrap gap-12 justify-center">
+        <div className="max-w-7xl mx-auto flex flex-col gap-6 sm:flex-row sm:flex-wrap sm:gap-12 sm:justify-center">
            <div className="flex items-center gap-4">
               <div className="bg-[#D02020] p-3 border-2 border-black rounded-full text-white"><Zap className="w-6 h-6" /></div>
               <span className="font-black text-sm uppercase">Instant Delivery</span>

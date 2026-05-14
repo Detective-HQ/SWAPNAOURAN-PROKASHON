@@ -38,16 +38,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   ];
 
   return (
-    <div className="h-screen flex bg-background overflow-hidden">
-      <div className="flex-grow flex flex-row">
+    <div className="flex min-h-screen bg-background overflow-x-hidden md:h-screen md:overflow-hidden">
+      <div className="flex min-w-0 flex-grow flex-col md:flex-row">
         {/* Sidebar */}
-        <aside className="w-72 bg-white border-r border-border/40 p-6 space-y-10 flex-shrink-0 h-screen overflow-y-auto sticky top-0">
+        <aside className="sticky top-0 z-50 h-auto w-full flex-shrink-0 space-y-3 overflow-hidden border-b border-border/40 bg-white p-3 md:h-screen md:w-72 md:space-y-10 md:overflow-y-auto md:border-b-0 md:border-r md:p-6">
           <div className="space-y-4">
-            <h2 className="text-[10px] uppercase tracking-[0.3em] font-bold text-botanical-sage px-4">Sanctuary Menu</h2>
-            <div className="h-px bg-border/50 mx-4" />
+            <h2 className="px-2 text-[10px] font-bold uppercase tracking-[0.3em] text-botanical-sage md:px-4">Sanctuary Menu</h2>
+            <div className="mx-2 h-px bg-border/50 md:mx-4" />
           </div>
           
-          <nav className="space-y-1">
+          <nav className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide md:block md:space-y-1 md:overflow-visible md:pb-0">
             {menuItems.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -55,7 +55,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   key={item.label}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-4 px-4 py-3 rounded-2xl font-semibold uppercase tracking-widest text-[10px] transition-all group",
+                    "group flex shrink-0 items-center gap-2 rounded-2xl px-3 py-3 text-[10px] font-semibold uppercase tracking-widest transition-all md:gap-4 md:px-4",
                     isActive 
                       ? "text-botanical-forest bg-botanical-clay/30" 
                       : "text-botanical-forest/50 hover:text-botanical-forest hover:bg-botanical-clay/10"
@@ -65,7 +65,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     "w-4 h-4 transition-transform group-hover:scale-110",
                     isActive ? "text-botanical-terracotta" : "text-botanical-sage"
                   )} />
-                  {item.label}
+                  <span className="whitespace-nowrap">{item.label}</span>
                 </Link>
               );
             })}
@@ -92,7 +92,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           )}
 
-          <div className="pt-10 mt-auto">
+          <div className="mt-auto hidden pt-10 md:block">
             <div className="bg-botanical-forest p-6 rounded-[32px] text-botanical-alabaster space-y-4 relative overflow-hidden">
               <Leaf className="absolute -bottom-2 -right-2 w-16 h-16 text-white/5 rotate-45" />
               <p className="text-[9px] font-bold uppercase tracking-[0.3em] opacity-40">Reader Status</p>
@@ -105,8 +105,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </aside>
 
         {/* Content */}
-        <main className="flex-grow overflow-y-auto">
-          <div className="flex items-center justify-end gap-3 px-6 lg:px-12 py-4 border-b border-border/40 bg-white/80 backdrop-blur-sm sticky top-0 z-40">
+        <main className="min-w-0 flex-grow overflow-visible md:overflow-y-auto">
+          <div className="z-40 flex items-center justify-end gap-3 border-b border-border/40 bg-white/80 px-4 py-3 backdrop-blur-sm md:sticky md:top-0 md:px-6 lg:px-12">
             {isLoaded && (
               <>
                 <CartDrawer />
@@ -114,7 +114,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </>
             )}
           </div>
-          <div className="p-6 lg:p-12">
+          <div className="p-4 sm:p-6 lg:p-12">
             <div className="max-w-6xl mx-auto">
               {children}
             </div>

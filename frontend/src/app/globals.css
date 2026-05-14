@@ -33,6 +33,7 @@
   }
   body {
     @apply bg-background text-foreground font-body antialiased selection:bg-accent/30 selection:text-foreground;
+    overflow-x: hidden;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline font-semibold leading-tight tracking-tight;
@@ -64,4 +65,13 @@
 
 .staggered-card:nth-child(even) {
   @apply md:translate-y-12;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

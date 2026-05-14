@@ -18,7 +18,10 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+const BASE_URL =
+  process.env.NODE_ENV === "development"
+    ? "/backend-api"
+    : process.env.NEXT_PUBLIC_API_URL || "/api";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { isLoaded: clerkLoaded, user: clerkUser } = useUser();
