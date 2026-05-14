@@ -1,7 +1,7 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  distDir: ".next-local",
+  distDir: ".next",
   outputFileTracingRoot: __dirname,
   typescript: {
     ignoreBuildErrors: true,
