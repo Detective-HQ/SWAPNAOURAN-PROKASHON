@@ -10,10 +10,8 @@ import {
   ShoppingBag, 
   FileText, 
   User, 
-  LayoutDashboard, 
   Camera, 
   ShoppingCart,
-  Home,
   Leaf,
   Shield,
   Heart,
@@ -27,7 +25,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user: appUser } = useAuth();
 
   const menuItems = [
-    { icon: Home, label: 'Home', href: '/dashboard' },
     { icon: ShoppingBag, label: 'Shop', href: '/dashboard/shop' },
     { icon: FileText, label: 'Ebooks', href: '/dashboard/ebooks' },
     { icon: Camera, label: 'Photo Time', href: '/dashboard/photo-time' },

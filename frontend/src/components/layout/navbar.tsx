@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { GeometricShape, BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
 import { CartDrawer } from '@/components/shop/cart-drawer';
-import { Menu, User as UserIcon } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useUser, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs';
 import { useAuth } from '@/context/auth-context';
 
@@ -22,7 +22,6 @@ export function Navbar() {
         {/* Conditionally show internal links only if user is logged in */}
         {user && isLoaded && (
           <div className="hidden lg:flex items-center gap-12 font-medium uppercase tracking-[0.2em] text-[11px] text-botanical-forest/70">
-            <Link href="/dashboard" className="hover:text-botanical-terracotta transition-colors">Home</Link>
             <Link href="/dashboard/shop" className="hover:text-botanical-terracotta transition-colors">Shop</Link>
             <Link href="/dashboard/ebooks" className="hover:text-botanical-terracotta transition-colors">Ebooks</Link>
             <Link href="/dashboard/photo-time" className="hover:text-botanical-terracotta transition-colors">Photo Time</Link>
@@ -37,10 +36,10 @@ export function Navbar() {
           <div className="hidden sm:flex items-center gap-4">
             {!user && isLoaded ? (
               <>
-                <SignInButton mode="modal">
+                <SignInButton mode="modal" forceRedirectUrl="/dashboard/shop">
                   <BauhausButton variant="ghost" size="sm">Sign In</BauhausButton>
                 </SignInButton>
-                <SignUpButton mode="modal">
+                <SignUpButton mode="modal" forceRedirectUrl="/dashboard/shop">
                   <BauhausButton variant="primary" size="sm">Join Collective</BauhausButton>
                 </SignUpButton>
               </>

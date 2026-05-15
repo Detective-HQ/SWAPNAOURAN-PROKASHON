@@ -35,12 +35,12 @@ export function Header() {
         <div className="flex items-center gap-2 md:gap-6">
           {!user ? (
             <>
-              <SignInButton mode="modal">
+              <SignInButton mode="modal" forceRedirectUrl="/dashboard/shop">
                 <button className={`px-2 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-medium transition-all rounded-full ${isScrolled ? "text-muted-foreground hover:text-foreground" : "text-white/70 hover:text-white"}`}>
                   Sign In
                 </button>
               </SignInButton>
-              <SignUpButton mode="modal">
+              <SignUpButton mode="modal" forceRedirectUrl="/dashboard/shop">
                 <button className={`px-2 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-medium transition-all rounded-full ${isScrolled ? "bg-foreground text-background hover:opacity-80" : "bg-white text-foreground hover:bg-white/90"}`}>
                   Sign Up
                 </button>
