@@ -13,7 +13,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isLoaded && user) {
-      router.push('/dashboard');
+      router.push('/dashboard/shop');
     }
   }, [user, isLoaded, router]);
 
@@ -37,6 +37,7 @@ export default function LoginPage() {
 
             <div className="flex justify-center">
               <SignIn 
+                forceRedirectUrl="/dashboard/shop"
                 appearance={{
                   elements: {
                     formButtonPrimary: 'bg-botanical-forest text-white hover:bg-botanical-forest/90',

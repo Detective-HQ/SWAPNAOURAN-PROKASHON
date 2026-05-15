@@ -13,7 +13,7 @@ export default function SignupPage() {
 
   useEffect(() => {
     if (isLoaded && user) {
-      router.push('/dashboard');
+      router.push('/dashboard/shop');
     }
   }, [user, isLoaded, router]);
 
@@ -34,6 +34,7 @@ export default function SignupPage() {
 
             <div className="flex justify-center">
               <SignUp 
+                forceRedirectUrl="/dashboard/shop"
                 appearance={{
                   elements: {
                     formButtonPrimary: 'bg-botanical-forest text-white hover:bg-botanical-forest/90',
