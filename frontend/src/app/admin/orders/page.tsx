@@ -133,6 +133,7 @@ export default function AdminOrdersPage() {
               <TableHead className="text-botanical-forest/70 font-semibold py-4 w-8"></TableHead>
               <TableHead className="text-botanical-forest/70 font-semibold">Order ID</TableHead>
               <TableHead className="text-botanical-forest/70 font-semibold">Buyer</TableHead>
+              <TableHead className="text-botanical-forest/70 font-semibold">Address</TableHead>
               <TableHead className="text-botanical-forest/70 font-semibold">Amount</TableHead>
               <TableHead className="text-botanical-forest/70 font-semibold">Date</TableHead>
               <TableHead className="text-botanical-forest/70 font-semibold">Status</TableHead>
@@ -159,6 +160,17 @@ export default function AdminOrdersPage() {
                       </div>
                     ) : (
                       <span className="text-botanical-forest/50 italic">Unknown</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-botanical-forest/70 text-[11px]">
+                    {order.shippingAddress ? (
+                      <div className="flex flex-col max-w-[180px]">
+                        <span className="font-medium truncate" title={order.shippingAddress.address}>{order.shippingAddress.address}</span>
+                        <span className="text-botanical-forest/50">{order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.pincode}</span>
+                        {order.shippingAddress.phone && <span className="text-botanical-terracotta/70 mt-0.5">{order.shippingAddress.phone}</span>}
+                      </div>
+                    ) : (
+                      <span className="text-botanical-forest/40 italic">No Address</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -197,7 +209,7 @@ export default function AdminOrdersPage() {
                 </TableRow>
                 {expandedOrder === order.id && (
                   <TableRow key={`${order.id}-tracking`}>
-                    <TableCell colSpan={7} className="bg-botanical-alabaster/30 p-4">
+                    <TableCell colSpan={8} className="bg-botanical-alabaster/30 p-4">
                       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
                         <div className="flex-1 space-y-1">
                           <label className="text-[10px] font-bold uppercase tracking-widest text-botanical-forest/60">Tracking Number</label>
@@ -258,7 +270,7 @@ export default function AdminOrdersPage() {
             ))}
             {orders.filter((o) => !searchQuery.trim() || o.id.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center text-botanical-forest/50">
+                <TableCell colSpan={8} className="h-32 text-center text-botanical-forest/50">
                   {searchQuery ? 'No orders match your search.' : 'No orders found in the system.'}
                 </TableCell>
               </TableRow>
