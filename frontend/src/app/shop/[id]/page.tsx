@@ -13,7 +13,7 @@ import { ReviewSection } from '@/components/shop/review-section';
 import { ShoppingCart, BookOpen, Heart, Loader2, Check, Star, ChevronLeft, Eye } from 'lucide-react';
 import Link from 'next/link';
 
-const PreviewPdfViewer = dynamic(() => import('@/components/ebooks/preview-pdf-viewer').then(m => m.PreviewPdfViewer), { ssr: false });
+const PreviewPdfViewer = dynamic(() => import('@/components/ebooks/preview-pdf-viewer'), { ssr: false });
 
 export default function BookDetailPage() {
   const { id } = useParams<{ id: string }>();

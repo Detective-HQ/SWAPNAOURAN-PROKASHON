@@ -13,7 +13,7 @@ import { BookOpen, ShieldCheck, Zap, Loader2, Eye } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { useApi } from '@/hooks/use-api';
 
-const PreviewPdfViewer = dynamic(() => import('@/components/ebooks/preview-pdf-viewer').then(m => m.PreviewPdfViewer), { ssr: false });
+const PreviewPdfViewer = dynamic(() => import('@/components/ebooks/preview-pdf-viewer'), { ssr: false });
 
 export default function EbooksPage() {
   const router = useRouter();
