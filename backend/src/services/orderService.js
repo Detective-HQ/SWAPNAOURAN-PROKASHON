@@ -92,9 +92,9 @@ const getOrderById = async ({ orderId, requester }) => {
   return order;
 };
 
-const listOrders = async ({ requester }) =>
+const listOrders = async ({ requester, userId }) =>
   prisma.order.findMany({
-    where: getOrderScope(requester),
+    where: userId ? { userId } : getOrderScope(requester),
     include: {
       user: { select: { id: true, name: true, email: true } },
       items: {
