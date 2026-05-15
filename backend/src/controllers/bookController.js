@@ -1,7 +1,7 @@
 const prisma = require("../prisma/client");
 const ApiError = require("../utils/ApiError");
 const { sendSuccess } = require("../utils/response");
-const { uploadBuffer } = require("../services/storageService");
+const { uploadBuffer, uploadPdf } = require("../services/storageService");
 const { getPreviewUrl } = require("../services/ebookService");
 
 const publicBookSelect = {
@@ -109,11 +109,9 @@ const createBookWithFiles = async (req, res) => {
       throw new ApiError(400, "Ebook file is required for EBOOK");
     }
 
-    const uploadedEbook = await uploadBuffer({
+    const uploadedEbook = await uploadPdf({
       buffer: ebookFile.buffer,
-      folder: "ebooks",
-      filename: `${Date.now()}-${ebookFile.originalname}`,
-      mimetype: ebookFile.mimetype
+      filename: `${Date.now()}-${ebookFile.originalname}`
     });
     fileUrl = uploadedEbook.url;
   }
@@ -121,11 +119,9 @@ const createBookWithFiles = async (req, res) => {
   let sampleChapterUrl = null;
   const sampleChapterFile = req.files?.sampleChapter?.[0];
   if (sampleChapterFile) {
-    const uploadedSample = await uploadBuffer({
+    const uploadedSample = await uploadPdf({
       buffer: sampleChapterFile.buffer,
-      folder: "samples",
-      filename: `${Date.now()}-${sampleChapterFile.originalname}`,
-      mimetype: sampleChapterFile.mimetype
+      filename: `${Date.now()}-${sampleChapterFile.originalname}`
     });
     sampleChapterUrl = uploadedSample.url;
   }
