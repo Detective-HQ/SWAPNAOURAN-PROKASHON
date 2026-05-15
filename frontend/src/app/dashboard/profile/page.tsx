@@ -1,13 +1,36 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
-import { User, Mail, Shield, TrendingUp, DollarSign, Package } from 'lucide-react';
+import { User, Mail, Shield, DollarSign, Package, Loader2 } from 'lucide-react';
 import { AddressManager } from '@/components/profile/address-manager';
+import { useApi } from '@/hooks/use-api';
 
 export default function ProfilePage() {
   const { user, isLoaded } = useUser();
+  const api = useApi();
+  const [totalSpent, setTotalSpent] = useState<number | null>(null);
+  const [totalOrders, setTotalOrders] = useState<number | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const res = await api.get('/orders/my');
+        const orders = res.data || [];
+        const paid = orders.filter((o: any) => o.status === 'PAID');
+        setTotalOrders(paid.length);
+        setTotalSpent(paid.reduce((sum: number, o: any) => sum + Number(o.totalAmount), 0));
+      } catch (err) {
+        console.error('Failed to load stats:', err);
+      } finally {
+        setStatsLoading(false);
+      }
+    })();
+  }, [user, api]);
 
   if (!isLoaded) {
     return (
@@ -65,38 +88,40 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="mt-8">
-                   <BauhausButton variant="outline" size="sm" onClick={() => window.location.href = '/user'}>Edit Details</BauhausButton>
+                   <BauhausButton variant="outline" size="sm">Edit Details</BauhausButton>
                 </div>
               </div>
             </div>
          </BauhausCard>
 
         <BauhausCard decorationColor="yellow" className="bg-[#121212] text-white">
-           <h3 className="text-xl font-black mb-8 border-b border-white/20 pb-2">ACCOUNT TIER</h3>
+           <h3 className="text-xl font-black mb-8 border-b border-white/20 pb-2">MEMBERSHIP</h3>
            <div className="text-center">
-              <p className="text-6xl font-black text-[#F0C020] mb-4">C-01</p>
-              <p className="font-black text-xs uppercase tracking-widest text-muted-foreground">Certified Collector</p>
+              <p className="text-6xl font-black text-[#F0C020] mb-4">{totalOrders !== null && totalOrders >= 3 ? 'GOLD' : totalOrders !== null && totalOrders >= 1 ? 'SILVER' : 'BRONZE'}</p>
+              <p className="font-black text-xs uppercase tracking-widest text-muted-foreground">{totalOrders !== null ? `${totalOrders} purchase${totalOrders !== 1 ? 's' : ''}` : '...'}</p>
            </div>
         </BauhausCard>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <BauhausCard decorationColor="red" className="bg-[#D02020] text-white text-center">
            <DollarSign className="mx-auto mb-4 w-10 h-10" />
-           <p className="text-xs font-black uppercase tracking-widest opacity-80 mb-2">Total Spending</p>
-           <p className="text-4xl font-black">$452.20</p>
+           <p className="text-xs font-black uppercase tracking-widest opacity-80 mb-2">Total Spent</p>
+           {statsLoading ? (
+             <Loader2 className="mx-auto w-6 h-6 animate-spin" />
+           ) : (
+             <p className="text-4xl font-black">₹{totalSpent !== null ? totalSpent.toLocaleString() : '0'}</p>
+           )}
         </BauhausCard>
         
         <BauhausCard decorationColor="blue" className="bg-[#1040C0] text-white text-center">
            <Package className="mx-auto mb-4 w-10 h-10" />
-           <p className="text-xs font-black uppercase tracking-widest opacity-80 mb-2">Total Orders</p>
-           <p className="text-4xl font-black">18</p>
-        </BauhausCard>
-
-        <BauhausCard decorationColor="yellow" className="bg-[#F0C020] text-black text-center">
-           <TrendingUp className="mx-auto mb-4 w-10 h-10" />
-           <p className="text-xs font-black uppercase tracking-widest opacity-80 mb-2">Reading Velocity</p>
-           <p className="text-4xl font-black">4.2/mo</p>
+           <p className="text-xs font-black uppercase tracking-widest opacity-80 mb-2">Paid Orders</p>
+           {statsLoading ? (
+             <Loader2 className="mx-auto w-6 h-6 animate-spin" />
+           ) : (
+             <p className="text-4xl font-black">{totalOrders !== null ? totalOrders : '0'}</p>
+           )}
         </BauhausCard>
       </div>
 
