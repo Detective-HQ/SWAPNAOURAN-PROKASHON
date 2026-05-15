@@ -3,17 +3,15 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Navbar } from '@/components/layout/navbar';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
+import PreviewPdfViewer from '@/components/ebooks/preview-pdf-viewer';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { BookOpen, ShieldCheck, Zap, Loader2, Eye } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { useApi } from '@/hooks/use-api';
-
-const PreviewPdfViewer = dynamic(() => import('@/components/ebooks/preview-pdf-viewer'), { ssr: false });
 
 export default function EbooksPage() {
   const router = useRouter();
