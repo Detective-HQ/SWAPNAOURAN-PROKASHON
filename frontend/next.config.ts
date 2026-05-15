@@ -63,11 +63,22 @@ const nextConfig: NextConfig = {
       ],
     };
   },
-  webpack: (config, { dev }) => {
+  serverExternalPackages: ['pdfjs-dist'],
+  webpack: (config, { dev, isServer }) => {
     if (dev) {
       // Disable filesystem caching to prevent OneDrive file lock/ENOENT issues
       config.cache = false;
     }
+
+    // Fix react-pdf: avoid eval-based devtool which breaks pdfjs-dist ESM
+    if (dev && !isServer) {
+      config.devtool = 'source-map';
+    }
+
+    // Aliases to prevent Node.js-only modules from being bundled client-side
+    config.resolve.alias.canvas = false;
+    config.resolve.alias.encoding = false;
+
     return config;
   },
 };

@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 
 const PreviewPdfViewer = dynamic(
-  () => import('@/components/ebooks/preview-pdf-viewer').then(m => m.PreviewPdfViewer),
+  () => import('@/components/ebooks/preview-pdf-viewer'),
   { ssr: false }
 );
 
