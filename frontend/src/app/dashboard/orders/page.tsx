@@ -103,15 +103,16 @@ export default function OrdersPage() {
         return;
       }
       try {
-        const [ordersRes, addressesRes] = await Promise.all([
-          api.get('/orders/my'),
-          api.get('/addresses')
-        ]);
+        const ordersRes = await api.get('/orders/my');
         setOrders(ordersRes.data || []);
-        
+      } catch (err) {
+        console.error('Failed to fetch orders:', err);
+      }
+
+      try {
+        const addressesRes = await api.get('/addresses');
         const addresses = addressesRes.data || [];
         setSavedAddresses(addresses);
-        
         if (addresses.length > 0) {
           const defaultAddr = addresses.find((a: any) => a.isDefault) || addresses[0];
           setSelectedAddressId(defaultAddr.id);
@@ -125,7 +126,7 @@ export default function OrdersPage() {
           });
         }
       } catch (err) {
-        console.error('Failed to fetch data:', err);
+        console.error('Failed to fetch addresses:', err);
       } finally {
         setLoading(false);
       }
