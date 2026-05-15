@@ -67,7 +67,12 @@ const getReadUrl = async ({ userId, bookId }) => {
 };
 
 const validateStreamToken = ({ token, expectedBookId }) => {
-  const decoded = verifyFileToken(token);
+  let decoded;
+  try {
+    decoded = verifyFileToken(token);
+  } catch (err) {
+    throw new ApiError(401, err.message === "jwt expired" ? "Stream token expired" : "Invalid stream token");
+  }
   if (decoded.action !== "READ_EBOOK") {
     throw new ApiError(401, "Invalid stream token");
   }
@@ -78,7 +83,12 @@ const validateStreamToken = ({ token, expectedBookId }) => {
 };
 
 const streamLocalFile = async ({ filePath, res, filenameHint }) => {
-  const stat = await fs.promises.stat(filePath);
+  let stat;
+  try {
+    stat = await fs.promises.stat(filePath);
+  } catch {
+    throw new ApiError(404, "E-book file not found on server");
+  }
   const ext = path.extname(filePath) || ".pdf";
   const contentType = mime.lookup(ext) || "application/pdf";
 
@@ -91,7 +101,15 @@ const streamLocalFile = async ({ filePath, res, filenameHint }) => {
 };
 
 const streamRemoteFile = async ({ url, res, filenameHint }) => {
-  const response = await axios.get(url, { responseType: "stream" });
+  let response;
+  try {
+    response = await axios.get(url, { responseType: "stream" });
+  } catch (err) {
+    if (err?.response?.status === 404) {
+      throw new ApiError(404, "E-book file not found on storage");
+    }
+    throw new ApiError(502, "Failed to fetch e-book file from storage");
+  }
   const contentType = response.headers["content-type"] || "application/pdf";
 
   res.setHeader("Content-Type", contentType);
@@ -135,7 +153,12 @@ const getPreviewUrl = async ({ bookId }) => {
 };
 
 const streamPreview = async ({ bookId, token, res }) => {
-  const decoded = verifyFileToken(token);
+  let decoded;
+  try {
+    decoded = verifyFileToken(token);
+  } catch (err) {
+    throw new ApiError(401, err.message === "jwt expired" ? "Preview token expired" : "Invalid preview token");
+  }
   if (decoded.action !== "PREVIEW_EBOOK") {
     throw new ApiError(401, "Invalid preview token");
   }

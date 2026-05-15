@@ -20,7 +20,8 @@ const createOrderController = async (req, res) => {
 
 const listMyOrders = async (req, res) => {
   const orders = await listOrders({
-    requester: req.user
+    requester: req.user,
+    userId: req.user.id
   });
 
   sendSuccess(res, 200, "Orders fetched", orders);
