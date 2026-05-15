@@ -207,13 +207,33 @@ export default function OrdersPage() {
         },
         handler: async (response: any) => {
           try {
-            // Step 4: Verify payment with backend
             await api.post(`/orders/${orderId}/verify`, {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_signature: response.razorpay_signature
             });
-            
+
+            if (savedAddresses.length === 0 && shippingAddress.address) {
+              const save = window.confirm(
+                'Would you like to save this shipping address to your profile for future orders?'
+              );
+              if (save) {
+                try {
+                  await api.post('/addresses', {
+                    name: shippingAddress.name,
+                    phone: shippingAddress.phone,
+                    address: shippingAddress.address,
+                    city: shippingAddress.city,
+                    state: shippingAddress.state,
+                    pincode: shippingAddress.pincode,
+                    isDefault: true
+                  });
+                } catch {
+                  // silently ignore — order already succeeded
+                }
+              }
+            }
+
             clearCart();
             window.location.href = '/dashboard/orders?payment=success';
           } catch (verifyErr: any) {
