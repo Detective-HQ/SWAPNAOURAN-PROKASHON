@@ -10,6 +10,15 @@ const { getLocalFilePathFromUrl } = require("./storageService");
 const env = require("../config/env");
 
 const requireEbookAccess = async (userId, bookId) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true }
+  });
+
+  if (user && user.role === "ADMIN") {
+    return true;
+  }
+
   const access = await prisma.ebookAccess.findFirst({
     where: {
       userId,
@@ -53,18 +62,19 @@ const getReadUrl = async ({ userId, bookId }) => {
   return {
     bookId: book.id,
     title: book.title,
-    streamUrl: `${env.appBaseUrl}/api/ebooks/${book.id}/stream?token=${token}`
+    streamUrl: `/api/ebooks/${book.id}/stream?token=${token}`
   };
 };
 
-const validateStreamToken = ({ token, expectedUserId, expectedBookId }) => {
+const validateStreamToken = ({ token, expectedBookId }) => {
   const decoded = verifyFileToken(token);
   if (decoded.action !== "READ_EBOOK") {
     throw new ApiError(401, "Invalid stream token");
   }
-  if (decoded.userId !== expectedUserId || decoded.bookId !== expectedBookId) {
+  if (decoded.bookId !== expectedBookId) {
     throw new ApiError(401, "Stream token mismatch");
   }
+  return decoded;
 };
 
 const streamLocalFile = async ({ filePath, res, filenameHint }) => {
@@ -94,9 +104,76 @@ const streamRemoteFile = async ({ url, res, filenameHint }) => {
   response.data.pipe(res);
 };
 
-const streamEbook = async ({ userId, bookId, token, res }) => {
-  validateStreamToken({ token, expectedUserId: userId, expectedBookId: bookId });
-  await requireEbookAccess(userId, bookId);
+const getPreviewUrl = async ({ bookId }) => {
+  const book = await prisma.book.findUnique({
+    where: { id: bookId },
+    select: { id: true, type: true, title: true, fileUrl: true, isActive: true }
+  });
+
+  if (!book || !book.isActive) {
+    throw new ApiError(404, "Book not found");
+  }
+
+  if (book.type !== "EBOOK") {
+    throw new ApiError(400, "This is not an e-book");
+  }
+
+  if (!book.fileUrl) {
+    throw new ApiError(404, "E-book file is missing");
+  }
+
+  const token = signFileToken({
+    bookId,
+    action: "PREVIEW_EBOOK"
+  });
+
+  return {
+    bookId: book.id,
+    title: book.title,
+    streamUrl: `/api/ebooks/${book.id}/stream-preview?token=${token}`
+  };
+};
+
+const streamPreview = async ({ bookId, token, res }) => {
+  const decoded = verifyFileToken(token);
+  if (decoded.action !== "PREVIEW_EBOOK") {
+    throw new ApiError(401, "Invalid preview token");
+  }
+  if (decoded.bookId !== bookId) {
+    throw new ApiError(401, "Preview token mismatch");
+  }
+
+  const book = await prisma.book.findUnique({
+    where: { id: bookId },
+    select: { id: true, fileUrl: true, title: true, type: true, isActive: true }
+  });
+
+  if (!book || !book.isActive || book.type !== "EBOOK" || !book.fileUrl) {
+    throw new ApiError(404, "E-book file not found");
+  }
+
+  const fileNameSafe = `${book.title.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "ebook"}.pdf`;
+  const localPath = getLocalFilePathFromUrl(book.fileUrl);
+
+  if (localPath && fs.existsSync(localPath)) {
+    await streamLocalFile({
+      filePath: localPath,
+      res,
+      filenameHint: fileNameSafe
+    });
+    return;
+  }
+
+  await streamRemoteFile({
+    url: book.fileUrl,
+    res,
+    filenameHint: fileNameSafe
+  });
+};
+
+const streamEbook = async ({ bookId, token, res }) => {
+  const decoded = validateStreamToken({ token, expectedBookId: bookId });
+  await requireEbookAccess(decoded.userId, bookId);
 
   const book = await prisma.book.findUnique({
     where: { id: bookId },
@@ -128,5 +205,7 @@ const streamEbook = async ({ userId, bookId, token, res }) => {
 
 module.exports = {
   getReadUrl,
-  streamEbook
+  streamEbook,
+  getPreviewUrl,
+  streamPreview
 };

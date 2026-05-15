@@ -6,7 +6,8 @@ import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useCart } from '@/lib/cart-context';
 import { useApi } from '@/hooks/use-api';
-import { ShoppingCart, Search, SlidersHorizontal, Check } from 'lucide-react';
+import { ShoppingCart, Search, SlidersHorizontal, Check, Eye, Heart } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 type Book = {
@@ -20,7 +21,9 @@ type Book = {
 export default function ShopPage() {
   const { addItem } = useCart();
   const api = useApi();
+  const router = useRouter();
   const [addedItems, setAddedItems] = useState<Array<string | number>>([]);
+  const [wishlistItems, setWishlistItems] = useState<string[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,6 +77,12 @@ export default function ShopPage() {
     setTimeout(() => {
       setAddedItems((prev) => prev.filter((id) => id !== book.id));
     }, 2000);
+  };
+
+  const toggleWishlist = (bookId: string) => {
+    setWishlistItems((prev) =>
+      prev.includes(bookId) ? prev.filter((id) => id !== bookId) : [...prev, bookId]
+    );
   };
 
   const filteredBooks = books.filter((b) => {
@@ -176,16 +185,33 @@ export default function ShopPage() {
                 )}
                 <div className="flex items-center justify-between pt-2 border-t border-border/10">
                   <span className="text-xl font-headline font-bold text-botanical-terracotta">₹{parsePrice(book.price).toLocaleString()}</span>
-                  <button
-                    onClick={() => handleAddToCart(book)}
-                    className="sm:hidden p-2.5 rounded-xl bg-botanical-clay/20 text-botanical-forest hover:bg-botanical-clay/40 transition-colors"
-                  >
-                    {addedItems.includes(book.id) ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <ShoppingCart className="w-4 h-4" />
-                    )}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => toggleWishlist(book.id)}
+                      className="p-2.5 rounded-xl bg-botanical-clay/10 text-botanical-forest hover:bg-botanical-clay/20 transition-colors"
+                      title="Add to Wishlist"
+                    >
+                      <Heart className={`w-4 h-4 transition-colors ${wishlistItems.includes(book.id) ? 'fill-red-500 text-red-500' : ''}`} />
+                    </button>
+                    <button
+                      onClick={() => router.push(`/shop/${book.id}`)}
+                      className="p-2.5 rounded-xl bg-botanical-clay/10 text-botanical-forest hover:bg-botanical-clay/20 transition-colors"
+                      title="View Details"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleAddToCart(book)}
+                      className="sm:hidden p-2.5 rounded-xl bg-botanical-clay/20 text-botanical-forest hover:bg-botanical-clay/40 transition-colors"
+                      title="Add to Cart"
+                    >
+                      {addedItems.includes(book.id) ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <ShoppingCart className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

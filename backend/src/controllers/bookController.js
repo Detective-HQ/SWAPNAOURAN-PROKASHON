@@ -2,6 +2,7 @@ const prisma = require("../prisma/client");
 const ApiError = require("../utils/ApiError");
 const { sendSuccess } = require("../utils/response");
 const { uploadBuffer } = require("../services/storageService");
+const { getPreviewUrl } = require("../services/ebookService");
 
 const publicBookSelect = {
   id: true,
@@ -10,6 +11,7 @@ const publicBookSelect = {
   price: true,
   type: true,
   coverImage: true,
+  fileUrl: true,
   sampleChapterUrl: true,
   isActive: true,
   createdAt: true,
@@ -27,11 +29,11 @@ const listBooks = async (req, res) => {
     ...(type ? { type } : {}),
     ...(search
       ? {
-          OR: [
-            { title: { contains: search, mode: "insensitive" } },
-            { description: { contains: search, mode: "insensitive" } }
-          ]
-        }
+        OR: [
+          { title: { contains: search, mode: "insensitive" } },
+          { description: { contains: search, mode: "insensitive" } }
+        ]
+      }
       : {})
   };
 
@@ -180,14 +182,23 @@ const deleteBook = async (req, res) => {
 const getBookSample = async (req, res) => {
   const book = await prisma.book.findUnique({
     where: { id: req.params.id },
-    select: { id: true, title: true, sampleChapterUrl: true, isActive: true }
+    select: { id: true, title: true, type: true, sampleChapterUrl: true, fileUrl: true, isActive: true }
   });
 
-  if (!book || !book.isActive || !book.sampleChapterUrl) {
+  if (!book || !book.isActive) {
     throw new ApiError(404, "Sample not available");
   }
 
-  res.redirect(book.sampleChapterUrl);
+  if (book.sampleChapterUrl) {
+    return res.redirect(book.sampleChapterUrl);
+  }
+
+  if (book.type === "EBOOK" && book.fileUrl) {
+    const payload = await getPreviewUrl({ bookId: book.id });
+    return sendSuccess(res, 200, "Preview URL generated", { streamUrl: payload.streamUrl, title: book.title });
+  }
+
+  throw new ApiError(404, "Sample not available");
 };
 
 module.exports = {

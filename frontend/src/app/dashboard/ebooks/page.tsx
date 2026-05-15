@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { BookOpen, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useApi } from '@/hooks/use-api';
 import dynamic from 'next/dynamic';
 
@@ -74,7 +74,7 @@ export default function EbooksPage() {
         </div>
         <h1 className="text-5xl font-headline font-bold text-botanical-forest">My <span className="italic font-normal text-botanical-terracotta">Ebooks</span></h1>
         <p className="text-botanical-forest/60 font-medium max-w-xl">
-          Secure digital blueprints delivered instantly to your device. Pure information, zero footprint.
+          Your purchased digital books. Click "Read Now" to open the full book.
         </p>
       </header>
 
@@ -91,10 +91,10 @@ export default function EbooksPage() {
           {ebooks.map((ebook, i) => (
             <BauhausCard key={ebook.id} className="group">
               <div className="aspect-[3/4] relative mb-6 rounded-2xl overflow-hidden arch-image shadow-md">
-                <Image 
-                  src={ebook.coverImage || PlaceHolderImages[i % PlaceHolderImages.length].imageUrl} 
-                  alt={ebook.title} 
-                  fill 
+                <Image
+                  src={ebook.coverImage || PlaceHolderImages[i % PlaceHolderImages.length].imageUrl}
+                  alt={ebook.title}
+                  fill
                   className="object-cover group-hover:scale-105 transition-transform duration-700"
                   data-ai-hint="digital book cover"
                 />
@@ -103,9 +103,9 @@ export default function EbooksPage() {
               <h3 className="text-lg font-headline font-bold text-botanical-forest mb-1">{ebook.title}</h3>
               <p className="text-[10px] font-bold text-botanical-sage uppercase tracking-widest mb-6 italic">Swapno Uran Prakashan</p>
               <div className="flex justify-end pt-4 border-t border-border/40">
-                <BauhausButton 
-                  variant="primary" 
-                  size="sm" 
+                <BauhausButton
+                  variant="primary"
+                  size="sm"
                   onClick={() => handleReadNow(ebook)}
                 >
                   READ NOW
@@ -118,10 +118,10 @@ export default function EbooksPage() {
 
       {/* Secure PDF Viewer Overlay */}
       {readingEbook && (
-        <SecurePdfViewer 
-          url={readingEbook.url} 
-          title={readingEbook.title} 
-          onClose={() => setReadingEbook(null)} 
+        <SecurePdfViewer
+          url={readingEbook.url}
+          title={readingEbook.title}
+          onClose={() => setReadingEbook(null)}
         />
       )}
     </div>

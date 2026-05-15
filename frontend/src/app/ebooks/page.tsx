@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Navbar } from '@/components/layout/navbar';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
@@ -12,12 +13,16 @@ import { BookOpen, ShieldCheck, Zap, Loader2, Eye } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { useApi } from '@/hooks/use-api';
 
+const PreviewPdfViewer = dynamic(() => import('@/components/ebooks/preview-pdf-viewer').then(m => m.PreviewPdfViewer), { ssr: false });
+
 export default function EbooksPage() {
   const router = useRouter();
   const { addItem } = useCart();
   const api = useApi();
   const [ebooks, setEbooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previewBook, setPreviewBook] = useState<any>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -57,6 +62,19 @@ export default function EbooksPage() {
       image: book.coverImage || PlaceHolderImages[0].imageUrl,
     });
     router.push('/dashboard/orders');
+  };
+
+  const handlePreview = async (book: any) => {
+    setPreviewBook(book);
+    try {
+      const res = await api.get('/ebooks/' + book.id + '/preview');
+      if (res.data?.streamUrl) {
+        setPreviewUrl(res.data.streamUrl);
+      }
+    } catch (err) {
+      console.error('Preview error:', err);
+      setPreviewBook(null);
+    }
   };
 
   return (
@@ -125,6 +143,11 @@ export default function EbooksPage() {
                       <BauhausButton variant="outline" size="sm" onClick={() => router.push(`/shop/${ebook.id}`)}>
                         <Eye className="w-4 h-4" />
                       </BauhausButton>
+                      {ebook.fileUrl && (
+                        <BauhausButton variant="secondary" size="sm" onClick={() => handlePreview(ebook)}>
+                          <BookOpen className="w-4 h-4" />
+                        </BauhausButton>
+                      )}
                       <BauhausButton variant="terracotta" size="sm" onClick={() => handleBuyNow(ebook)}>
                         BUY NOW
                       </BauhausButton>
@@ -145,6 +168,16 @@ export default function EbooksPage() {
            </p>
         </div>
       </section>
+
+      {previewBook && previewUrl && (
+        <PreviewPdfViewer
+          url={previewUrl}
+          title={previewBook.title}
+          price={typeof previewBook.price === 'number' ? previewBook.price : parseFloat(String(previewBook.price).replace(/,/g, ''))}
+          bookId={previewBook.id}
+          onClose={() => { setPreviewBook(null); setPreviewUrl(null); }}
+        />
+      )}
     </div>
   );
 }

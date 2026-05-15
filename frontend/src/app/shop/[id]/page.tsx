@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { Navbar } from '@/components/layout/navbar';
 import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
@@ -9,8 +10,10 @@ import { useCart } from '@/lib/cart-context';
 import { useApi } from '@/hooks/use-api';
 import { SamplePreview } from '@/components/ebooks/sample-preview';
 import { ReviewSection } from '@/components/shop/review-section';
-import { ShoppingCart, BookOpen, Heart, Loader2, Check, Star, ChevronLeft } from 'lucide-react';
+import { ShoppingCart, BookOpen, Heart, Loader2, Check, Star, ChevronLeft, Eye } from 'lucide-react';
 import Link from 'next/link';
+
+const PreviewPdfViewer = dynamic(() => import('@/components/ebooks/preview-pdf-viewer').then(m => m.PreviewPdfViewer), { ssr: false });
 
 export default function BookDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +24,9 @@ export default function BookDetailPage() {
   const [loading, setLoading] = useState(true);
   const [addedToCart, setAddedToCart] = useState(false);
   const [showSample, setShowSample] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [avgRating, setAvgRating] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
@@ -81,6 +87,20 @@ export default function BookDetailPage() {
       }
     } catch (err) {
       console.error('Wishlist error:', err);
+    }
+  };
+
+  const handlePreview = async () => {
+    if (!book || !book.fileUrl) return;
+    setPreviewLoading(true);
+    try {
+      const res = await api.get(`/ebooks/${book.id}/preview`);
+      setPreviewUrl(res.data?.streamUrl || null);
+      setShowPreview(true);
+    } catch (err) {
+      console.error('Preview error:', err);
+    } finally {
+      setPreviewLoading(false);
     }
   };
 
@@ -180,6 +200,17 @@ export default function BookDetailPage() {
                   </BauhausButton>
                 )}
 
+                {book.type === 'EBOOK' && book.fileUrl && (
+                  <BauhausButton variant="outline" size="lg" onClick={handlePreview} disabled={previewLoading}>
+                    {previewLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                    Preview (First 4 Pages)
+                  </BauhausButton>
+                )}
+
                 <button
                   onClick={handleToggleWishlist}
                   className={`p-4 rounded-2xl border transition-all ${
@@ -205,6 +236,16 @@ export default function BookDetailPage() {
           url={book.sampleChapterUrl}
           title={book.title}
           onClose={() => setShowSample(false)}
+        />
+      )}
+
+      {showPreview && previewUrl && (
+        <PreviewPdfViewer
+          url={previewUrl}
+          title={book.title}
+          price={price}
+          bookId={book.id}
+          onClose={() => { setShowPreview(false); setPreviewUrl(null); }}
         />
       )}
     </div>
