@@ -2,18 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { Navbar } from '@/components/layout/navbar';
 import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
 import { useCart } from '@/lib/cart-context';
 import { useApi } from '@/hooks/use-api';
 import { SamplePreview } from '@/components/ebooks/sample-preview';
+import PreviewPdfViewer from '@/components/ebooks/preview-pdf-viewer';
 import { ReviewSection } from '@/components/shop/review-section';
 import { ShoppingCart, BookOpen, Heart, Loader2, Check, Star, ChevronLeft, Eye } from 'lucide-react';
 import Link from 'next/link';
-
-const PreviewPdfViewer = dynamic(() => import('@/components/ebooks/preview-pdf-viewer'), { ssr: false });
 
 export default function BookDetailPage() {
   const { id } = useParams<{ id: string }>();
