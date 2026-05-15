@@ -96,9 +96,30 @@ const getLocalFilePathFromUrl = (url) => {
   return resolved.startsWith(UPLOADS_ROOT) ? resolved : null;
 };
 
+// Always save PDFs locally — Cloudinary free plan blocks inline PDF delivery
+const uploadPdf = async ({ buffer, filename }) => {
+  if (!buffer) {
+    throw new Error("No file buffer provided");
+  }
+
+  const safeName = filename || `${Date.now()}-${crypto.randomUUID()}.pdf`;
+  const folderPath = path.join(UPLOADS_ROOT, "ebooks");
+  await ensureFolder(folderPath);
+
+  const finalPath = path.join(folderPath, safeName);
+  await fs.writeFile(finalPath, buffer);
+
+  return {
+    url: buildPublicUploadUrl("ebooks", safeName),
+    publicId: null,
+    storage: "LOCAL"
+  };
+};
+
 module.exports = {
   uploadBuffer,
   uploadBase64,
+  uploadPdf,
   deleteFile,
   getLocalFilePathFromUrl
 };

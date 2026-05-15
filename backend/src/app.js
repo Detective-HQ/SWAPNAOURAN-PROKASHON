@@ -35,6 +35,15 @@ app.use("/api/webhooks", webhookRoutes);
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+// Disable CSP headers for PDF stream endpoints so Chrome's PDF viewer can render
+app.use("/api/ebooks", (req, res, next) => {
+  if (req.path.includes("/stream")) {
+    res.removeHeader("Content-Security-Policy");
+  }
+  next();
+});
+
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.use("/api", routes);
