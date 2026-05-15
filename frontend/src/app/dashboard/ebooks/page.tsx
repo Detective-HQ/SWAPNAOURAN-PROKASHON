@@ -20,11 +20,11 @@ export default function EbooksPage() {
 
     const fetchEbooks = async () => {
       try {
-        const res = await api.get('/books?type=EBOOK&limit=100');
+        const res = await api.get('/ebooks');
         if (!mounted) return;
 
-        const items = Array.isArray(res?.data?.items)
-          ? res.data.items
+        const items = Array.isArray(res?.data)
+          ? res.data
           : Array.isArray((res as any)?.items)
             ? (res as any).items
             : [];
