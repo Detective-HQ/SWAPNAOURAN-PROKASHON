@@ -55,7 +55,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   key={item.label}
                   href={item.href}
                   className={cn(
-                    "group flex shrink-0 items-center gap-2 rounded-2xl px-3 py-3 text-[10px] font-semibold uppercase tracking-widest transition-all md:gap-4 md:px-4",
+                    "group flex shrink-0 items-center gap-2 rounded-lg px-3 py-3 text-[10px] font-semibold uppercase tracking-widest transition-all md:gap-4 md:px-4",
                     isActive 
                       ? "text-botanical-forest bg-botanical-clay/30" 
                       : "text-botanical-forest/50 hover:text-botanical-forest hover:bg-botanical-clay/10"
@@ -77,7 +77,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Link
                 href="/admin"
                 className={cn(
-                  "flex items-center gap-4 px-4 py-3 rounded-2xl font-semibold uppercase tracking-widest text-[10px] transition-all group",
+                  "flex items-center gap-4 px-4 py-3 rounded-lg font-semibold uppercase tracking-widest text-[10px] transition-all group",
                   pathname.startsWith('/admin')
                     ? "text-botanical-terracotta bg-botanical-terracotta/10"
                     : "text-botanical-forest/50 hover:text-botanical-terracotta hover:bg-botanical-terracotta/5"
@@ -93,7 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
 
           <div className="mt-auto hidden pt-10 md:block">
-            <div className="bg-botanical-forest p-6 rounded-[32px] text-botanical-alabaster space-y-4 relative overflow-hidden">
+            <div className="bg-botanical-forest p-6 rounded-xl text-botanical-alabaster space-y-4 relative overflow-hidden">
               <Leaf className="absolute -bottom-2 -right-2 w-16 h-16 text-white/5 rotate-45" />
               <p className="text-[9px] font-bold uppercase tracking-[0.3em] opacity-40">Reader Status</p>
               <p className="text-lg font-headline font-bold text-botanical-clay">Elite Bloom</p>

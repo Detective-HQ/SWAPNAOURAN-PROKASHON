@@ -26,7 +26,7 @@ export const BauhausButton = React.forwardRef<HTMLButtonElement, BauhausButtonPr
       <button
         ref={ref}
         className={cn(
-          'rounded-full font-semibold uppercase tracking-widest transition-all duration-300 inline-flex items-center justify-center gap-2 active:scale-95',
+          'rounded-lg font-semibold uppercase tracking-widest transition-all duration-300 inline-flex items-center justify-center gap-2 active:scale-95',
           variants[variant],
           sizes[size],
           className

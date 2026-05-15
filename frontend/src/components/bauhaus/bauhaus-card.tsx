@@ -19,7 +19,7 @@ export const BauhausCard = React.forwardRef<HTMLDivElement, BauhausCardProps>(
       <div
         ref={ref}
         className={cn(
-          'relative rounded-[32px] organic-shadow-lg p-8 group transition-all duration-500 hover:-translate-y-2',
+          'relative rounded-xl organic-shadow-lg p-8 group transition-all duration-500 hover:-translate-y-2',
           variants[variant],
           className
         )}
