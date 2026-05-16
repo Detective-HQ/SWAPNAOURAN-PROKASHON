@@ -23,7 +23,7 @@ export function CartDrawer() {
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-md p-0 flex flex-col border-l border-border/40 bg-background">
         <SheetHeader className="p-10 border-b border-border bg-white/50 backdrop-blur-md sticky top-0 z-10">
-          <SheetTitle className="text-3xl font-headline font-bold italic">Your <span className="not-italic">Sanctuary</span></SheetTitle>
+          <SheetTitle className="text-3xl font-headline font-bold italic">Your <span className="not-italic">Cart</span></SheetTitle>
         </SheetHeader>
         
         <div className="flex-grow overflow-y-auto p-8 space-y-6">
@@ -32,7 +32,7 @@ export function CartDrawer() {
               <div className="w-20 h-28 bg-botanical-clay/30 rounded-2xl overflow-hidden flex-shrink-0" />
               <div className="flex-grow flex flex-col">
                 <h3 className="font-headline font-bold text-lg leading-tight mb-1">{item.title}</h3>
-                <p className="text-[10px] font-bold text-botanical-sage uppercase tracking-widest italic mb-auto">Curated Selection</p>
+                <p className="text-[10px] font-bold text-botanical-sage uppercase tracking-widest italic mb-auto">Swapnouran Prokashon</p>
                 <div className="flex justify-between items-center pt-4">
                   <span className="font-bold text-botanical-forest italic">₹{item.price.toLocaleString()}</span>
                   <div className="flex items-center gap-4">
@@ -47,7 +47,7 @@ export function CartDrawer() {
           ))}
           {items.length === 0 && (
             <div className="text-center py-20 text-botanical-forest/30 font-bold uppercase tracking-widest text-xs italic">
-              Empty garden...
+              Your cart is empty...
             </div>
           )}
         </div>
