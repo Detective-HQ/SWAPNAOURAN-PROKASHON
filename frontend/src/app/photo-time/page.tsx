@@ -25,7 +25,7 @@ export default function PhotoTimePage() {
             Visual Archive
           </div>
           <h1 className="text-6xl lg:text-8xl font-headline font-bold leading-none italic font-normal">Photo <span className="not-italic font-bold">Time</span></h1>
-          <p className="text-xl font-medium opacity-60 tracking-[0.1em] uppercase">A silent glimpse into the sanctuaries of our publishers</p>
+          <p className="text-xl font-medium opacity-60 tracking-[0.1em] uppercase">A silent glimpse into our publishing world</p>
         </div>
       </header>
 
