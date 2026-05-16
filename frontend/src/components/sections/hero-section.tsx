@@ -172,8 +172,8 @@ export function HeroSection() {
                 }}
               >
                 <h2 className="text-white text-[3vw] md:text-[2.5vw] font-bold tracking-widest uppercase drop-shadow-lg opacity-80 text-center px-4">
-                  <span className="text-xs md:text-sm block mb-2">স্বপ্নউড়ান</span>
-                  <span className="text-[2.5vw] md:text-[2vw]">প্রকাশন</span>
+                  <span className="text-xs md:text-sm block mb-2"></span>
+                  <span className="text-[2.5vw] md:text-[2vw]"></span>
                 </h2>
               </div>
             </div>
