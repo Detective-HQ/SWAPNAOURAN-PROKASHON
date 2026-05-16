@@ -32,7 +32,7 @@ export default function LoginPage() {
           <BauhausCard className="p-10 lg:p-16 border border-border/40">
             <div className="text-center space-y-4 mb-12">
               <h1 className="text-4xl font-headline font-bold text-botanical-forest italic">Welcome Back</h1>
-              <p className="text-xs uppercase tracking-[0.3em] font-bold text-botanical-sage">Enter your sanctuary</p>
+              <p className="text-xs uppercase tracking-[0.3em] font-bold text-botanical-sage">Enter your reading room</p>
             </div>
 
             <div className="flex justify-center">
