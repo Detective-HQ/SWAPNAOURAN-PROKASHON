@@ -14,7 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Search, Package, IndianRupee, Eye, EyeOff, Plus } from "lucide-react";
+import { Search, Package, IndianRupee, Eye, EyeOff, Plus, Edit } from "lucide-react";
 
 export default function AdminProductsPage() {
   const api = useApi();
@@ -159,17 +159,27 @@ export default function AdminProductsPage() {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right pr-6">
-                  <button
-                    onClick={() => toggleActive(book)}
-                    className={`p-2 rounded-lg transition-all ${
-                      book.isActive
-                        ? "text-rose-500 hover:bg-rose-50"
-                        : "text-emerald-500 hover:bg-emerald-50"
-                    }`}
-                    title={book.isActive ? "Disable" : "Enable"}
-                  >
-                    {book.isActive ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
+                  <div className="flex items-center justify-end gap-1">
+                    <Link href={`/admin/products/edit/${book.id}`}>
+                      <button
+                        className="p-2 rounded-lg text-botanical-forest/60 hover:text-botanical-terracotta hover:bg-botanical-terracotta/10 transition-all"
+                        title="Edit Product Details"
+                      >
+                        <Edit size={16} />
+                      </button>
+                    </Link>
+                    <button
+                      onClick={() => toggleActive(book)}
+                      className={`p-2 rounded-lg transition-all ${
+                        book.isActive
+                          ? "text-rose-500 hover:bg-rose-50"
+                          : "text-emerald-500 hover:bg-emerald-50"
+                      }`}
+                      title={book.isActive ? "Disable" : "Enable"}
+                    >
+                      {book.isActive ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
