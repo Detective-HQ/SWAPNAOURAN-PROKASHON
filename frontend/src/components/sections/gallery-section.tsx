@@ -115,13 +115,13 @@ export function GallerySection() {
             {images.map((image, index) => (
               <div
                 key={index}
-                className="relative h-[62svh] w-[82vw] flex-shrink-0 snap-center overflow-hidden rounded-2xl"
+                className="relative h-[62svh] w-[82vw] flex-shrink-0 snap-center overflow-hidden rounded-2xl flex items-center justify-center bg-gray-100"
               >
                 <Image
                   src={image.src || "/placeholder.svg"}
                   alt={image.alt}
                   fill
-                  className="object-cover"
+                  className="object-contain"
                   priority={index < 2}
                 />
               </div>
@@ -147,7 +147,7 @@ export function GallerySection() {
               {images.map((image, index) => (
                 <div
                   key={index}
-                  className="relative h-[70vh] w-[60vw] flex-shrink-0 overflow-hidden rounded-2xl lg:w-[45vw]"
+                  className="relative h-[65vh] w-[50vw] flex-shrink-0 overflow-hidden rounded-2xl lg:w-[40vw] flex items-center justify-center bg-gray-100"
                   style={{
                     transform: "translateZ(0)",
                     WebkitTransform: "translateZ(0)",
@@ -157,7 +157,7 @@ export function GallerySection() {
                     src={image.src || "/placeholder.svg"}
                     alt={image.alt}
                     fill
-                    className="object-cover transition-transform duration-700 hover:scale-105"
+                    className="object-contain transition-transform duration-700 hover:scale-110"
                     priority={index < 3}
                   />
                 </div>
