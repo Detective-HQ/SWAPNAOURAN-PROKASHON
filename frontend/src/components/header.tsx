@@ -36,7 +36,7 @@ export function Header() {
           {!user ? (
             <>
               <SignInButton mode="modal" forceRedirectUrl="/dashboard/shop">
-                <button className={`px-2 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-medium transition-all rounded-full ${isScrolled ? "text-muted-foreground hover:text-foreground" : "text-white/70 hover:text-white"}`}>
+                <button className={`px-2 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-medium transition-all rounded-full ${isScrolled ? "text-muted-foreground hover:text-foreground" : "text-black hover:text-white"}`}>
                   Sign In
                 </button>
               </SignInButton>
