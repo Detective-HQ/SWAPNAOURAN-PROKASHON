@@ -484,7 +484,7 @@ export default function OrdersPage() {
               </BauhausButton>
               {error && <p className="text-red-500 text-xs text-center mt-4">{error}</p>}
               <p className="text-[9px] font-bold text-botanical-forest/40 text-center mt-6 uppercase tracking-widest">
-                Safe and secure botanical payments
+                Safe and secure payments
               </p>
             </BauhausCard>
           </div>

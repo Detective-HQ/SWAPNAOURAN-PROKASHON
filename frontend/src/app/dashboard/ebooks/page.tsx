@@ -65,7 +65,7 @@ export default function EbooksPage() {
       <header className="space-y-4">
         <div className="inline-flex items-center gap-2 text-botanical-sage uppercase tracking-[0.3em] text-[10px] font-bold">
           <div className="w-8 h-px bg-botanical-sage" />
-          Digital Sanctuary
+          Digital Library
         </div>
         <h1 className="text-5xl font-headline font-bold text-botanical-forest">My <span className="italic font-normal text-botanical-terracotta">Ebooks</span></h1>
         <p className="text-botanical-forest/60 font-medium max-w-xl">
