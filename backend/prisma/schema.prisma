@@ -16,6 +16,7 @@ enum Role {
 enum BookType {
   PHYSICAL
   EBOOK
+  ENGLISH_BOOK
 }
 
 enum OrderStatus {
@@ -76,6 +77,8 @@ model Book {
   title            String
   description      String
   price            Decimal       @db.Decimal(10, 2)
+  mrp              Decimal?      @db.Decimal(10, 2)
+  discountPercentage Decimal?    @db.Decimal(5, 2)
   type             BookType
   coverImage       String?
   fileUrl          String?

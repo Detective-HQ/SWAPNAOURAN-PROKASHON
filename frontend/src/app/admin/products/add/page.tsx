@@ -172,6 +172,7 @@ export default function AddProductPage() {
                 <SelectContent className="bg-white border-botanical-sage/20 text-botanical-forest">
                   <SelectItem value="PHYSICAL" className="hover:bg-botanical-alabaster focus:bg-botanical-alabaster cursor-pointer">Physical Book</SelectItem>
                   <SelectItem value="EBOOK" className="hover:bg-botanical-alabaster focus:bg-botanical-alabaster cursor-pointer">E-Book (Digital)</SelectItem>
+                  <SelectItem value="ENGLISH_BOOK" className="hover:bg-botanical-alabaster focus:bg-botanical-alabaster cursor-pointer">English Book</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -24,7 +24,7 @@ export default function PhotoTimePage() {
         </div>
         <h1 className="text-5xl font-headline font-bold text-botanical-forest italic">Photo <span className="not-italic font-bold">Time</span></h1>
         <p className="text-botanical-forest/60 font-medium max-w-xl">
-          A silent glimpse into the sanctuaries of our independent publishers. Curated visual inspiration from the botanical world.
+          A silent glimpse into the world of our publishers. Curated visual inspiration from the literary world.
         </p>
       </header>
 

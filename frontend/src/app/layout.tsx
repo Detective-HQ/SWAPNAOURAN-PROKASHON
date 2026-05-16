@@ -19,8 +19,8 @@ const sourceSans = Source_Sans_3({
 });
 
 export const metadata: Metadata = {
-  title: 'Swapno Uran Prakashan | Curator of Stories',
-  description: 'A premium destination for physical and digital books with a bold botanical aesthetic. Discover stories that matter.',
+  title: 'Swapnouran Prokashon | Publisher of Stories',
+  description: 'Swapnouran Prokashon — a premium Bengali publication house for physical and digital books. Discover stories that matter.',
   icons: {
     icon: '/favicon.ico',
   },

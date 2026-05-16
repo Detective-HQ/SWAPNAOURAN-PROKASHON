@@ -74,7 +74,7 @@ export default function AdminOverviewPage() {
         <h1 className="text-3xl font-headline font-bold tracking-tight text-botanical-forest pb-2">
           Dashboard Overview
         </h1>
-        <p className="text-botanical-forest/70 font-body mt-2">Welcome back. Here's what's happening on CampusKart today.</p>
+        <p className="text-botanical-forest/70 font-body mt-2">Welcome back. Here's what's happening at Swapnouran Prokashon today.</p>
       </motion.div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -97,7 +97,7 @@ export default function AdminOverviewPage() {
                   </div>
                   <div className="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
                     <TrendingUp size={14} className="mr-1" />
-                    <span>Live</span>
+                    <span>Active</span>
                   </div>
                 </div>
                 

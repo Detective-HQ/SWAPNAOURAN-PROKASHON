@@ -19,7 +19,9 @@ type Book = {
   title: string;
   description?: string;
   price: number | string;
-  type: 'PHYSICAL' | 'EBOOK';
+  mrp?: number | string;
+  discountPercentage?: number | string;
+  type: 'PHYSICAL' | 'EBOOK' | 'ENGLISH_BOOK';
   coverImage?: string;
   fileUrl?: string;
 };
@@ -36,7 +38,7 @@ export default function ShopPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high'>('newest');
-  const [typeFilter, setTypeFilter] = useState<'ALL' | 'PHYSICAL' | 'EBOOK'>('ALL');
+  const [typeFilter, setTypeFilter] = useState<'ALL' | 'PHYSICAL' | 'EBOOK' | 'ENGLISH_BOOK'>('ALL');
   const [previewBook, setPreviewBook] = useState<Book | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -126,7 +128,7 @@ export default function ShopPage() {
             Curated Collection
           </div>
           <h1 className="text-4xl font-headline font-bold text-botanical-forest">
-            Book <span className="italic font-normal text-botanical-terracotta">Shop</span>
+            Sapnouran <span className="italic font-normal text-botanical-terracotta">Publication</span>
           </h1>
         </div>
 
@@ -153,8 +155,8 @@ export default function ShopPage() {
       </header>
 
       {/* Type Filter Tabs */}
-      <div className="flex items-center gap-2">
-        {(['ALL', 'PHYSICAL', 'EBOOK'] as const).map((t) => (
+      <div className="flex flex-wrap items-center gap-2">
+        {(['ALL', 'PHYSICAL', 'EBOOK', 'ENGLISH_BOOK'] as const).map((t) => (
           <button
             key={t}
             suppressHydrationWarning
@@ -165,7 +167,7 @@ export default function ShopPage() {
                 : 'bg-botanical-clay/10 border border-border text-botanical-forest/60 hover:bg-botanical-clay/20'
             }`}
           >
-            {t === 'ALL' ? 'All Books' : t === 'PHYSICAL' ? 'Physical' : 'Ebook'}
+            {t === 'ALL' ? 'All Books' : t === 'PHYSICAL' ? 'Book' : t === 'EBOOK' ? 'Ebook' : 'English Book'}
           </button>
         ))}
       </div>
@@ -221,9 +223,11 @@ export default function ShopPage() {
                 <div className={`absolute top-3 left-3 px-2.5 py-1 rounded text-[9px] font-bold uppercase tracking-wider ${
                   book.type === 'EBOOK'
                     ? 'bg-blue-600 text-white'
+                    : book.type === 'ENGLISH_BOOK'
+                    ? 'bg-indigo-600 text-white'
                     : 'bg-botanical-forest text-white'
                 }`}>
-                  {book.type === 'EBOOK' ? 'Ebook' : 'Physical'}
+                  {book.type === 'EBOOK' ? 'Ebook' : book.type === 'ENGLISH_BOOK' ? 'English Book' : 'Book'}
                 </div>
                 {/* Hover Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -254,7 +258,19 @@ export default function ShopPage() {
 
                 {/* Price + Actions */}
                 <div className="flex items-center justify-between pt-2 border-t border-border/10">
-                  <span className="text-lg font-headline font-bold text-botanical-terracotta">₹{parsePrice(book.price).toLocaleString()}</span>
+                  <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-lg font-headline font-bold text-botanical-terracotta">₹{parsePrice(book.price).toLocaleString()}</span>
+                      {book.mrp && Number(book.mrp) > Number(book.price) && (
+                        <span className="text-[10px] font-medium text-botanical-forest/40 line-through">₹{parsePrice(book.mrp).toLocaleString()}</span>
+                      )}
+                    </div>
+                    {book.discountPercentage && Number(book.discountPercentage) > 0 && (
+                      <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded w-fit inline-block leading-none">
+                        {Number(book.discountPercentage)}% OFF
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => toggleWishlist(book.id)}

@@ -29,7 +29,7 @@ export default function SignupPage() {
           <BauhausCard className="p-10 lg:p-16 border border-border/40">
             <div className="space-y-4 mb-12 text-center md:text-left">
               <h1 className="text-5xl font-headline font-bold text-botanical-forest leading-tight">Join The <br /><span className="italic font-normal text-botanical-terracotta">Collective</span></h1>
-              <p className="text-xs uppercase tracking-[0.3em] font-bold text-botanical-sage">Begin your botanical journey</p>
+              <p className="text-xs uppercase tracking-[0.3em] font-bold text-botanical-sage">Begin your reading journey</p>
             </div>
 
             <div className="flex justify-center">

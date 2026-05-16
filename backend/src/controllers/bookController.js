@@ -9,6 +9,8 @@ const publicBookSelect = {
   title: true,
   description: true,
   price: true,
+  mrp: true,
+  discountPercentage: true,
   type: true,
   coverImage: true,
   fileUrl: true,
@@ -73,19 +75,32 @@ const getBookById = async (req, res) => {
 };
 
 const createBook = async (req, res) => {
+  let { mrp, discountPercentage, price, ...rest } = req.body;
+  
+  if (mrp !== undefined) {
+    mrp = Number(mrp);
+    discountPercentage = Number(discountPercentage) || 0;
+    price = mrp - (mrp * (discountPercentage / 100));
+  }
+
   const created = await prisma.book.create({
-    data: req.body
+    data: { mrp, discountPercentage, price, ...rest }
   });
 
   sendSuccess(res, 201, "Book created", created);
 };
 
 const createBookWithFiles = async (req, res) => {
-  const { title, description } = req.body;
-  const price = Number(req.body.price);
-  const type = req.body.type;
+  const { title, description, type } = req.body;
+  let price = Number(req.body.price);
+  const mrp = req.body.mrp !== undefined ? Number(req.body.mrp) : null;
+  const discountPercentage = req.body.discountPercentage !== undefined ? Number(req.body.discountPercentage) : 0;
 
-  if (!title || !description || !Number.isFinite(price) || price <= 0 || !["PHYSICAL", "EBOOK"].includes(type)) {
+  if (mrp && mrp > 0) {
+    price = mrp - (mrp * (discountPercentage / 100));
+  }
+
+  if (!title || !description || !Number.isFinite(price) || price <= 0 || !["PHYSICAL", "EBOOK", "ENGLISH_BOOK"].includes(type)) {
     throw new ApiError(400, "Invalid book payload");
   }
 
@@ -131,6 +146,8 @@ const createBookWithFiles = async (req, res) => {
       title,
       description,
       price,
+      mrp,
+      discountPercentage,
       type,
       coverImage: coverImageUrl,
       fileUrl,
@@ -150,9 +167,22 @@ const updateBook = async (req, res) => {
     throw new ApiError(404, "Book not found");
   }
 
+  let { mrp, discountPercentage, price, ...rest } = req.body;
+  
+  if (mrp !== undefined || discountPercentage !== undefined) {
+    const finalMrp = mrp !== undefined ? Number(mrp) : Number(existing.mrp || 0);
+    const finalDiscount = discountPercentage !== undefined ? Number(discountPercentage) : Number(existing.discountPercentage || 0);
+    
+    if (finalMrp > 0) {
+      price = finalMrp - (finalMrp * (finalDiscount / 100));
+      mrp = finalMrp;
+      discountPercentage = finalDiscount;
+    }
+  }
+
   const updated = await prisma.book.update({
     where: { id: req.params.id },
-    data: req.body
+    data: { mrp, discountPercentage, price, ...rest }
   });
 
   sendSuccess(res, 200, "Book updated", updated);

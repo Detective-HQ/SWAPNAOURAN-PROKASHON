@@ -40,7 +40,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Sidebar */}
         <aside className="sticky top-0 z-50 h-auto w-full flex-shrink-0 space-y-3 overflow-hidden border-b border-border/40 bg-white p-3 md:h-screen md:w-72 md:space-y-10 md:overflow-y-auto md:border-b-0 md:border-r md:p-6">
           <div className="space-y-4">
-            <h2 className="px-2 text-[10px] font-bold uppercase tracking-[0.3em] text-botanical-sage md:px-4">Sanctuary Menu</h2>
+            <h2 className="px-2 text-[10px] font-bold uppercase tracking-[0.3em] text-botanical-sage md:px-4">Library</h2>
             <div className="mx-2 h-px bg-border/50 md:mx-4" />
           </div>
           
@@ -93,7 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="bg-botanical-forest p-6 rounded-xl text-botanical-alabaster space-y-4 relative overflow-hidden">
               <Leaf className="absolute -bottom-2 -right-2 w-16 h-16 text-white/5 rotate-45" />
               <p className="text-[9px] font-bold uppercase tracking-[0.3em] opacity-40">Reader Status</p>
-              <p className="text-lg font-headline font-bold text-botanical-clay">Elite Bloom</p>
+              <p className="text-lg font-headline font-bold text-botanical-clay">Devoted Reader</p>
               <div className="w-full h-1 bg-white/10 rounded-full">
                 <div className="w-3/4 h-full bg-botanical-terracotta rounded-full" />
               </div>
