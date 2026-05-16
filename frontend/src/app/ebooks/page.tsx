@@ -135,20 +135,34 @@ export default function EbooksPage() {
                   <Link href={`/shop/${ebook.id}`}>
                     <h2 className="text-xl font-black mb-6 hover:text-[#1040C0] transition-colors">{ebook.title}</h2>
                   </Link>
-                  <div className="flex flex-wrap gap-2 justify-between items-center">
-                    <span className="text-3xl font-black">₹{ebook.price}</span>
-                    <div className="flex gap-2">
-                      <BauhausButton variant="outline" size="sm" onClick={() => router.push(`/shop/${ebook.id}`)}>
-                        <Eye className="w-4 h-4" />
-                      </BauhausButton>
-                      {ebook.fileUrl && (
-                        <BauhausButton variant="secondary" size="sm" onClick={() => handlePreview(ebook)}>
-                          <BookOpen className="w-4 h-4" />
+                  <div className="flex flex-col gap-1 w-full mt-2">
+                    <div className="flex flex-wrap gap-2 justify-between items-end">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="text-3xl font-black">₹{ebook.price}</span>
+                          {ebook.mrp && Number(ebook.mrp) > Number(ebook.price) && (
+                            <span className="text-lg font-bold text-black/40 line-through">₹{ebook.mrp}</span>
+                          )}
+                        </div>
+                        {ebook.discountPercentage && Number(ebook.discountPercentage) > 0 && (
+                          <span className="text-[10px] font-black bg-[#1040C0] text-white px-2 py-0.5 mt-1 self-start inline-block">
+                            {Number(ebook.discountPercentage)}% OFF
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <BauhausButton variant="outline" size="sm" onClick={() => router.push(`/shop/${ebook.id}`)}>
+                          <Eye className="w-4 h-4" />
                         </BauhausButton>
-                      )}
-                      <BauhausButton variant="terracotta" size="sm" onClick={() => handleBuyNow(ebook)}>
-                        BUY NOW
-                      </BauhausButton>
+                        {ebook.fileUrl && (
+                          <BauhausButton variant="secondary" size="sm" onClick={() => handlePreview(ebook)}>
+                            <BookOpen className="w-4 h-4" />
+                          </BauhausButton>
+                        )}
+                        <BauhausButton variant="terracotta" size="sm" onClick={() => handleBuyNow(ebook)}>
+                          BUY NOW
+                        </BauhausButton>
+                      </div>
                     </div>
                   </div>
                 </BauhausCard>
