@@ -27,6 +27,9 @@ export default function EditProductPage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
+    authorName: "",
+    weight: "",
+    stockQuantity: "0",
     price: "",
     mrp: "",
     discountPercentage: "0",
@@ -49,6 +52,9 @@ export default function EditProductPage() {
       setFormData({
         title: book.title || "",
         description: book.description || "",
+        authorName: book.authorName || "",
+        weight: book.weight || "",
+        stockQuantity: book.stockQuantity?.toString() || "0",
         price: book.price || "",
         mrp: book.mrp || "",
         discountPercentage: book.discountPercentage || "0",
@@ -91,6 +97,9 @@ export default function EditProductPage() {
       const payload: any = {
         title: formData.title,
         description: formData.description,
+        authorName: formData.authorName,
+        weight: formData.weight,
+        stockQuantity: parseInt(formData.stockQuantity, 10),
         type: formData.type,
       };
 
@@ -156,6 +165,16 @@ export default function EditProductPage() {
           </div>
 
           <div className="space-y-2">
+            <label className="text-sm font-medium text-botanical-forest/80">Author Name</label>
+            <Input
+              name="authorName"
+              value={formData.authorName}
+              onChange={handleInputChange}
+              className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+            />
+          </div>
+
+          <div className="space-y-2">
             <label className="text-sm font-medium text-botanical-forest/80">Description</label>
             <Textarea
               name="description"
@@ -179,6 +198,31 @@ export default function EditProductPage() {
               </SelectContent>
             </Select>
           </div>
+
+          {(formData.type === "PHYSICAL" || formData.type === "ENGLISH_BOOK") && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-botanical-forest/80">Weight</label>
+                <Input
+                  name="weight"
+                  value={formData.weight}
+                  onChange={handleInputChange}
+                  className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-botanical-forest/80">Stock Quantity</label>
+                <Input
+                  name="stockQuantity"
+                  type="number"
+                  value={formData.stockQuantity}
+                  onChange={handleInputChange}
+                  className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+                  required
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-6">

@@ -71,7 +71,7 @@ export default function ShopPage() {
     addItem({
       id: book.id,
       title: book.title,
-      author: 'Swapno Uran Prakashan',
+      author: book.authorName ? `${book.authorName} | Swapno Uran Prakashan` : 'Swapno Uran Prakashan',
       price: parsedPrice,
       image: book.coverImage || PlaceHolderImages[0].imageUrl,
     });
@@ -249,7 +249,7 @@ export default function ShopPage() {
               <div className="p-4 space-y-2.5">
                 <div>
                   <h3 className="text-sm font-headline font-bold text-botanical-forest leading-tight line-clamp-2">{book.title}</h3>
-                  <p className="text-[9px] font-medium text-botanical-sage uppercase tracking-widest mt-0.5 italic">Swapno Uran Prakashan</p>
+                  <p className="text-[9px] font-medium text-botanical-sage uppercase tracking-widest mt-0.5 italic">{book.authorName ? `${book.authorName} | Swapno Uran Prakashan` : 'Swapno Uran Prakashan'}</p>
                 </div>
 
                 {book.description && (
