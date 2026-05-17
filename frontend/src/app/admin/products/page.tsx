@@ -14,7 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Search, Package, IndianRupee, Eye, EyeOff, Plus, Edit } from "lucide-react";
+import { Search, Package, IndianRupee, Eye, EyeOff, Plus, Edit, Trash2, AlertTriangle } from "lucide-react";
 
 export default function AdminProductsPage() {
   const api = useApi();
@@ -55,6 +55,24 @@ export default function AdminProductsPage() {
     } catch (error: any) {
       toast({
         title: "Error updating product",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteProduct = async (book: any) => {
+    if (!confirm(`Are you sure you want to delete "${book.title}"?`)) return;
+    try {
+      await api.del(`/books/${book.id}`);
+      setProducts((prev) => prev.filter((b) => b.id !== book.id));
+      toast({
+        title: "Product Deleted",
+        description: `${book.title} has been deleted.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error deleting product",
         description: error.message,
         variant: "destructive",
       });
@@ -118,6 +136,7 @@ export default function AdminProductsPage() {
             <TableRow className="border-b border-botanical-sage/20 hover:bg-transparent">
               <TableHead className="text-botanical-forest/70 font-semibold py-4">Title</TableHead>
               <TableHead className="text-botanical-forest/70 font-semibold">Type</TableHead>
+              <TableHead className="text-botanical-forest/70 font-semibold">Stock</TableHead>
               <TableHead className="text-botanical-forest/70 font-semibold">Price</TableHead>
               <TableHead className="text-botanical-forest/70 font-semibold">Status</TableHead>
               <TableHead className="text-right text-botanical-forest/70 font-semibold pr-6">Actions</TableHead>
@@ -139,6 +158,20 @@ export default function AdminProductsPage() {
                   <Badge variant="outline" className="border-botanical-sage/30 text-botanical-forest/70 text-[10px] uppercase font-bold">
                     {book.type}
                   </Badge>
+                </TableCell>
+                <TableCell>
+                  {book.type !== "EBOOK" ? (
+                    <div className="flex flex-col items-start gap-1">
+                      <span className="font-semibold text-botanical-forest">{book.stockQuantity || 0}</span>
+                      {(book.stockQuantity || 0) < 10 && (
+                        <span className="flex items-center text-[10px] text-amber-600 font-bold uppercase gap-1 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                          <AlertTriangle size={10} /> Low Stock
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-botanical-forest/40 text-xs italic">N/A</span>
+                  )}
                 </TableCell>
                 <TableCell className="text-botanical-terracotta font-semibold">
                   <span className="flex items-center">
@@ -172,12 +205,19 @@ export default function AdminProductsPage() {
                       onClick={() => toggleActive(book)}
                       className={`p-2 rounded-lg transition-all ${
                         book.isActive
-                          ? "text-rose-500 hover:bg-rose-50"
+                          ? "text-amber-500 hover:bg-amber-50"
                           : "text-emerald-500 hover:bg-emerald-50"
                       }`}
                       title={book.isActive ? "Disable" : "Enable"}
                     >
                       {book.isActive ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                    <button
+                      onClick={() => deleteProduct(book)}
+                      className="p-2 rounded-lg text-rose-500 hover:bg-rose-50 transition-all"
+                      title="Delete Product"
+                    >
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </TableCell>

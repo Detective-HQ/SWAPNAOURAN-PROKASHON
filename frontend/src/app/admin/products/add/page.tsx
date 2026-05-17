@@ -24,6 +24,9 @@ export default function AddProductPage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
+    authorName: "",
+    weight: "",
+    stockQuantity: "0",
     price: "",
     type: "PHYSICAL",
   });
@@ -70,6 +73,9 @@ export default function AddProductPage() {
       const data = new FormData();
       data.append("title", formData.title);
       data.append("description", formData.description);
+      if (formData.authorName) data.append("authorName", formData.authorName);
+      if (formData.weight) data.append("weight", formData.weight);
+      data.append("stockQuantity", formData.stockQuantity);
       data.append("price", formData.price);
       data.append("type", formData.type);
 
@@ -139,6 +145,17 @@ export default function AddProductPage() {
           </div>
 
           <div className="space-y-2">
+            <label className="text-sm font-medium text-botanical-forest/80">Author Name</label>
+            <Input
+              name="authorName"
+              value={formData.authorName}
+              onChange={handleInputChange}
+              placeholder="e.g. F. Scott Fitzgerald"
+              className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+            />
+          </div>
+
+          <div className="space-y-2">
             <label className="text-sm font-medium text-botanical-forest/80">Description</label>
             <Textarea
               name="description"
@@ -177,6 +194,33 @@ export default function AddProductPage() {
               </Select>
             </div>
           </div>
+
+          {(formData.type === "PHYSICAL" || formData.type === "ENGLISH_BOOK") && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-botanical-forest/80">Weight</label>
+                <Input
+                  name="weight"
+                  value={formData.weight}
+                  onChange={handleInputChange}
+                  placeholder="e.g. 500g"
+                  className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-botanical-forest/80">Stock Quantity</label>
+                <Input
+                  name="stockQuantity"
+                  type="number"
+                  value={formData.stockQuantity}
+                  onChange={handleInputChange}
+                  placeholder="0"
+                  className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+                  required
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Column: Media Uploads */}

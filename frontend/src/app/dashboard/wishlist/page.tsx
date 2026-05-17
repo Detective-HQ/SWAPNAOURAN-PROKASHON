@@ -47,7 +47,7 @@ export default function WishlistPage() {
     addItem({
       id: book.id,
       title: book.title,
-      author: 'Swapno Uran Prakashan',
+      author: book.authorName ? `${book.authorName} | Swapno Uran Prakashan` : 'Swapno Uran Prakashan',
       price,
       image: book.coverImage || '',
     });
@@ -92,7 +92,8 @@ export default function WishlistPage() {
                 <Link href={`/shop/${book.id}`}>
                   <h3 className="text-lg font-headline font-bold text-botanical-forest hover:text-botanical-terracotta transition-colors">{book.title}</h3>
                 </Link>
-                <p className="text-[10px] font-bold text-botanical-sage uppercase tracking-widest mt-1 italic mb-4">{book.type}</p>
+                <p className="text-[10px] font-bold text-botanical-sage uppercase tracking-widest mt-1 italic mb-1">{book.authorName ? `${book.authorName} | Swapno Uran Prakashan` : 'Swapno Uran Prakashan'}</p>
+                <p className="text-[10px] font-bold text-botanical-sage uppercase tracking-widest italic mb-4">{book.type}</p>
                 <div className="flex items-center justify-between pt-4 border-t border-border/40">
                   <span className="text-xl font-headline font-bold text-botanical-terracotta">₹{Number(book.price).toLocaleString()}</span>
                   <div className="flex gap-2">

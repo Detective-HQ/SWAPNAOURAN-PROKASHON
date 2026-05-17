@@ -8,6 +8,9 @@ const publicBookSelect = {
   id: true,
   title: true,
   description: true,
+  authorName: true,
+  weight: true,
+  stockQuantity: true,
   price: true,
   mrp: true,
   discountPercentage: true,
@@ -91,10 +94,11 @@ const createBook = async (req, res) => {
 };
 
 const createBookWithFiles = async (req, res) => {
-  const { title, description, type } = req.body;
+  const { title, description, type, authorName, weight } = req.body;
   let price = Number(req.body.price);
   const mrp = req.body.mrp !== undefined ? Number(req.body.mrp) : null;
   const discountPercentage = req.body.discountPercentage !== undefined ? Number(req.body.discountPercentage) : 0;
+  const stockQuantity = req.body.stockQuantity !== undefined ? parseInt(req.body.stockQuantity, 10) : 0;
 
   if (mrp && mrp > 0) {
     price = mrp - (mrp * (discountPercentage / 100));
@@ -145,6 +149,9 @@ const createBookWithFiles = async (req, res) => {
     data: {
       title,
       description,
+      authorName,
+      weight,
+      stockQuantity,
       price,
       mrp,
       discountPercentage,
@@ -167,8 +174,12 @@ const updateBook = async (req, res) => {
     throw new ApiError(404, "Book not found");
   }
 
-  let { mrp, discountPercentage, price, ...rest } = req.body;
+  let { mrp, discountPercentage, price, stockQuantity, ...rest } = req.body;
   
+  if (stockQuantity !== undefined) {
+    stockQuantity = parseInt(stockQuantity, 10);
+  }
+
   if (mrp !== undefined || discountPercentage !== undefined) {
     const finalMrp = mrp !== undefined ? Number(mrp) : Number(existing.mrp || 0);
     const finalDiscount = discountPercentage !== undefined ? Number(discountPercentage) : Number(existing.discountPercentage || 0);
@@ -182,7 +193,7 @@ const updateBook = async (req, res) => {
 
   const updated = await prisma.book.update({
     where: { id: req.params.id },
-    data: { mrp, discountPercentage, price, ...rest }
+    data: { mrp, discountPercentage, price, stockQuantity, ...rest }
   });
 
   sendSuccess(res, 200, "Book updated", updated);
@@ -190,19 +201,28 @@ const updateBook = async (req, res) => {
 
 const deleteBook = async (req, res) => {
   const existing = await prisma.book.findUnique({
-    where: { id: req.params.id }
+    where: { id: req.params.id },
+    include: { _count: { select: { orderItems: true } } }
   });
 
   if (!existing) {
     throw new ApiError(404, "Book not found");
   }
 
-  await prisma.book.update({
-    where: { id: req.params.id },
-    data: { isActive: false }
-  });
-
-  sendSuccess(res, 200, "Book deleted");
+  if (existing._count.orderItems > 0) {
+    // Soft delete if orders exist to maintain history
+    await prisma.book.update({
+      where: { id: req.params.id },
+      data: { isActive: false }
+    });
+    return sendSuccess(res, 200, "Book disabled (cannot be deleted due to existing orders)");
+  } else {
+    // Hard delete if no orders
+    await prisma.book.delete({
+      where: { id: req.params.id }
+    });
+    return sendSuccess(res, 200, "Book permanently deleted");
+  }
 };
 
 const getBookSample = async (req, res) => {

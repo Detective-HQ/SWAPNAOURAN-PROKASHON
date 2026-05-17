@@ -55,7 +55,7 @@ export default function EbooksPage() {
     addItem({
       id: book.id,
       title: book.title,
-      author: 'Swapno Uran Prakashan',
+      author: book.authorName ? `${book.authorName} | Swapno Uran Prakashan` : 'Swapno Uran Prakashan',
       price: isNaN(price) ? 0 : price,
       image: book.coverImage || PlaceHolderImages[0].imageUrl,
     });

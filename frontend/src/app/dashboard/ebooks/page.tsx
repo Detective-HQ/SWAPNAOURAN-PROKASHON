@@ -96,7 +96,7 @@ export default function EbooksPage() {
                 <div className="absolute inset-0 bg-botanical-forest/20 mix-blend-multiply opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               <h3 className="text-lg font-headline font-bold text-botanical-forest mb-1">{ebook.title}</h3>
-              <p className="text-[10px] font-bold text-botanical-sage uppercase tracking-widest mb-6 italic">Swapno Uran Prakashan</p>
+              <p className="text-[10px] font-bold text-botanical-sage uppercase tracking-widest mb-6 italic">{ebook.authorName ? `${ebook.authorName} | Swapno Uran Prakashan` : 'Swapno Uran Prakashan'}</p>
               <div className="flex justify-end pt-4 border-t border-border/40">
                 <BauhausButton
                   variant="primary"
