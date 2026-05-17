@@ -24,6 +24,9 @@ type Book = {
   type: 'PHYSICAL' | 'EBOOK' | 'ENGLISH_BOOK';
   coverImage?: string;
   fileUrl?: string;
+  authorName?: string;
+  weight?: string;
+  stockQuantity?: number;
 };
 
 export default function ShopPage() {
@@ -44,19 +47,25 @@ export default function ShopPage() {
 
   useEffect(() => {
     let mounted = true;
-    const fetchBooks = async () => {
+    const fetchData = async () => {
       try {
-        const response = await api.get('/books?limit=100');
+        const [booksRes, wishlistRes] = await Promise.all([
+          api.get('/books?limit=100'),
+          api.get('/wishlist').catch(() => ({ data: [] }))
+        ]);
         if (!mounted) return;
-        setBooks(response?.data?.items || []);
+        setBooks(booksRes?.data?.items || []);
+        if (wishlistRes?.data) {
+          setWishlistItems(wishlistRes.data.map((item: any) => item.bookId));
+        }
       } catch (err: any) {
         if (!mounted) return;
-        setError(err?.message || 'Failed to load books');
+        setError(err?.message || 'Failed to load data');
       } finally {
         if (mounted) setLoading(false);
       }
     };
-    fetchBooks();
+    fetchData();
     return () => { mounted = false; };
   }, [api]);
 
@@ -86,10 +95,19 @@ export default function ShopPage() {
     router.push('/dashboard/orders');
   };
 
-  const toggleWishlist = (bookId: string) => {
-    setWishlistItems((prev) =>
-      prev.includes(bookId) ? prev.filter((id) => id !== bookId) : [...prev, bookId]
-    );
+  const toggleWishlist = async (bookId: string) => {
+    try {
+      const isWishlisted = wishlistItems.includes(bookId);
+      if (isWishlisted) {
+        await api.del(`/wishlist/${bookId}`);
+        setWishlistItems((prev) => prev.filter((id) => id !== bookId));
+      } else {
+        await api.post('/wishlist', { bookId });
+        setWishlistItems((prev) => [...prev, bookId]);
+      }
+    } catch (err) {
+      console.error('Wishlist error:', err);
+    }
   };
 
   const handlePreview = async (book: Book) => {
