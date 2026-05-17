@@ -227,6 +227,18 @@ const finalizePaidOrder = async ({ orderId, paymentId, paymentMeta }) => {
         skipDuplicates: true
       });
     }
+
+    const physicalItems = order.items.filter((item) => item.book.type === "PHYSICAL" || item.book.type === "ENGLISH_BOOK");
+    for (const item of physicalItems) {
+      await tx.book.update({
+        where: { id: item.bookId },
+        data: {
+          stockQuantity: {
+            decrement: item.quantity
+          }
+        }
+      });
+    }
   });
 
   await ensureQRCodesForPaidOrder(orderId);
