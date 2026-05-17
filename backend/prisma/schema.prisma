@@ -76,6 +76,9 @@ model Book {
   id               String        @id @default(cuid())
   title            String
   description      String
+  authorName       String?
+  weight           String?
+  stockQuantity    Int           @default(0)
   price            Decimal       @db.Decimal(10, 2)
   mrp              Decimal?      @db.Decimal(10, 2)
   discountPercentage Decimal?    @db.Decimal(5, 2)
