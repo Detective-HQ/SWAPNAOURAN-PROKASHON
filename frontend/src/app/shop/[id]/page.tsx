@@ -63,10 +63,12 @@ export default function BookDetailPage() {
     if (!book) return;
     const price = typeof book.price === 'number' ? book.price : parseFloat(String(book.price).replace(/,/g, ''));
     if (isNaN(price)) return;
+    if (book.type !== 'EBOOK' && book.stockQuantity !== undefined && book.stockQuantity <= 0) return;
+    
     addItem({
       id: book.id,
       title: book.title,
-      author: 'Swapno Uran Prakashan',
+      author: book.authorName ? `${book.authorName} | Swapno Uran Prakashan` : 'Swapno Uran Prakashan',
       price,
       image: book.coverImage || '',
     });
@@ -156,8 +158,23 @@ export default function BookDetailPage() {
                   {book.type === 'EBOOK' ? 'Digital Edition' : 'Physical Book'}
                 </div>
                 <h1 className="text-5xl font-headline font-bold text-botanical-forest leading-tight">{book.title}</h1>
-                <p className="text-sm font-medium text-botanical-sage uppercase tracking-widest italic">Swapno Uran Prakashan</p>
+                <p className="text-sm font-medium text-botanical-sage uppercase tracking-widest italic">{book.authorName ? `${book.authorName} | Swapno Uran Prakashan` : 'Swapno Uran Prakashan'}</p>
               </div>
+
+              {((book.weight && book.weight.trim() !== '') || book.type !== 'EBOOK') && (
+                <div className="flex gap-4 mb-4">
+                  {book.weight && book.weight.trim() !== '' && (
+                    <div className="bg-botanical-clay/20 px-3 py-1.5 rounded-lg text-sm text-botanical-forest font-medium border border-botanical-sage/20">
+                      Weight: {book.weight}
+                    </div>
+                  )}
+                  {book.type !== 'EBOOK' && (
+                    <div className={`px-3 py-1.5 rounded-lg text-sm font-bold border ${book.stockQuantity > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                      {book.stockQuantity > 0 ? `In Stock (${book.stockQuantity})` : 'Out of Stock'}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {avgRating > 0 && (
                 <div className="flex items-center gap-3">
@@ -184,9 +201,17 @@ export default function BookDetailPage() {
               )}
 
               <div className="flex flex-wrap gap-4 pt-4">
-                <BauhausButton variant="primary" size="lg" onClick={handleAddToCart}>
+                <BauhausButton 
+                  variant="primary" 
+                  size="lg" 
+                  onClick={handleAddToCart}
+                  disabled={book.type !== 'EBOOK' && book.stockQuantity <= 0}
+                  className={book.type !== 'EBOOK' && book.stockQuantity <= 0 ? 'opacity-50 cursor-not-allowed' : ''}
+                >
                   {addedToCart ? (
                     <><Check className="w-5 h-5" /> Added to Cart</>
+                  ) : book.type !== 'EBOOK' && book.stockQuantity <= 0 ? (
+                    'Out of Stock'
                   ) : (
                     <><ShoppingCart className="w-5 h-5" /> Add to Cart</>
                   )}
