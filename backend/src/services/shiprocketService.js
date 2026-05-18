@@ -246,6 +246,91 @@ const processWebhook = async (payload) => {
   return { success: true, orderId: order.id, newStatus: deliveryStatus };
 };
 
+// ──────────────────────── NDR / Dispute ────────────────────────
+
+const listNdrDisputes = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.page) query.set("page", params.page);
+  if (params.perPage) query.set("per_page", params.perPage);
+  if (params.fromDate) query.set("from_date", params.fromDate);
+  if (params.toDate) query.set("to_date", params.toDate);
+  if (params.status) query.set("status", params.status);
+  if (params.awb) query.set("awb", params.awb);
+  const qs = query.toString();
+  const result = await shiprocketApi("GET", `/ndr/list${qs ? `?${qs}` : ""}`);
+  return result;
+};
+
+const getNdrDetails = async (ndrId) => {
+  const result = await shiprocketApi("GET", `/ndr/${ndrId}`);
+  return result;
+};
+
+const raiseDispute = async (payload) => {
+  const result = await shiprocketApi("POST", "/ndr/dispute", payload);
+  if (result.dispute_id) {
+    await prisma.dispute.updateMany({
+      where: { ndrId: payload.ndr_id },
+      data: { shiprocketDisputeId: String(result.dispute_id) }
+    });
+  }
+  return result;
+};
+
+const updateDispute = async (disputeId, payload) => {
+  const result = await shiprocketApi("PUT", `/ndr/dispute/${disputeId}`, payload);
+  return result;
+};
+
+const resolveNdr = async (payload) => {
+  const result = await shiprocketApi("POST", "/ndr/resolve", payload);
+  return result;
+};
+
+// ──────────────────────── Local Dispute Records ────────────────────────
+
+const createLocalDispute = async (data) => {
+  const dispute = await prisma.dispute.create({ data });
+  return dispute;
+};
+
+const listLocalDisputes = async (filters = {}) => {
+  const where = {};
+  if (filters.status) where.status = filters.status;
+  if (filters.orderId) where.orderId = filters.orderId;
+  if (filters.ndrId) where.ndrId = filters.ndrId;
+  const disputes = await prisma.dispute.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    include: {
+      order: {
+        select: { id: true, invoiceNumber: true, userId: true, totalAmount: true, status: true }
+      }
+    }
+  });
+  return disputes;
+};
+
+const getLocalDispute = async (id) => {
+  const dispute = await prisma.dispute.findUnique({
+    where: { id },
+    include: {
+      order: {
+        select: { id: true, invoiceNumber: true, totalAmount: true, status: true, shippingAddress: true }
+      }
+    }
+  });
+  return dispute;
+};
+
+const updateLocalDispute = async (id, data) => {
+  const dispute = await prisma.dispute.update({
+    where: { id },
+    data
+  });
+  return dispute;
+};
+
 module.exports = {
   createShiprocketOrder,
   requestShipment,
@@ -253,5 +338,14 @@ module.exports = {
   trackByShiprocketOrderId,
   cancelShiprocketOrder,
   getAvailableCouriers,
-  processWebhook
+  processWebhook,
+  listNdrDisputes,
+  getNdrDetails,
+  raiseDispute,
+  updateDispute,
+  resolveNdr,
+  createLocalDispute,
+  listLocalDisputes,
+  getLocalDispute,
+  updateLocalDispute
 };
