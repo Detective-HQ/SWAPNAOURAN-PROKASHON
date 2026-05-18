@@ -29,7 +29,14 @@ const env = {
   cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET || "",
   adminEmail: process.env.ADMIN_EMAIL || "admin@example.com",
   adminPassword: process.env.ADMIN_PASSWORD || "Admin@123",
-  adminName: process.env.ADMIN_NAME || "Platform Admin"
+  adminName: process.env.ADMIN_NAME || "Platform Admin",
+  r2AccountId: process.env.R2_ACCOUNT_ID || "",
+  r2AccessKeyId: process.env.R2_ACCESS_KEY_ID || "",
+  r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
+  r2BucketName: process.env.R2_BUCKET_NAME || "",
+  r2PublicUrl: process.env.R2_PUBLIC_URL || "",
+  shiprocketEmail: process.env.SHIPROCKET_EMAIL || "",
+  shiprocketPassword: process.env.SHIPROCKET_PASSWORD || ""
 };
 
 if (!env.databaseUrl) {

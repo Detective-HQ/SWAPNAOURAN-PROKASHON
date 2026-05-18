@@ -6,6 +6,19 @@ const mime = require("mime-types");
 
 const env = require("../config/env");
 const { cloudinary, isCloudinaryConfigured } = require("../config/cloudinary");
+const { S3Client, PutObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
+
+let s3Client = null;
+if (env.r2AccountId && env.r2AccessKeyId && env.r2SecretAccessKey) {
+  s3Client = new S3Client({
+    region: "auto",
+    endpoint: `https://${env.r2AccountId}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: env.r2AccessKeyId,
+      secretAccessKey: env.r2SecretAccessKey,
+    },
+  });
+}
 
 const UPLOADS_ROOT = path.resolve(__dirname, "../../uploads");
 
@@ -67,6 +80,19 @@ const deleteFile = async ({ publicId, url }) => {
     return;
   }
 
+  if (url && s3Client && env.r2PublicUrl && url.startsWith(env.r2PublicUrl)) {
+    try {
+      const key = url.replace(`${env.r2PublicUrl}/`, "");
+      await s3Client.send(new DeleteObjectCommand({
+        Bucket: env.r2BucketName,
+        Key: key
+      }));
+    } catch (err) {
+      console.error("Failed to delete from R2:", err);
+    }
+    return;
+  }
+
   if (!url || !url.includes("/uploads/")) {
     return;
   }
@@ -96,13 +122,37 @@ const getLocalFilePathFromUrl = (url) => {
   return resolved.startsWith(UPLOADS_ROOT) ? resolved : null;
 };
 
-// Always save PDFs locally — Cloudinary free plan blocks inline PDF delivery
+// Upload PDFs to Cloudflare R2 if configured, fallback to local storage
 const uploadPdf = async ({ buffer, filename }) => {
   if (!buffer) {
     throw new Error("No file buffer provided");
   }
 
   const safeName = filename || `${Date.now()}-${crypto.randomUUID()}.pdf`;
+
+  if (s3Client && env.r2BucketName && env.r2PublicUrl) {
+    try {
+      const key = `ebooks/${safeName}`;
+      await s3Client.send(new PutObjectCommand({
+        Bucket: env.r2BucketName,
+        Key: key,
+        Body: buffer,
+        ContentType: "application/pdf"
+      }));
+
+      // Strip trailing slash if present
+      const baseUrl = env.r2PublicUrl.endsWith('/') ? env.r2PublicUrl.slice(0, -1) : env.r2PublicUrl;
+      
+      return {
+        url: `${baseUrl}/${key}`,
+        publicId: null,
+        storage: "CLOUDFLARE_R2"
+      };
+    } catch (err) {
+      console.error("R2 Upload failed, falling back to local:", err);
+    }
+  }
+
   const folderPath = path.join(UPLOADS_ROOT, "ebooks");
   await ensureFolder(folderPath);
 
