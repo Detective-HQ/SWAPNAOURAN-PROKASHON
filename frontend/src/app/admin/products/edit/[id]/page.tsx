@@ -15,7 +15,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Package, Ruler } from "lucide-react";
 import Link from "next/link";
 
 export default function EditProductPage() {
@@ -34,7 +34,14 @@ export default function EditProductPage() {
     mrp: "",
     discountPercentage: "0",
     type: "PHYSICAL",
-    isActive: true
+    isActive: true,
+    // Shiprocket shipping fields
+    sku: "",
+    hsn: "",
+    lengthCm: "",
+    breadthCm: "",
+    heightCm: "",
+    weightGrams: "",
   });
 
   const { toast } = useToast();
@@ -59,7 +66,13 @@ export default function EditProductPage() {
         mrp: book.mrp || "",
         discountPercentage: book.discountPercentage || "0",
         type: book.type || "PHYSICAL",
-        isActive: book.isActive !== false
+        isActive: book.isActive !== false,
+        sku: book.sku || "",
+        hsn: book.hsn || "",
+        lengthCm: book.lengthCm || "",
+        breadthCm: book.breadthCm || "",
+        heightCm: book.heightCm || "",
+        weightGrams: book.weightGrams || "",
       });
     } catch (error: any) {
       toast({
@@ -107,6 +120,14 @@ export default function EditProductPage() {
       if (formData.discountPercentage) payload.discountPercentage = Number(formData.discountPercentage);
       if (!formData.mrp) payload.price = Number(formData.price);
 
+      // Shiprocket shipping dimension fields
+      if (formData.sku) payload.sku = formData.sku;
+      if (formData.hsn) payload.hsn = formData.hsn;
+      if (formData.lengthCm) payload.lengthCm = Number(formData.lengthCm);
+      if (formData.breadthCm) payload.breadthCm = Number(formData.breadthCm);
+      if (formData.heightCm) payload.heightCm = Number(formData.heightCm);
+      if (formData.weightGrams) payload.weightGrams = Number(formData.weightGrams);
+
       await api.put(`/books/${id}`, payload);
 
       toast({
@@ -133,6 +154,8 @@ export default function EditProductPage() {
     );
   }
 
+  const isPhysical = formData.type === "PHYSICAL" || formData.type === "ENGLISH_BOOK";
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -146,8 +169,8 @@ export default function EditProductPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-headline font-bold text-botanical-forest">Edit Product Pricing</h1>
-          <p className="text-botanical-forest/70 font-body">Update MRP and Discounts for {formData.title}</p>
+          <h1 className="text-3xl font-headline font-bold text-botanical-forest">Edit Product</h1>
+          <p className="text-botanical-forest/70 font-body">Update pricing, dimensions & details for {formData.title}</p>
         </div>
       </div>
 
@@ -185,24 +208,36 @@ export default function EditProductPage() {
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-botanical-forest/80">Book Type</label>
-            <Select value={formData.type} onValueChange={handleTypeChange}>
-              <SelectTrigger className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus:ring-botanical-terracotta">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-botanical-sage/20 text-botanical-forest">
-                <SelectItem value="PHYSICAL" className="hover:bg-botanical-alabaster focus:bg-botanical-alabaster cursor-pointer">Physical Book</SelectItem>
-                <SelectItem value="EBOOK" className="hover:bg-botanical-alabaster focus:bg-botanical-alabaster cursor-pointer">E-Book (Digital)</SelectItem>
-                <SelectItem value="ENGLISH_BOOK" className="hover:bg-botanical-alabaster focus:bg-botanical-alabaster cursor-pointer">English Book</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-botanical-forest/80">Book Type</label>
+              <Select value={formData.type} onValueChange={handleTypeChange}>
+                <SelectTrigger className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus:ring-botanical-terracotta">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-botanical-sage/20 text-botanical-forest">
+                  <SelectItem value="PHYSICAL" className="hover:bg-botanical-alabaster focus:bg-botanical-alabaster cursor-pointer">Physical Book</SelectItem>
+                  <SelectItem value="EBOOK" className="hover:bg-botanical-alabaster focus:bg-botanical-alabaster cursor-pointer">E-Book (Digital)</SelectItem>
+                  <SelectItem value="ENGLISH_BOOK" className="hover:bg-botanical-alabaster focus:bg-botanical-alabaster cursor-pointer">English Book</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-botanical-forest/80">SKU Code</label>
+              <Input
+                name="sku"
+                value={formData.sku}
+                onChange={handleInputChange}
+                placeholder="e.g. BOOK-001"
+                className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+              />
+            </div>
           </div>
 
-          {(formData.type === "PHYSICAL" || formData.type === "ENGLISH_BOOK") && (
+          {isPhysical && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-botanical-forest/80">Weight</label>
+                <label className="text-sm font-medium text-botanical-forest/80">Weight (display)</label>
                 <Input
                   name="weight"
                   value={formData.weight}
@@ -226,6 +261,7 @@ export default function EditProductPage() {
         </div>
 
         <div className="space-y-6">
+          {/* Pricing Settings */}
           <div className="bg-botanical-clay/10 p-6 rounded-2xl border border-botanical-sage/20 space-y-6">
             <h3 className="text-lg font-semibold text-botanical-forest">Pricing Settings</h3>
             
@@ -271,9 +307,98 @@ export default function EditProductPage() {
             </div>
             
             <p className="text-xs text-botanical-forest/60 italic">
-              Note: Selling price is automatically calculated based on the MRP and Discount. To change the cover image or files, please delete and re-add the book.
+              Selling price is automatically calculated based on the MRP and Discount.
             </p>
           </div>
+
+          {/* Shiprocket Shipping Dimensions */}
+          {isPhysical && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="bg-blue-50/60 p-5 rounded-2xl border border-blue-200/40 space-y-4"
+            >
+              <h3 className="text-base font-semibold text-botanical-forest flex items-center gap-2">
+                <Package size={18} className="text-blue-600" />
+                Shipping Dimensions <span className="text-xs font-normal text-botanical-forest/50">(Shiprocket)</span>
+              </h3>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-botanical-forest/80">HSN Code</label>
+                <Input
+                  name="hsn"
+                  value={formData.hsn}
+                  onChange={handleInputChange}
+                  placeholder="e.g. 49011010"
+                  className="bg-white border-blue-200/50 text-botanical-forest focus-visible:ring-blue-400"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-botanical-forest/80 flex items-center gap-1">
+                    <Ruler size={14} /> Length (cm)
+                  </label>
+                  <Input
+                    name="lengthCm"
+                    type="number"
+                    step="0.1"
+                    value={formData.lengthCm}
+                    onChange={handleInputChange}
+                    placeholder="25"
+                    className="bg-white border-blue-200/50 text-botanical-forest focus-visible:ring-blue-400"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-botanical-forest/80 flex items-center gap-1">
+                    <Ruler size={14} /> Breadth (cm)
+                  </label>
+                  <Input
+                    name="breadthCm"
+                    type="number"
+                    step="0.1"
+                    value={formData.breadthCm}
+                    onChange={handleInputChange}
+                    placeholder="18"
+                    className="bg-white border-blue-200/50 text-botanical-forest focus-visible:ring-blue-400"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-botanical-forest/80 flex items-center gap-1">
+                    <Ruler size={14} /> Height (cm)
+                  </label>
+                  <Input
+                    name="heightCm"
+                    type="number"
+                    step="0.1"
+                    value={formData.heightCm}
+                    onChange={handleInputChange}
+                    placeholder="3"
+                    className="bg-white border-blue-200/50 text-botanical-forest focus-visible:ring-blue-400"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-botanical-forest/80">Weight (grams)</label>
+                  <Input
+                    name="weightGrams"
+                    type="number"
+                    step="1"
+                    value={formData.weightGrams}
+                    onChange={handleInputChange}
+                    placeholder="500"
+                    className="bg-white border-blue-200/50 text-botanical-forest focus-visible:ring-blue-400"
+                  />
+                </div>
+              </div>
+
+              <p className="text-xs text-blue-600/70 italic">
+                These dimensions are required by Shiprocket for shipping rate calculation and label generation.
+              </p>
+            </motion.div>
+          )}
 
           <div className="pt-4">
             <Button 
