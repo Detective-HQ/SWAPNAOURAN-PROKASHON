@@ -70,12 +70,7 @@ const getOrderInvoice = async (req, res) => {
 const fulfillShiprocket = async (req, res) => {
   const orderId = req.params.id;
   const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    include: {
-      items: { include: { book: true } },
-      user: true,
-      shippingAddress: true
-    }
+    where: { id: orderId }
   });
 
   if (!order) {
@@ -86,21 +81,26 @@ const fulfillShiprocket = async (req, res) => {
     throw new ApiError(400, "Can only fulfill paid orders");
   }
 
-  // Use the user model for details if shippingAddress lacks some fields
-  const userDetails = await prisma.user.findUnique({ where: { id: order.userId } });
+  const result = await createShiprocketOrder(orderId);
 
-  const shiprocketData = await createShiprocketOrder(order, userDetails);
-
-  // Update order with tracking details
-  const updated = await prisma.order.update({
+  // Fetch the final, updated order to return to the frontend
+  const updatedOrder = await prisma.order.findUnique({
     where: { id: orderId },
-    data: {
-      trackingNumber: shiprocketData.awbCode || shiprocketData.shipmentId?.toString(),
-      deliveryStatus: "SHIPPED",
+    include: {
+      user: { select: { id: true, name: true, email: true } },
+      items: {
+        include: {
+          book: { select: { id: true, title: true, type: true, coverImage: true } }
+        }
+      },
+      payment: true
     }
   });
 
-  sendSuccess(res, 200, "Order sent to Shiprocket", updated);
+  sendSuccess(res, 200, "Order successfully pushed to Shiprocket", {
+    ...updatedOrder,
+    trackingNumber: result.shipment_id ? String(result.shipment_id) : null // Fallback reference for front-end toasts
+  });
 };
 
 module.exports = {
