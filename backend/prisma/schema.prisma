@@ -45,6 +45,12 @@ enum PaymentStatus {
   FAILED
 }
 
+enum DisputeStatus {
+  OPEN
+  RESOLVED
+  CLOSED
+}
+
 enum PaymentProvider {
   MOCK
   STRIPE
@@ -133,6 +139,7 @@ model Order {
   ebookAccesses   EbookAccess[]
   qrCodes         QRCode[]
   returnRequests  ReturnRequest[]
+  disputes        Dispute[]
 
   @@index([userId])
   @@index([status])
@@ -264,6 +271,29 @@ model ReturnRequest {
   @@index([orderId])
   @@index([userId])
   @@index([status])
+}
+
+model Dispute {
+  id                  String        @id @default(cuid())
+  orderId             String
+  ndrId               String?       @unique
+  shiprocketDisputeId String?
+  awbCode             String?
+  issueType           String?
+  description         String
+  adminNotes          String?
+  customerName        String?
+  customerPhone       String?
+  status              DisputeStatus @default(OPEN)
+  resolution          String?
+  ndrData             Json?
+  order               Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+  @@index([ndrId])
 }
 
 model Newsletter {
