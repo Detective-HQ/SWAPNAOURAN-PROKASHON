@@ -29,7 +29,14 @@ const env = {
   cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET || "",
   adminEmail: process.env.ADMIN_EMAIL || "admin@example.com",
   adminPassword: process.env.ADMIN_PASSWORD || "Admin@123",
-  adminName: process.env.ADMIN_NAME || "Platform Admin"
+  adminName: process.env.ADMIN_NAME || "Platform Admin",
+
+  // Shiprocket
+  shiprocketEmail: process.env.SHIPROCKET_EMAIL || "",
+  shiprocketPassword: process.env.SHIPROCKET_PASSWORD || "",
+  shiprocketPickupLocation: process.env.SHIPROCKET_PICKUP_LOCATION || "Primary",
+  shiprocketWebhookToken: process.env.SHIPROCKET_WEBHOOK_TOKEN || "",
+  shiprocketChannelId: process.env.SHIPROCKET_CHANNEL_ID || ""
 };
 
 if (!env.databaseUrl) {

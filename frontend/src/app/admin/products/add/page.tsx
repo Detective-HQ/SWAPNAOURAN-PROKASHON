@@ -15,7 +15,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { motion } from "framer-motion";
-import { ArrowLeft, Upload, FileText, ImageIcon, Loader2, BookOpen } from "lucide-react";
+import { ArrowLeft, Upload, FileText, ImageIcon, Loader2, BookOpen, Package, Ruler } from "lucide-react";
 import Link from "next/link";
 
 export default function AddProductPage() {
@@ -28,7 +28,16 @@ export default function AddProductPage() {
     weight: "",
     stockQuantity: "0",
     price: "",
+    mrp: "",
+    discountPercentage: "0",
     type: "PHYSICAL",
+    // Shiprocket shipping fields
+    sku: "",
+    hsn: "",
+    lengthCm: "",
+    breadthCm: "",
+    heightCm: "",
+    weightGrams: "",
   });
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [ebookFile, setEbookFile] = useState<File | null>(null);
@@ -40,7 +49,18 @@ export default function AddProductPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      const newData = { ...prev, [name]: value };
+      // Auto-calculate selling price from MRP & discount
+      if (name === "mrp" || name === "discountPercentage") {
+        const mrpVal = Number(newData.mrp) || 0;
+        const discountVal = Number(newData.discountPercentage) || 0;
+        if (mrpVal > 0) {
+          newData.price = (mrpVal - (mrpVal * (discountVal / 100))).toFixed(2);
+        }
+      }
+      return newData;
+    });
   };
 
   const handleTypeChange = (value: string) => {
@@ -76,8 +96,24 @@ export default function AddProductPage() {
       if (formData.authorName) data.append("authorName", formData.authorName);
       if (formData.weight) data.append("weight", formData.weight);
       data.append("stockQuantity", formData.stockQuantity);
-      data.append("price", formData.price);
       data.append("type", formData.type);
+
+      // Pricing fields
+      if (formData.mrp) {
+        data.append("mrp", formData.mrp);
+        data.append("discountPercentage", formData.discountPercentage || "0");
+        data.append("price", formData.price);
+      } else {
+        data.append("price", formData.price);
+      }
+
+      // Shiprocket shipping dimension fields
+      if (formData.sku) data.append("sku", formData.sku);
+      if (formData.hsn) data.append("hsn", formData.hsn);
+      if (formData.lengthCm) data.append("lengthCm", formData.lengthCm);
+      if (formData.breadthCm) data.append("breadthCm", formData.breadthCm);
+      if (formData.heightCm) data.append("heightCm", formData.heightCm);
+      if (formData.weightGrams) data.append("weightGrams", formData.weightGrams);
 
       if (coverImage) {
         data.append("coverImage", coverImage);
@@ -110,6 +146,8 @@ export default function AddProductPage() {
       setIsLoading(false);
     }
   };
+
+  const isPhysical = formData.type === "PHYSICAL" || formData.type === "ENGLISH_BOOK";
 
   return (
     <motion.div 
@@ -169,18 +207,6 @@ export default function AddProductPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-botanical-forest/80">Price (₹)</label>
-              <Input
-                name="price"
-                type="number"
-                value={formData.price}
-                onChange={handleInputChange}
-                placeholder="299"
-                className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
-                required
-              />
-            </div>
-            <div className="space-y-2">
               <label className="text-sm font-medium text-botanical-forest/80">Book Type</label>
               <Select value={formData.type} onValueChange={handleTypeChange}>
                 <SelectTrigger className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus:ring-botanical-terracotta">
@@ -193,12 +219,73 @@ export default function AddProductPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-botanical-forest/80">SKU Code</label>
+              <Input
+                name="sku"
+                value={formData.sku}
+                onChange={handleInputChange}
+                placeholder="e.g. BOOK-001"
+                className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+              />
+            </div>
           </div>
 
-          {(formData.type === "PHYSICAL" || formData.type === "ENGLISH_BOOK") && (
+          {/* Pricing Section */}
+          <div className="bg-botanical-clay/10 p-5 rounded-2xl border border-botanical-sage/20 space-y-4">
+            <h3 className="text-base font-semibold text-botanical-forest flex items-center gap-2">
+              <span className="text-botanical-terracotta">₹</span> Pricing
+            </h3>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-botanical-forest/80">MRP (₹)</label>
+                <Input
+                  name="mrp"
+                  type="number"
+                  step="0.01"
+                  value={formData.mrp}
+                  onChange={handleInputChange}
+                  placeholder="299"
+                  className="bg-white border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-botanical-forest/80">Discount (%)</label>
+                <Input
+                  name="discountPercentage"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="100"
+                  value={formData.discountPercentage}
+                  onChange={handleInputChange}
+                  placeholder="10"
+                  className="bg-white border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-botanical-forest/80">Selling Price</label>
+                <Input
+                  name="price"
+                  type="number"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  placeholder="269"
+                  readOnly={!!formData.mrp}
+                  className={`border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta ${formData.mrp ? "bg-botanical-sage/20 cursor-not-allowed font-bold" : "bg-white"}`}
+                  required
+                />
+              </div>
+            </div>
+            <p className="text-xs text-botanical-forest/50 italic">
+              {formData.mrp ? "Selling price is auto-calculated from MRP & discount." : "Enter a direct selling price, or set MRP & discount to auto-calculate."}
+            </p>
+          </div>
+
+          {isPhysical && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-botanical-forest/80">Weight</label>
+                <label className="text-sm font-medium text-botanical-forest/80">Weight (display)</label>
                 <Input
                   name="weight"
                   value={formData.weight}
@@ -220,6 +307,95 @@ export default function AddProductPage() {
                 />
               </div>
             </div>
+          )}
+
+          {/* Shiprocket Shipping Dimensions */}
+          {isPhysical && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="bg-blue-50/60 p-5 rounded-2xl border border-blue-200/40 space-y-4"
+            >
+              <h3 className="text-base font-semibold text-botanical-forest flex items-center gap-2">
+                <Package size={18} className="text-blue-600" />
+                Shipping Dimensions <span className="text-xs font-normal text-botanical-forest/50">(for Shiprocket)</span>
+              </h3>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-botanical-forest/80">HSN Code</label>
+                <Input
+                  name="hsn"
+                  value={formData.hsn}
+                  onChange={handleInputChange}
+                  placeholder="e.g. 49011010"
+                  className="bg-white border-blue-200/50 text-botanical-forest focus-visible:ring-blue-400"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-botanical-forest/80 flex items-center gap-1">
+                    <Ruler size={14} /> Length (cm)
+                  </label>
+                  <Input
+                    name="lengthCm"
+                    type="number"
+                    step="0.1"
+                    value={formData.lengthCm}
+                    onChange={handleInputChange}
+                    placeholder="25"
+                    className="bg-white border-blue-200/50 text-botanical-forest focus-visible:ring-blue-400"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-botanical-forest/80 flex items-center gap-1">
+                    <Ruler size={14} /> Breadth (cm)
+                  </label>
+                  <Input
+                    name="breadthCm"
+                    type="number"
+                    step="0.1"
+                    value={formData.breadthCm}
+                    onChange={handleInputChange}
+                    placeholder="18"
+                    className="bg-white border-blue-200/50 text-botanical-forest focus-visible:ring-blue-400"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-botanical-forest/80 flex items-center gap-1">
+                    <Ruler size={14} /> Height (cm)
+                  </label>
+                  <Input
+                    name="heightCm"
+                    type="number"
+                    step="0.1"
+                    value={formData.heightCm}
+                    onChange={handleInputChange}
+                    placeholder="3"
+                    className="bg-white border-blue-200/50 text-botanical-forest focus-visible:ring-blue-400"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-botanical-forest/80">Weight (grams)</label>
+                  <Input
+                    name="weightGrams"
+                    type="number"
+                    step="1"
+                    value={formData.weightGrams}
+                    onChange={handleInputChange}
+                    placeholder="500"
+                    className="bg-white border-blue-200/50 text-botanical-forest focus-visible:ring-blue-400"
+                  />
+                </div>
+              </div>
+
+              <p className="text-xs text-blue-600/70 italic">
+                These dimensions are required by Shiprocket for shipping rate calculation and label generation.
+              </p>
+            </motion.div>
           )}
         </div>
 
