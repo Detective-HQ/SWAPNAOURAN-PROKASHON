@@ -1,5 +1,6 @@
 const express = require("express");
 const { clerkWebhook } = require("../controllers/webhookController");
+const { shiprocketWebhookHandler } = require("../controllers/shiprocketController");
 const asyncHandler = require("../utils/asyncHandler");
 
 const router = express.Router();
@@ -11,4 +12,11 @@ const router = express.Router();
  */
 router.post("/clerk", express.raw({ type: 'application/json' }), asyncHandler(clerkWebhook));
 
+/**
+ * Endpoint for Shiprocket tracking webhooks.
+ * Shiprocket sends JSON POST payloads with order status updates.
+ */
+router.post("/shiprocket", express.json(), asyncHandler(shiprocketWebhookHandler));
+
 module.exports = router;
+

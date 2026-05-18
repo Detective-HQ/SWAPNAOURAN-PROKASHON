@@ -19,6 +19,12 @@ const publicBookSelect = {
   fileUrl: true,
   sampleChapterUrl: true,
   isActive: true,
+  sku: true,
+  hsn: true,
+  lengthCm: true,
+  breadthCm: true,
+  heightCm: true,
+  weightGrams: true,
   createdAt: true,
   updatedAt: true
 };
@@ -100,6 +106,14 @@ const createBookWithFiles = async (req, res) => {
   const discountPercentage = req.body.discountPercentage !== undefined ? Number(req.body.discountPercentage) : 0;
   const stockQuantity = req.body.stockQuantity !== undefined ? parseInt(req.body.stockQuantity, 10) : 0;
 
+  // Shipping dimension fields
+  const sku = req.body.sku || null;
+  const hsn = req.body.hsn || null;
+  const lengthCm = req.body.lengthCm !== undefined ? Number(req.body.lengthCm) : null;
+  const breadthCm = req.body.breadthCm !== undefined ? Number(req.body.breadthCm) : null;
+  const heightCm = req.body.heightCm !== undefined ? Number(req.body.heightCm) : null;
+  const weightGrams = req.body.weightGrams !== undefined ? Number(req.body.weightGrams) : null;
+
   if (mrp && mrp > 0) {
     price = mrp - (mrp * (discountPercentage / 100));
   }
@@ -158,7 +172,13 @@ const createBookWithFiles = async (req, res) => {
       type,
       coverImage: coverImageUrl,
       fileUrl,
-      sampleChapterUrl
+      sampleChapterUrl,
+      sku,
+      hsn,
+      lengthCm,
+      breadthCm,
+      heightCm,
+      weightGrams
     }
   });
 
@@ -174,11 +194,17 @@ const updateBook = async (req, res) => {
     throw new ApiError(404, "Book not found");
   }
 
-  let { mrp, discountPercentage, price, stockQuantity, ...rest } = req.body;
+  let { mrp, discountPercentage, price, stockQuantity, sku, hsn, lengthCm, breadthCm, heightCm, weightGrams, ...rest } = req.body;
   
   if (stockQuantity !== undefined) {
     stockQuantity = parseInt(stockQuantity, 10);
   }
+
+  // Parse shipping dimension fields
+  if (lengthCm !== undefined) lengthCm = Number(lengthCm);
+  if (breadthCm !== undefined) breadthCm = Number(breadthCm);
+  if (heightCm !== undefined) heightCm = Number(heightCm);
+  if (weightGrams !== undefined) weightGrams = Number(weightGrams);
 
   if (mrp !== undefined || discountPercentage !== undefined) {
     const finalMrp = mrp !== undefined ? Number(mrp) : Number(existing.mrp || 0);
@@ -193,7 +219,7 @@ const updateBook = async (req, res) => {
 
   const updated = await prisma.book.update({
     where: { id: req.params.id },
-    data: { mrp, discountPercentage, price, stockQuantity, ...rest }
+    data: { mrp, discountPercentage, price, stockQuantity, sku, hsn, lengthCm, breadthCm, heightCm, weightGrams, ...rest }
   });
 
   sendSuccess(res, 200, "Book updated", updated);

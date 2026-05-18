@@ -12,7 +12,14 @@ const baseBookSchema = z.object({
   coverImage: z.string().url().optional(),
   fileUrl: z.string().url().optional(),
   sampleChapterUrl: z.string().url().optional(),
-  isActive: z.boolean().optional()
+  isActive: z.boolean().optional(),
+  // Shiprocket shipping dimensions
+  sku: z.string().optional(),
+  hsn: z.string().optional(),
+  lengthCm: z.number().positive().optional(),
+  breadthCm: z.number().positive().optional(),
+  heightCm: z.number().positive().optional(),
+  weightGrams: z.number().positive().optional()
 });
 
 const createBookSchema = baseBookSchema.superRefine((value, ctx) => {
