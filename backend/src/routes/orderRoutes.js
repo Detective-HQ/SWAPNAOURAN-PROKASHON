@@ -9,7 +9,8 @@ const {
   getOrderByIdController,
   initiateOrderPayment,
   verifyOrderPayment,
-  getOrderInvoice
+  getOrderInvoice,
+  fulfillShiprocket
 } = require("../controllers/orderController");
 const {
   createOrderSchema,
@@ -25,6 +26,7 @@ router.use(authMiddleware);
 router.post("/", validate({ body: createOrderSchema }), asyncHandler(createOrderController));
 router.get("/my", asyncHandler(listMyOrders));
 router.get("/:id/invoice", validate({ params: orderIdParamsSchema }), asyncHandler(getOrderInvoice));
+router.post("/:id/fulfill-shiprocket", validate({ params: orderIdParamsSchema }), asyncHandler(fulfillShiprocket));
 router.get("/:id", validate({ params: orderIdParamsSchema }), asyncHandler(getOrderByIdController));
 router.post("/:orderId/pay", validate({ params: payOrderParamsSchema }), asyncHandler(initiateOrderPayment));
 router.post(
