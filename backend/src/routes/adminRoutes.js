@@ -26,7 +26,15 @@ const {
   assignAwb,
   trackAwb,
   trackOrder,
-  cancelOrder
+  cancelOrder,
+  listNdr,
+  getNdr,
+  raiseDisputeHandler,
+  updateDisputeHandler,
+  resolveNdrHandler,
+  listDisputes,
+  getDispute,
+  resolveLocalDispute
 } = require("../controllers/shiprocketController");
 const {
   updateOrderTrackingSchema
@@ -34,6 +42,12 @@ const {
 const {
   updateReturnSchema
 } = require("../validations/returnValidation");
+const {
+  raiseDisputeSchema,
+  updateDisputeSchema,
+  resolveNdrSchema,
+  resolveLocalDisputeSchema
+} = require("../validations/disputeValidation");
 
 const router = express.Router();
 
@@ -56,6 +70,16 @@ router.post("/shiprocket/shipments/:shipmentId/awb", asyncHandler(assignAwb));
 router.get("/shiprocket/track/awb/:awb", asyncHandler(trackAwb));
 router.get("/shiprocket/track/order/:shiprocketOrderId", asyncHandler(trackOrder));
 router.post("/shiprocket/orders/cancel", asyncHandler(cancelOrder));
+
+// Shiprocket NDR / Dispute routes
+router.get("/shiprocket/ndr", asyncHandler(listNdr));
+router.get("/shiprocket/ndr/:ndrId", asyncHandler(getNdr));
+router.post("/shiprocket/ndr/resolve", validate({ body: resolveNdrSchema }), asyncHandler(resolveNdrHandler));
+router.post("/shiprocket/disputes", validate({ body: raiseDisputeSchema }), asyncHandler(raiseDisputeHandler));
+router.put("/shiprocket/disputes/:disputeId", validate({ body: updateDisputeSchema }), asyncHandler(updateDisputeHandler));
+router.get("/shiprocket/disputes", asyncHandler(listDisputes));
+router.get("/shiprocket/disputes/:id", asyncHandler(getDispute));
+router.put("/shiprocket/disputes/:id/resolve", validate({ body: resolveLocalDisputeSchema }), asyncHandler(resolveLocalDispute));
 
 module.exports = router;
 
