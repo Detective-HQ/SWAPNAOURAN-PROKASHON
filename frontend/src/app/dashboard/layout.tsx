@@ -6,11 +6,11 @@ import { usePathname } from 'next/navigation';
 import { useUser, UserButton } from '@clerk/nextjs';
 import { useAuth } from '@/context/auth-context';
 import { CartDrawer } from '@/components/shop/cart-drawer';
-import { 
-  ShoppingBag, 
-  FileText, 
-  User, 
-  Camera, 
+import {
+  ShoppingBag,
+  FileText,
+  User,
+  Camera,
   ShoppingCart,
   Leaf,
   Shield,
@@ -40,21 +40,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Sidebar */}
         <aside className="sticky top-0 z-50 h-auto w-full flex-shrink-0 space-y-3 overflow-hidden border-b border-border/40 bg-white p-3 md:h-screen md:w-72 md:space-y-10 md:overflow-y-auto md:border-b-0 md:border-r md:p-6">
           <div className="space-y-4">
-            <h2 className="px-2 text-[10px] font-bold uppercase tracking-[0.3em] text-botanical-sage md:px-4">Sanctuary Menu</h2>
+            <h2 className="px-2 text-[10px] font-bold uppercase tracking-[0.3em] text-botanical-sage md:px-4">SWAPNAOURAN PROKASHON</h2>
             <div className="mx-2 h-px bg-border/50 md:mx-4" />
           </div>
-          
+
           <nav className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide md:block md:space-y-1 md:overflow-visible md:pb-0">
             {menuItems.map((item) => {
               const isActive = pathname === item.href;
               return (
-                <Link 
+                <Link
                   key={item.label}
                   href={item.href}
                   className={cn(
                     "group flex shrink-0 items-center gap-2 rounded-lg px-3 py-3 text-[10px] font-semibold uppercase tracking-widest transition-all md:gap-4 md:px-4",
-                    isActive 
-                      ? "text-botanical-forest bg-botanical-clay/30" 
+                    isActive
+                      ? "text-botanical-forest bg-botanical-clay/30"
                       : "text-botanical-forest/50 hover:text-botanical-forest hover:bg-botanical-clay/10"
                   )}
                 >
