@@ -22,7 +22,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
-import { Search, Filter, Truck, PackageCheck, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Filter, Truck, PackageCheck, ChevronDown, ChevronUp, FileText, Rocket, Loader2 } from "lucide-react";
+import InvoiceModal from "@/components/shop/invoice-modal";
 
 export default function AdminOrdersPage() {
   const api = useApi();
@@ -31,6 +32,8 @@ export default function AdminOrdersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [trackingInputs, setTrackingInputs] = useState<Record<string, { number: string; status: string }>>({});
+  const [invoiceOrderId, setInvoiceOrderId] = useState<string | null>(null);
+  const [isFulfilling, setIsFulfilling] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -70,6 +73,31 @@ export default function AdminOrdersPage() {
         description: error.message,
         variant: "destructive",
       });
+    }
+  };
+
+  const handleShiprocketFulfill = async (orderId: string) => {
+    setIsFulfilling((prev) => ({ ...prev, [orderId]: true }));
+    try {
+      const res = await api.post(`/orders/${orderId}/fulfill-shiprocket`);
+      const updatedOrder = res.data;
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === orderId ? { ...order, ...updatedOrder } : order
+        )
+      );
+      toast({
+        title: "Shiprocket Fulfillment Success",
+        description: `Order successfully pushed to Shiprocket. Tracking AWB: ${updatedOrder.trackingNumber}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Shiprocket Error",
+        description: error.message || "Failed to initiate Shiprocket fulfillment",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFulfilling((prev) => ({ ...prev, [orderId]: false }));
     }
   };
 
@@ -260,9 +288,44 @@ export default function AdminOrdersPage() {
                           <Truck className="w-4 h-4 mr-1" /> Update
                         </Button>
                       </div>
-                      {order.trackingNumber && (
-                        <p className="text-xs text-botanical-forest/50 mt-2">Current: {order.trackingNumber}</p>
-                      )}
+                      
+                      <div className="mt-4 pt-4 border-t border-botanical-sage/10 flex flex-wrap gap-3 items-center justify-between">
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-white border-botanical-sage/30 hover:bg-botanical-alabaster text-botanical-forest"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setInvoiceOrderId(order.id);
+                            }}
+                          >
+                            <FileText className="w-4 h-4 mr-1.5 text-botanical-terracotta" /> View Invoice
+                          </Button>
+                          
+                          {order.status === "PAID" && (
+                            <Button
+                              size="sm"
+                              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                              disabled={isFulfilling[order.id]}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                void handleShiprocketFulfill(order.id);
+                              }}
+                            >
+                              {isFulfilling[order.id] ? (
+                                <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                              ) : (
+                                <Rocket className="w-4 h-4 mr-1.5" />
+                              )}
+                              Fulfill with Shiprocket
+                            </Button>
+                          )}
+                        </div>
+                        {order.trackingNumber && (
+                          <p className="text-xs text-botanical-forest/50">Current Tracking: <strong className="text-botanical-forest">{order.trackingNumber}</strong></p>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}
@@ -278,6 +341,11 @@ export default function AdminOrdersPage() {
           </TableBody>
         </Table>
       </motion.div>
+      <InvoiceModal
+        orderId={invoiceOrderId || ''}
+        open={!!invoiceOrderId}
+        onClose={() => setInvoiceOrderId(null)}
+      />
     </motion.div>
   );
 }

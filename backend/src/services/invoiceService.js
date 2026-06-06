@@ -11,11 +11,14 @@ const buildInvoice = async ({ orderId, requester }) => {
       items: {
         include: {
           book: {
-            select: { title: true, type: true }
+            select: { id: true, title: true, type: true }
           }
         }
       },
-      payment: true
+      payment: true,
+      qrCodes: {
+        select: { id: true, bookId: true, imageUrl: true }
+      }
     }
   });
 
@@ -40,14 +43,24 @@ const buildInvoice = async ({ orderId, requester }) => {
           transactionId: order.payment.providerPaymentId
         }
       : null,
-    items: order.items.map((item) => ({
-      bookTitle: item.book.title,
-      bookType: item.book.type,
-      quantity: item.quantity,
-      unitPrice: Number(item.unitPrice),
-      totalPrice: Number(item.totalPrice)
-    })),
-    grandTotal: Number(order.totalAmount)
+    items: order.items.map((item) => {
+      const itemQrs = order.qrCodes
+        .filter((qr) => qr.bookId === item.bookId)
+        .map((qr) => qr.imageUrl);
+      return {
+        bookTitle: item.book.title,
+        bookType: item.book.type,
+        quantity: item.quantity,
+        unitPrice: Number(item.unitPrice),
+        totalPrice: Number(item.totalPrice),
+        qrCodes: itemQrs
+      };
+    }),
+    grandTotal: Number(order.totalAmount),
+    qrCodes: order.qrCodes.map((qr) => ({
+      bookId: qr.bookId,
+      imageUrl: qr.imageUrl
+    }))
   };
 };
 

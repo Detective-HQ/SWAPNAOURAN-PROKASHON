@@ -3,7 +3,7 @@ const prisma = require("../prisma/client");
 const { uploadBase64 } = require("./storageService");
 
 const buildQrPayload = ({ user, book, order }) => {
-  if (book.type === "PHYSICAL") {
+  if (book.type === "PHYSICAL" || book.type === "ENGLISH_BOOK") {
     return {
       userId: user.id,
       name: user.name,

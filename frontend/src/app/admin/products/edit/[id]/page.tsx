@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { useApi } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -15,12 +15,15 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { motion } from "framer-motion";
-import { ArrowLeft, Upload, FileText, ImageIcon, Loader2, BookOpen, Package, Ruler } from "lucide-react";
+import { ArrowLeft, Loader2, Package, Ruler } from "lucide-react";
 import Link from "next/link";
 
-export default function AddProductPage() {
+export default function EditProductPage() {
+  const { id } = useParams<{ id: string }>();
   const api = useApi();
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
+  
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -31,6 +34,7 @@ export default function AddProductPage() {
     mrp: "",
     discountPercentage: "0",
     type: "PHYSICAL",
+    isActive: true,
     // Shiprocket shipping fields
     sku: "",
     hsn: "",
@@ -39,25 +43,56 @@ export default function AddProductPage() {
     heightCm: "",
     weightGrams: "",
   });
-  const [coverImage, setCoverImage] = useState<File | null>(null);
-  const [ebookFile, setEbookFile] = useState<File | null>(null);
-  const [sampleChapterFile, setSampleChapterFile] = useState<File | null>(null);
-  const [previews, setPreviews] = useState<{ cover: string | null }>({ cover: null });
 
   const { toast } = useToast();
   const router = useRouter();
+
+  useEffect(() => {
+    if (id) fetchBook();
+  }, [id]);
+
+  const fetchBook = async () => {
+    try {
+      const response = await api.get(`/books/${id}`);
+      const book = response.data;
+      
+      setFormData({
+        title: book.title || "",
+        description: book.description || "",
+        authorName: book.authorName || "",
+        weight: book.weight || "",
+        stockQuantity: book.stockQuantity?.toString() || "0",
+        price: book.price || "",
+        mrp: book.mrp || "",
+        discountPercentage: book.discountPercentage || "0",
+        type: book.type || "PHYSICAL",
+        isActive: book.isActive !== false,
+        sku: book.sku || "",
+        hsn: book.hsn || "",
+        lengthCm: book.lengthCm || "",
+        breadthCm: book.breadthCm || "",
+        heightCm: book.heightCm || "",
+        weightGrams: book.weightGrams || "",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error fetching book",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsFetching(false);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => {
       const newData = { ...prev, [name]: value };
-      // Auto-calculate selling price from MRP & discount
       if (name === "mrp" || name === "discountPercentage") {
         const mrpVal = Number(newData.mrp) || 0;
         const discountVal = Number(newData.discountPercentage) || 0;
-        if (mrpVal > 0) {
-          newData.price = (mrpVal - (mrpVal * (discountVal / 100))).toFixed(2);
-        }
+        newData.price = (mrpVal - (mrpVal * (discountVal / 100))).toFixed(2);
       }
       return newData;
     });
@@ -67,78 +102,42 @@ export default function AddProductPage() {
     setFormData((prev) => ({ ...prev, type: value }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: "cover" | "ebook" | "sample") => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (field === "cover") {
-      setCoverImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviews((prev) => ({ ...prev, cover: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
-    } else if (field === "ebook") {
-      setEbookFile(file);
-    } else {
-      setSampleChapterFile(file);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const data = new FormData();
-      data.append("title", formData.title);
-      data.append("description", formData.description);
-      if (formData.authorName) data.append("authorName", formData.authorName);
-      if (formData.weight) data.append("weight", formData.weight);
-      data.append("stockQuantity", formData.stockQuantity);
-      data.append("type", formData.type);
+      const payload: any = {
+        title: formData.title,
+        description: formData.description,
+        authorName: formData.authorName,
+        weight: formData.weight,
+        stockQuantity: parseInt(formData.stockQuantity, 10),
+        type: formData.type,
+      };
 
-      // Pricing fields
-      if (formData.mrp) {
-        data.append("mrp", formData.mrp);
-        data.append("discountPercentage", formData.discountPercentage || "0");
-        data.append("price", formData.price);
-      } else {
-        data.append("price", formData.price);
-      }
+      if (formData.mrp) payload.mrp = Number(formData.mrp);
+      if (formData.discountPercentage) payload.discountPercentage = Number(formData.discountPercentage);
+      if (!formData.mrp) payload.price = Number(formData.price);
 
       // Shiprocket shipping dimension fields
-      if (formData.sku) data.append("sku", formData.sku);
-      if (formData.hsn) data.append("hsn", formData.hsn);
-      if (formData.lengthCm) data.append("lengthCm", formData.lengthCm);
-      if (formData.breadthCm) data.append("breadthCm", formData.breadthCm);
-      if (formData.heightCm) data.append("heightCm", formData.heightCm);
-      if (formData.weightGrams) data.append("weightGrams", formData.weightGrams);
+      if (formData.sku) payload.sku = formData.sku;
+      if (formData.hsn) payload.hsn = formData.hsn;
+      if (formData.lengthCm) payload.lengthCm = Number(formData.lengthCm);
+      if (formData.breadthCm) payload.breadthCm = Number(formData.breadthCm);
+      if (formData.heightCm) payload.heightCm = Number(formData.heightCm);
+      if (formData.weightGrams) payload.weightGrams = Number(formData.weightGrams);
 
-      if (coverImage) {
-        data.append("coverImage", coverImage);
-      }
-
-      if (formData.type === "EBOOK" && ebookFile) {
-        data.append("file", ebookFile);
-      } else if (formData.type === "EBOOK" && !ebookFile) {
-        throw new Error("Please upload an ebook file");
-      }
-
-      if (sampleChapterFile) {
-        data.append("sampleChapter", sampleChapterFile);
-      }
-
-      await api.post("/books/with-files", data);
+      await api.put(`/books/${id}`, payload);
 
       toast({
         title: "Success!",
-        description: "Book has been added successfully.",
+        description: "Book pricing and details updated successfully.",
       });
       router.push("/admin/products");
     } catch (error: any) {
       toast({
-        title: "Error adding book",
+        title: "Error updating book",
         description: error.message,
         variant: "destructive",
       });
@@ -146,6 +145,14 @@ export default function AddProductPage() {
       setIsLoading(false);
     }
   };
+
+  if (isFetching) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-botanical-forest" />
+      </div>
+    );
+  }
 
   const isPhysical = formData.type === "PHYSICAL" || formData.type === "ENGLISH_BOOK";
 
@@ -162,13 +169,12 @@ export default function AddProductPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-headline font-bold text-botanical-forest">Add New Book</h1>
-          <p className="text-botanical-forest/70 font-body">List a new physical book or ebook in the store.</p>
+          <h1 className="text-3xl font-headline font-bold text-botanical-forest">Edit Product</h1>
+          <p className="text-botanical-forest/70 font-body">Update pricing, dimensions & details for {formData.title}</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Left Column: Basic Info */}
         <div className="space-y-6">
           <div className="space-y-2">
             <label className="text-sm font-medium text-botanical-forest/80">Book Title</label>
@@ -176,7 +182,6 @@ export default function AddProductPage() {
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              placeholder="e.g. The Great Gatsby"
               className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
               required
             />
@@ -188,7 +193,6 @@ export default function AddProductPage() {
               name="authorName"
               value={formData.authorName}
               onChange={handleInputChange}
-              placeholder="e.g. F. Scott Fitzgerald"
               className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
             />
           </div>
@@ -199,7 +203,6 @@ export default function AddProductPage() {
               name="description"
               value={formData.description}
               onChange={handleInputChange}
-              placeholder="Detailed description of the book..."
               className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest min-h-[150px] focus-visible:ring-botanical-terracotta"
               required
             />
@@ -231,12 +234,38 @@ export default function AddProductPage() {
             </div>
           </div>
 
-          {/* Pricing Section */}
-          <div className="bg-botanical-clay/10 p-5 rounded-2xl border border-botanical-sage/20 space-y-4">
-            <h3 className="text-base font-semibold text-botanical-forest flex items-center gap-2">
-              <span className="text-botanical-terracotta">₹</span> Pricing
-            </h3>
-            <div className="grid grid-cols-3 gap-3">
+          {isPhysical && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-botanical-forest/80">Weight (display)</label>
+                <Input
+                  name="weight"
+                  value={formData.weight}
+                  onChange={handleInputChange}
+                  className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-botanical-forest/80">Stock Quantity</label>
+                <Input
+                  name="stockQuantity"
+                  type="number"
+                  value={formData.stockQuantity}
+                  onChange={handleInputChange}
+                  className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+                  required
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-6">
+          {/* Pricing Settings */}
+          <div className="bg-botanical-clay/10 p-6 rounded-2xl border border-botanical-sage/20 space-y-6">
+            <h3 className="text-lg font-semibold text-botanical-forest">Pricing Settings</h3>
+            
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-botanical-forest/80">MRP (₹)</label>
                 <Input
@@ -247,6 +276,7 @@ export default function AddProductPage() {
                   onChange={handleInputChange}
                   placeholder="299"
                   className="bg-white border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+                  required
                 />
               </div>
               <div className="space-y-2">
@@ -263,51 +293,23 @@ export default function AddProductPage() {
                   className="bg-white border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-botanical-forest/80">Selling Price</label>
-                <Input
-                  name="price"
-                  type="number"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  placeholder="269"
-                  readOnly={!!formData.mrp}
-                  className={`border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta ${formData.mrp ? "bg-botanical-sage/20 cursor-not-allowed font-bold" : "bg-white"}`}
-                  required
-                />
-              </div>
             </div>
-            <p className="text-xs text-botanical-forest/50 italic">
-              {formData.mrp ? "Selling price is auto-calculated from MRP & discount." : "Enter a direct selling price, or set MRP & discount to auto-calculate."}
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-botanical-forest/80">Selling Price (₹)</label>
+              <Input
+                name="price"
+                type="number"
+                value={formData.price}
+                readOnly
+                className="bg-botanical-sage/20 border-botanical-sage/40 text-botanical-forest cursor-not-allowed font-bold text-lg"
+              />
+            </div>
+            
+            <p className="text-xs text-botanical-forest/60 italic">
+              Selling price is automatically calculated based on the MRP and Discount.
             </p>
           </div>
-
-          {isPhysical && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-botanical-forest/80">Weight (display)</label>
-                <Input
-                  name="weight"
-                  value={formData.weight}
-                  onChange={handleInputChange}
-                  placeholder="e.g. 500g"
-                  className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-botanical-forest/80">Stock Quantity</label>
-                <Input
-                  name="stockQuantity"
-                  type="number"
-                  value={formData.stockQuantity}
-                  onChange={handleInputChange}
-                  placeholder="0"
-                  className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
-                  required
-                />
-              </div>
-            </div>
-          )}
 
           {/* Shiprocket Shipping Dimensions */}
           {isPhysical && (
@@ -318,7 +320,7 @@ export default function AddProductPage() {
             >
               <h3 className="text-base font-semibold text-botanical-forest flex items-center gap-2">
                 <Package size={18} className="text-blue-600" />
-                Shipping Dimensions <span className="text-xs font-normal text-botanical-forest/50">(for Shiprocket)</span>
+                Shipping Dimensions <span className="text-xs font-normal text-botanical-forest/50">(Shiprocket)</span>
               </h3>
 
               <div className="space-y-2">
@@ -397,105 +399,6 @@ export default function AddProductPage() {
               </p>
             </motion.div>
           )}
-        </div>
-
-        {/* Right Column: Media Uploads */}
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-botanical-forest/80">Cover Image</label>
-            <div 
-              className="border-2 border-dashed border-botanical-sage/40 rounded-2xl p-4 flex flex-col items-center justify-center gap-4 bg-botanical-alabaster hover:bg-botanical-sage/10 transition-colors cursor-pointer relative overflow-hidden h-[300px]"
-              onClick={() => document.getElementById("cover-upload")?.click()}
-            >
-              {previews.cover ? (
-                <img 
-                  src={previews.cover} 
-                  alt="Cover preview" 
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              ) : (
-                <>
-                  <div className="p-4 rounded-full bg-botanical-sage/10 text-botanical-forest/60">
-                    <ImageIcon size={32} />
-                  </div>
-                  <p className="text-sm text-botanical-forest/60 text-center font-medium">
-                    Click to upload cover image<br />
-                    <span className="text-xs font-normal">Supports JPG, PNG, WEBP</span>
-                  </p>
-                </>
-              )}
-              <input 
-                id="cover-upload" 
-                type="file" 
-                accept="image/*" 
-                className="hidden" 
-                onChange={(e) => handleFileChange(e, "cover")}
-              />
-            </div>
-          </div>
-
-          {formData.type === "EBOOK" && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="space-y-2"
-            >
-              <label className="text-sm font-medium text-botanical-forest/80">E-Book File (PDF/EPUB)</label>
-              <div 
-                className="border border-botanical-sage/30 rounded-xl p-4 flex items-center gap-4 bg-botanical-alabaster hover:bg-botanical-sage/10 transition-colors cursor-pointer"
-                onClick={() => document.getElementById("ebook-upload")?.click()}
-              >
-                <div className="p-2 rounded-lg bg-botanical-sage/20 text-botanical-forest">
-                  <FileText size={20} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-botanical-forest truncate">
-                    {ebookFile ? ebookFile.name : "Select ebook file"}
-                  </p>
-                  <p className="text-xs text-botanical-forest/60">Max size 50MB</p>
-                </div>
-                <Upload size={16} className="text-botanical-forest/50" />
-                <input 
-                  id="ebook-upload" 
-                  type="file" 
-                  accept=".pdf,.epub" 
-                  className="hidden" 
-                  onChange={(e) => handleFileChange(e, "ebook")}
-                />
-              </div>
-            </motion.div>
-          )}
-
-          {/* Sample Chapter Upload */}
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            className="space-y-2"
-          >
-            <label className="text-sm font-medium text-botanical-forest/80">Sample Chapter (PDF) — Optional</label>
-            <div
-              className="border-2 border-dashed border-botanical-sage/30 rounded-xl p-4 flex items-center gap-4 bg-botanical-alabaster hover:bg-botanical-sage/10 transition-colors cursor-pointer"
-              onClick={() => document.getElementById("sample-upload")?.click()}
-            >
-              <div className="p-2 rounded-lg bg-botanical-sage/20 text-botanical-forest">
-                <BookOpen size={20} />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-botanical-forest truncate">
-                  {sampleChapterFile ? sampleChapterFile.name : "Upload a sample chapter PDF"}
-                </p>
-                <p className="text-xs text-botanical-forest/60">Let readers preview before buying</p>
-              </div>
-              <Upload size={16} className="text-botanical-forest/50" />
-              <input
-                id="sample-upload"
-                type="file"
-                accept=".pdf"
-                className="hidden"
-                onChange={(e) => handleFileChange(e, "sample")}
-              />
-            </div>
-          </motion.div>
 
           <div className="pt-4">
             <Button 
@@ -506,10 +409,10 @@ export default function AddProductPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Product...
+                  Saving Changes...
                 </>
               ) : (
-                "Add Product"
+                "Save Changes"
               )}
             </Button>
           </div>

@@ -43,12 +43,12 @@ export function FooterSection() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Subscription failed");
       setNewsletterStatus("success");
-      setNewsletterMsg("You're subscribed! Check your inbox for a free chapter.");
+      setNewsletterMsg("Welcome to the Readers' Circle! Check your inbox for a free chapter.");
       setEmail("");
       setTimeout(() => setNewsletterStatus("idle"), 5000);
     } catch (err: any) {
       setNewsletterStatus("error");
-      setNewsletterMsg(err.message || "Something went wrong");
+      setNewsletterMsg(err.message || "Something went wrong. Please try again.");
     }
   };
 
@@ -58,7 +58,7 @@ export function FooterSection() {
       <div className="border-t border-border px-4 md:px-12 lg:px-20 py-10 md:py-12 bg-botanical-forest/5">
         <div className="max-w-4xl mx-auto text-center space-y-3 md:space-y-4">
           <Mail className="w-6 md:w-8 h-6 md:h-8 mx-auto text-botanical-terracotta" />
-          <h3 className="text-xl md:text-2xl font-headline font-bold text-botanical-forest">Join the <span className="italic font-normal">Bloomsletter</span></h3>
+          <h3 className="text-xl md:text-2xl font-headline font-bold text-botanical-forest">Join the <span className="italic font-normal">Readers' Circle</span></h3>
           <p className="text-xs md:text-sm text-botanical-forest/60 max-w-lg mx-auto">Get a free sample chapter, exclusive author insights, and early access to new releases.</p>
           <form onSubmit={handleNewsletter} className="flex flex-col gap-2 md:flex-row md:gap-3 max-w-md mx-auto w-full">
             <input

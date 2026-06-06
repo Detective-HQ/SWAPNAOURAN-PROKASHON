@@ -7,6 +7,9 @@ const {
   verifyPayment
 } = require("../services/orderService");
 const { buildInvoice } = require("../services/invoiceService");
+const { createShiprocketOrder } = require("../services/shiprocketService");
+const prisma = require("../prisma/client");
+const ApiError = require("../utils/ApiError");
 
 const createOrderController = async (req, res) => {
   const order = await createOrder({
@@ -64,11 +67,48 @@ const getOrderInvoice = async (req, res) => {
   sendSuccess(res, 200, "Invoice generated", invoice);
 };
 
+const fulfillShiprocket = async (req, res) => {
+  const orderId = req.params.id;
+  const order = await prisma.order.findUnique({
+    where: { id: orderId }
+  });
+
+  if (!order) {
+    throw new ApiError(404, "Order not found");
+  }
+
+  if (order.status !== "PAID") {
+    throw new ApiError(400, "Can only fulfill paid orders");
+  }
+
+  const result = await createShiprocketOrder(orderId);
+
+  // Fetch the final, updated order to return to the frontend
+  const updatedOrder = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      user: { select: { id: true, name: true, email: true } },
+      items: {
+        include: {
+          book: { select: { id: true, title: true, type: true, coverImage: true } }
+        }
+      },
+      payment: true
+    }
+  });
+
+  sendSuccess(res, 200, "Order successfully pushed to Shiprocket", {
+    ...updatedOrder,
+    trackingNumber: result.shipment_id ? String(result.shipment_id) : null // Fallback reference for front-end toasts
+  });
+};
+
 module.exports = {
   createOrderController,
   listMyOrders,
   getOrderByIdController,
   initiateOrderPayment,
   verifyOrderPayment,
-  getOrderInvoice
+  getOrderInvoice,
+  fulfillShiprocket
 };

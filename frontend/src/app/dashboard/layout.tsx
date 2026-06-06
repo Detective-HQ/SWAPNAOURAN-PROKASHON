@@ -93,7 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="bg-botanical-forest p-6 rounded-xl text-botanical-alabaster space-y-4 relative overflow-hidden">
               <Leaf className="absolute -bottom-2 -right-2 w-16 h-16 text-white/5 rotate-45" />
               <p className="text-[9px] font-bold uppercase tracking-[0.3em] opacity-40">Reader Status</p>
-              <p className="text-lg font-headline font-bold text-botanical-clay">Elite Bloom</p>
+              <p className="text-lg font-headline font-bold text-botanical-clay">Devoted Reader</p>
               <div className="w-full h-1 bg-white/10 rounded-full">
                 <div className="w-3/4 h-full bg-botanical-terracotta rounded-full" />
               </div>

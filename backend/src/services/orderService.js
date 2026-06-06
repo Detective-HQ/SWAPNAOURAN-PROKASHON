@@ -29,7 +29,7 @@ const createOrder = async ({ userId, items, shippingAddress }) => {
 
   const bookById = books.reduce((acc, book) => ({ ...acc, [book.id]: book }), {});
 
-  const hasPhysical = normalizedItems.some((item) => bookById[item.bookId].type === "PHYSICAL");
+  const hasPhysical = normalizedItems.some((item) => bookById[item.bookId].type === "PHYSICAL" || bookById[item.bookId].type === "ENGLISH_BOOK");
   if (hasPhysical && !shippingAddress) {
     throw new ApiError(400, "Shipping address is required for physical books");
   }
@@ -225,6 +225,18 @@ const finalizePaidOrder = async ({ orderId, paymentId, paymentMeta }) => {
           orderId: order.id
         })),
         skipDuplicates: true
+      });
+    }
+
+    const physicalItems = order.items.filter((item) => item.book.type === "PHYSICAL" || item.book.type === "ENGLISH_BOOK");
+    for (const item of physicalItems) {
+      await tx.book.update({
+        where: { id: item.bookId },
+        data: {
+          stockQuantity: {
+            decrement: item.quantity
+          }
+        }
       });
     }
   });

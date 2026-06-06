@@ -10,6 +10,7 @@ interface InvoiceItem {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
+  qrCodes?: string[];
 }
 
 interface InvoiceData {
@@ -21,6 +22,7 @@ interface InvoiceData {
   payment: { provider: string; status: string; transactionId: string } | null;
   items: InvoiceItem[];
   grandTotal: number;
+  qrCodes?: { bookId: string; imageUrl: string }[];
 }
 
 interface InvoiceModalProps {
@@ -165,8 +167,19 @@ export default function InvoiceModal({ orderId, open, onClose }: InvoiceModalPro
                   </thead>
                   <tbody>
                     {invoice.items.map((item, idx) => (
-                      <tr key={idx} className="border-t border-border/40">
-                        <td className="p-4 font-medium text-botanical-forest">{item.bookTitle}</td>
+                      <tr key={idx} className="border-t border-border/40 align-top">
+                        <td className="p-4 font-medium text-botanical-forest">
+                          <div>{item.bookTitle}</div>
+                          {item.qrCodes && item.qrCodes.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2 print:mt-1">
+                              {item.qrCodes.map((qrUrl, qIdx) => (
+                                <div key={qIdx} className="border border-border/40 p-1.5 rounded-lg bg-white inline-block">
+                                  <img src={qrUrl} alt="Item QR Code" className="w-16 h-16 object-contain" />
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </td>
                         <td className="p-4">
                           <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-botanical-clay/20">
                             {item.bookType}

@@ -19,6 +19,9 @@ type Book = {
   coverImage?: string;
   type: string;
   sampleChapterUrl?: string;
+  authorName?: string;
+  weight?: string;
+  stockQuantity?: number;
 };
 
 export default function ShopPage() {
@@ -113,7 +116,7 @@ export default function ShopPage() {
     addItem({
       id: book.id,
       title: book.title,
-      author: 'Swapno Uran Prakashan',
+      author: book.authorName ? `${book.authorName} | Swapno Uran Prakashan` : 'Swapno Uran Prakashan',
       price: parsedPrice,
       image: book.coverImage || '',
     });
@@ -203,11 +206,14 @@ export default function ShopPage() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                         <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-500 space-y-2">
                           <button
-                            onClick={(e) => { e.preventDefault(); handleAddToCart(book); }}
-                            className="w-full py-3 rounded-2xl bg-white/90 backdrop-blur-sm text-botanical-forest font-bold text-[11px] uppercase tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-lg"
+                            onClick={(e) => { e.preventDefault(); if (book.type === "EBOOK" || (book.stockQuantity !== undefined && book.stockQuantity > 0)) handleAddToCart(book); }}
+                            className={`w-full py-3 rounded-2xl bg-white/90 backdrop-blur-sm font-bold text-[11px] uppercase tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-lg ${book.type !== "EBOOK" && book.stockQuantity !== undefined && book.stockQuantity <= 0 ? "text-rose-500 opacity-50 cursor-not-allowed" : "text-botanical-forest"}`}
+                            disabled={book.type !== "EBOOK" && book.stockQuantity !== undefined && book.stockQuantity <= 0}
                           >
                             {addedItems.includes(book.id) ? (
                               <><Check className="w-4 h-4" /> Added</>
+                            ) : book.type !== "EBOOK" && book.stockQuantity !== undefined && book.stockQuantity <= 0 ? (
+                              <><X className="w-4 h-4" /> Out of Stock</>
                             ) : (
                               <><ShoppingCart className="w-4 h-4" /> Add to Cart</>
                             )}
@@ -225,7 +231,7 @@ export default function ShopPage() {
                       <div className="p-5 space-y-3">
                         <div>
                           <h3 className="text-base font-headline font-bold text-botanical-forest leading-tight line-clamp-2">{book.title}</h3>
-                          <p className="text-[10px] font-medium text-botanical-sage uppercase tracking-widest mt-1 italic">Swapno Uran Prakashan</p>
+                          <p className="text-[10px] font-medium text-botanical-sage uppercase tracking-widest mt-1 italic">{book.authorName ? `${book.authorName} | Swapno Uran Prakashan` : 'Swapno Uran Prakashan'}</p>
                         </div>
                         {book.description && (
                           <p className="text-xs text-botanical-forest/50 leading-relaxed line-clamp-2">{book.description}</p>
@@ -252,15 +258,20 @@ export default function ShopPage() {
                               </button>
                             )}
                             <button
-                              onClick={(e) => { e.preventDefault(); handleAddToCart(book); }}
+                              onClick={(e) => { e.preventDefault(); if (book.type === "EBOOK" || (book.stockQuantity !== undefined && book.stockQuantity > 0)) handleAddToCart(book); }}
+                              disabled={book.type !== "EBOOK" && book.stockQuantity !== undefined && book.stockQuantity <= 0}
                               className={`p-2.5 rounded-xl transition-colors ${
                                 addedItems.includes(book.id)
                                   ? 'bg-botanical-forest text-white'
+                                  : book.type !== "EBOOK" && book.stockQuantity !== undefined && book.stockQuantity <= 0
+                                  ? 'bg-rose-50 text-rose-300 cursor-not-allowed'
                                   : 'bg-botanical-clay/20 text-botanical-forest hover:bg-botanical-clay/40'
                               }`}
                             >
                               {addedItems.includes(book.id) ? (
                                 <Check className="w-4 h-4" />
+                              ) : book.type !== "EBOOK" && book.stockQuantity !== undefined && book.stockQuantity <= 0 ? (
+                                <X className="w-4 h-4" />
                               ) : (
                                 <ShoppingCart className="w-4 h-4" />
                               )}

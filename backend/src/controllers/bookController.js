@@ -8,12 +8,23 @@ const publicBookSelect = {
   id: true,
   title: true,
   description: true,
+  authorName: true,
+  weight: true,
+  stockQuantity: true,
   price: true,
+  mrp: true,
+  discountPercentage: true,
   type: true,
   coverImage: true,
   fileUrl: true,
   sampleChapterUrl: true,
   isActive: true,
+  sku: true,
+  hsn: true,
+  lengthCm: true,
+  breadthCm: true,
+  heightCm: true,
+  weightGrams: true,
   createdAt: true,
   updatedAt: true
 };
@@ -73,19 +84,41 @@ const getBookById = async (req, res) => {
 };
 
 const createBook = async (req, res) => {
+  let { mrp, discountPercentage, price, ...rest } = req.body;
+  
+  if (mrp !== undefined) {
+    mrp = Number(mrp);
+    discountPercentage = Number(discountPercentage) || 0;
+    price = mrp - (mrp * (discountPercentage / 100));
+  }
+
   const created = await prisma.book.create({
-    data: req.body
+    data: { mrp, discountPercentage, price, ...rest }
   });
 
   sendSuccess(res, 201, "Book created", created);
 };
 
 const createBookWithFiles = async (req, res) => {
-  const { title, description } = req.body;
-  const price = Number(req.body.price);
-  const type = req.body.type;
+  const { title, description, type, authorName, weight } = req.body;
+  let price = Number(req.body.price);
+  const mrp = req.body.mrp !== undefined ? Number(req.body.mrp) : null;
+  const discountPercentage = req.body.discountPercentage !== undefined ? Number(req.body.discountPercentage) : 0;
+  const stockQuantity = req.body.stockQuantity !== undefined ? parseInt(req.body.stockQuantity, 10) : 0;
 
-  if (!title || !description || !Number.isFinite(price) || price <= 0 || !["PHYSICAL", "EBOOK"].includes(type)) {
+  // Shipping dimension fields
+  const sku = req.body.sku || null;
+  const hsn = req.body.hsn || null;
+  const lengthCm = req.body.lengthCm !== undefined ? Number(req.body.lengthCm) : null;
+  const breadthCm = req.body.breadthCm !== undefined ? Number(req.body.breadthCm) : null;
+  const heightCm = req.body.heightCm !== undefined ? Number(req.body.heightCm) : null;
+  const weightGrams = req.body.weightGrams !== undefined ? Number(req.body.weightGrams) : null;
+
+  if (mrp && mrp > 0) {
+    price = mrp - (mrp * (discountPercentage / 100));
+  }
+
+  if (!title || !description || !Number.isFinite(price) || price <= 0 || !["PHYSICAL", "EBOOK", "ENGLISH_BOOK"].includes(type)) {
     throw new ApiError(400, "Invalid book payload");
   }
 
@@ -130,11 +163,22 @@ const createBookWithFiles = async (req, res) => {
     data: {
       title,
       description,
+      authorName,
+      weight,
+      stockQuantity,
       price,
+      mrp,
+      discountPercentage,
       type,
       coverImage: coverImageUrl,
       fileUrl,
-      sampleChapterUrl
+      sampleChapterUrl,
+      sku,
+      hsn,
+      lengthCm,
+      breadthCm,
+      heightCm,
+      weightGrams
     }
   });
 
@@ -150,9 +194,32 @@ const updateBook = async (req, res) => {
     throw new ApiError(404, "Book not found");
   }
 
+  let { mrp, discountPercentage, price, stockQuantity, sku, hsn, lengthCm, breadthCm, heightCm, weightGrams, ...rest } = req.body;
+  
+  if (stockQuantity !== undefined) {
+    stockQuantity = parseInt(stockQuantity, 10);
+  }
+
+  // Parse shipping dimension fields
+  if (lengthCm !== undefined) lengthCm = Number(lengthCm);
+  if (breadthCm !== undefined) breadthCm = Number(breadthCm);
+  if (heightCm !== undefined) heightCm = Number(heightCm);
+  if (weightGrams !== undefined) weightGrams = Number(weightGrams);
+
+  if (mrp !== undefined || discountPercentage !== undefined) {
+    const finalMrp = mrp !== undefined ? Number(mrp) : Number(existing.mrp || 0);
+    const finalDiscount = discountPercentage !== undefined ? Number(discountPercentage) : Number(existing.discountPercentage || 0);
+    
+    if (finalMrp > 0) {
+      price = finalMrp - (finalMrp * (finalDiscount / 100));
+      mrp = finalMrp;
+      discountPercentage = finalDiscount;
+    }
+  }
+
   const updated = await prisma.book.update({
     where: { id: req.params.id },
-    data: req.body
+    data: { mrp, discountPercentage, price, stockQuantity, sku, hsn, lengthCm, breadthCm, heightCm, weightGrams, ...rest }
   });
 
   sendSuccess(res, 200, "Book updated", updated);
@@ -160,19 +227,28 @@ const updateBook = async (req, res) => {
 
 const deleteBook = async (req, res) => {
   const existing = await prisma.book.findUnique({
-    where: { id: req.params.id }
+    where: { id: req.params.id },
+    include: { _count: { select: { orderItems: true } } }
   });
 
   if (!existing) {
     throw new ApiError(404, "Book not found");
   }
 
-  await prisma.book.update({
-    where: { id: req.params.id },
-    data: { isActive: false }
-  });
-
-  sendSuccess(res, 200, "Book deleted");
+  if (existing._count.orderItems > 0) {
+    // Soft delete if orders exist to maintain history
+    await prisma.book.update({
+      where: { id: req.params.id },
+      data: { isActive: false }
+    });
+    return sendSuccess(res, 200, "Book disabled (cannot be deleted due to existing orders)");
+  } else {
+    // Hard delete if no orders
+    await prisma.book.delete({
+      where: { id: req.params.id }
+    });
+    return sendSuccess(res, 200, "Book permanently deleted");
+  }
 };
 
 const getBookSample = async (req, res) => {

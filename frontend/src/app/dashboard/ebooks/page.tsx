@@ -65,7 +65,7 @@ export default function EbooksPage() {
       <header className="space-y-4">
         <div className="inline-flex items-center gap-2 text-botanical-sage uppercase tracking-[0.3em] text-[10px] font-bold">
           <div className="w-8 h-px bg-botanical-sage" />
-          Digital Sanctuary
+          Digital Library
         </div>
         <h1 className="text-5xl font-headline font-bold text-botanical-forest">My <span className="italic font-normal text-botanical-terracotta">Ebooks</span></h1>
         <p className="text-botanical-forest/60 font-medium max-w-xl">
@@ -96,7 +96,7 @@ export default function EbooksPage() {
                 <div className="absolute inset-0 bg-botanical-forest/20 mix-blend-multiply opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               <h3 className="text-lg font-headline font-bold text-botanical-forest mb-1">{ebook.title}</h3>
-              <p className="text-[10px] font-bold text-botanical-sage uppercase tracking-widest mb-6 italic">Swapno Uran Prakashan</p>
+              <p className="text-[10px] font-bold text-botanical-sage uppercase tracking-widest mb-6 italic">{ebook.authorName ? `${ebook.authorName} | Swapno Uran Prakashan` : 'Swapno Uran Prakashan'}</p>
               <div className="flex justify-end pt-4 border-t border-border/40">
                 <BauhausButton
                   variant="primary"
