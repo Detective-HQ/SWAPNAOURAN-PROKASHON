@@ -135,7 +135,7 @@ export function HeroSection() {
               }}
             >
               <Image
-                src="/sapnahero.png"
+                src={isMobile ? "/mobile hero.png" : "/sapnahero.png"}
                 alt="Sapnauran Main Hero"
                 fill
                 className="object-cover"
