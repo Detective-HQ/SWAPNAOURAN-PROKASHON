@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { GeometricShape, BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
 import { CartDrawer } from '@/components/shop/cart-drawer';
 import { Menu } from 'lucide-react';
@@ -15,7 +16,7 @@ export function Navbar() {
     <nav className="bg-background/80 backdrop-blur-md sticky top-0 z-50 py-6 border-b border-border/40">
       <div className="max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-4 group">
-          <GeometricShape type="square" color="sage" className="w-12 h-12" />
+          <Image src="/logo.jpg" alt="Swapno Uran Logo" width={48} height={48} className="rounded-md object-cover" />
           <span className="font-headline font-bold text-2xl tracking-tight text-botanical-forest italic">Swapno Uran</span>
         </Link>
 

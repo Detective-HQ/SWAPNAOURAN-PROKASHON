@@ -135,7 +135,7 @@ export function HeroSection() {
               }}
             >
               <Image
-                src="/sapnahero.png"
+                src={isMobile ? "/mobile hero.png" : "/sapnahero.png"}
                 alt="Sapnauran Main Hero"
                 fill
                 className="object-cover"
@@ -143,26 +143,28 @@ export function HeroSection() {
               />
               
               {/* Overlay Text - Fades out first */}
-              <div 
-                className="absolute inset-0 flex items-end overflow-hidden px-4 md:px-6"
-                style={{ opacity: textOpacity }}
-              >
-                <h1 className="w-full break-words text-[16vw] font-medium leading-[0.85] tracking-tight text-white sm:text-[13vw] md:text-[14vw] md:tracking-tighter lg:text-[16vw]">
-                  {word.split("").map((letter, index) => (
-                    <span
-                      key={index}
-                      className="inline-block animate-[slideUp_0.8s_ease-out_forwards] opacity-0"
-                      style={{
-                        animationDelay: `${index * 0.08}s`,
-                        transition: 'all 1.5s',
-                        transitionTimingFunction: 'cubic-bezier(0.86, 0, 0.07, 1)',
-                      }}
-                    >
-                      {letter}
-                    </span>
-                  ))}
-                </h1>
-              </div>
+              {!isMobile && (
+                <div 
+                  className="absolute inset-0 flex items-end overflow-hidden px-4 md:px-6"
+                  style={{ opacity: textOpacity }}
+                >
+                  <h1 className="w-full break-words text-[12vw] font-medium leading-[0.85] tracking-tight text-white sm:text-[10vw] md:text-[12vw] lg:text-[14vw]">
+                    {word.split("").map((letter, index) => (
+                      <span
+                        key={index}
+                        className="inline-block animate-[slideUp_0.8s_ease-out_forwards] opacity-0"
+                        style={{
+                          animationDelay: `${index * 0.08}s`,
+                          transition: 'all 1.5s',
+                          transitionTimingFunction: 'cubic-bezier(0.86, 0, 0.07, 1)',
+                        }}
+                      >
+                        {letter}
+                      </span>
+                    ))}
+                  </h1>
+                </div>
+              )}
 
               {/* Tagline */}
               <div 
@@ -171,7 +173,7 @@ export function HeroSection() {
                   opacity: textOpacity,
                 }}
               >
-                <h2 className="text-white text-[3vw] md:text-[2.5vw] font-bold tracking-widest uppercase drop-shadow-lg opacity-80 text-center px-4">
+                <h2 className="text-white text-[4vw] sm:text-[3vw] md:text-[2.5vw] font-bold tracking-widest uppercase drop-shadow-lg opacity-80 text-center px-4">
                   <span className="text-xs md:text-sm block mb-2"></span>
                   <span className="text-[2.5vw] md:text-[2vw]"></span>
                 </h2>
