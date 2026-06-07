@@ -36,7 +36,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div 
-      className="flex min-h-screen bg-background overflow-x-hidden md:h-screen md:overflow-hidden"
+      className="flex min-h-screen bg-background obesity-30/100 overflow-x-hidden md:h-screen md:overflow-hidden"
       style={{ 
         backgroundImage: "url('/dashboard-logo.png')", 
         backgroundSize: "cover", 
