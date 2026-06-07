@@ -49,9 +49,9 @@ export default function ReturnsPage() {
       {loading ? (
         <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-botanical-terracotta" /></div>
       ) : returns.length === 0 ? (
-        <div className="p-20 text-center bg-botanical-clay/10 rounded-[40px] border border-dashed border-border">
+        <div className="p-20 text-center bg-botanical-clay rounded-[40px] border border-dashed border-yellow-500 border-border">
           <Package className="w-12 h-12 mx-auto text-botanical-forest/20 mb-4" />
-          <p className="text-botanical-forest/40 font-bold uppercase tracking-[0.2em] text-xs italic">No return requests yet</p>
+          <p className="text-black font-bold uppercase tracking-[0.2em] text-xs italic">No return requests yet</p>
         </div>
       ) : (
         <div className="space-y-4">

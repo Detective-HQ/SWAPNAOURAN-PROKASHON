@@ -35,8 +35,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   ];
 
   return (
-    <div className="flex min-h-screen bg-background overflow-x-hidden md:h-screen md:overflow-hidden">
-      <div className="flex min-w-0 flex-grow flex-col md:flex-row">
+    <div className="relative flex min-h-screen bg-background overflow-x-hidden md:h-screen md:overflow-hidden">
+      {/* Blurred Background Image */}
+      <div 
+        className="absolute inset-0 z-0 pointer-events-none opacity-80"
+        style={{ 
+          backgroundImage: "url('/dashboard-logo.png')", 
+          backgroundSize: "cover", 
+          backgroundPosition: "center", 
+          backgroundAttachment: "fixed",
+          filter: "blur(8px)"
+        }}
+      />
+      <div className="relative z-10 flex min-w-0 flex-grow flex-col md:flex-row w-full">
         {/* Sidebar */}
         <aside className="sticky top-0 z-50 h-auto w-full flex-shrink-0 space-y-3 overflow-hidden border-b border-border/40 bg-white p-3 md:h-screen md:w-72 md:space-y-10 md:overflow-y-auto md:border-b-0 md:border-r md:p-6">
           <div className="space-y-4">

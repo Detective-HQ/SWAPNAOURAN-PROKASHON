@@ -342,8 +342,8 @@ export default function OrdersPage() {
                 </BauhausCard>
               ))
             ) : (
-              <div className="p-20 text-center bg-botanical-clay/10 rounded-[40px] border border-dashed border-border">
-                <p className="text-botanical-forest/40 font-bold uppercase tracking-[0.2em] text-xs italic">Your cart is silent...</p>
+              <div className="p-20 text-center bg-botanical-clay rounded-[40px] border border-dashed border-yellow-500 border-border">
+                <p className="text-black font-bold uppercase tracking-[0.2em] text-xs italic">Your cart is silent...</p>
               </div>
             )}
           </div>
@@ -504,9 +504,9 @@ export default function OrdersPage() {
         </header>
 
         {paidOrders.length === 0 ? (
-          <div className="p-20 text-center bg-botanical-clay/10 rounded-[40px] border border-dashed border-border">
+          <div className="p-20 text-center bg-botanical-clay rounded-[40px] border border-dashed border-yellow-500 border-border">
             <Package className="w-12 h-12 mx-auto text-botanical-forest/20 mb-4" />
-            <p className="text-botanical-forest/40 font-bold uppercase tracking-[0.2em] text-xs italic">No paid orders yet</p>
+            <p className="text-black font-bold uppercase tracking-[0.2em] text-xs italic">No paid orders yet</p>
           </div>
         ) : (
           <div className="space-y-4">
