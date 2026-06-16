@@ -72,6 +72,19 @@ const createShiprocketOrder = async (orderId) => {
 
   // Build shipping address from order JSON
   const addr = order.shippingAddress || {};
+  const pincode = String(addr.pincode || addr.postalCode || "").trim();
+  const billingAddress = String(addr.address || addr.line1 || "").trim();
+  const billingPhone = String(addr.phone || "").replace(/\D/g, "").slice(-10);
+
+  if (!pincode) {
+    throw new ApiError(400, "Shipping address is missing pincode. Update the order address before fulfilling.");
+  }
+  if (!billingAddress || !addr.city || !addr.state) {
+    throw new ApiError(400, "Shipping address is incomplete. Name, address, city, state, and pincode are required.");
+  }
+  if (billingPhone.length !== 10) {
+    throw new ApiError(400, "Shipping address must include a valid 10-digit phone number.");
+  }
 
   // Build order_items array for Shiprocket
   const orderItems = order.items
@@ -111,14 +124,14 @@ const createShiprocketOrder = async (orderId) => {
     comment: `Swapnaouran Prokashon Order`,
     billing_customer_name: addr.name || order.user.name || "Customer",
     billing_last_name: "",
-    billing_address: addr.address || "",
-    billing_address_2: "",
+    billing_address: billingAddress,
+    billing_address_2: addr.addressLine2 || addr.line2 || "",
     billing_city: addr.city || "",
-    billing_pincode: addr.pincode || "",
+    billing_pincode: pincode,
     billing_state: addr.state || "",
     billing_country: "India",
-    billing_email: order.user.email || "",
-    billing_phone: addr.phone || "",
+    billing_email: order.user.email || addr.email || "",
+    billing_phone: billingPhone,
     shipping_is_billing: true,
     order_items: orderItems,
     payment_method: "Prepaid",
@@ -134,6 +147,11 @@ const createShiprocketOrder = async (orderId) => {
   };
 
   const result = await shiprocketApi("POST", "/orders/create/adhoc", payload);
+
+  if (!result?.order_id) {
+    const detail = result?.message || result?.errors || "Shiprocket did not return an order ID";
+    throw new ApiError(502, `Shiprocket API error: ${JSON.stringify(detail)}`);
+  }
 
   // Save Shiprocket references
   await prisma.order.update({
@@ -189,9 +207,10 @@ const getAvailableCouriers = async (shiprocketOrderId) => {
   }
 
   const addr = order.shippingAddress || {};
+  const pincode = String(addr.pincode || addr.postalCode || "").trim();
   const result = await shiprocketApi(
     "GET",
-    `/courier/serviceability/?pickup_postcode=${env.shiprocketPickupLocation}&delivery_postcode=${addr.pincode || ""}&cod=0&weight=0.5&shipment_id=${order.shiprocketShipmentId}`
+    `/courier/serviceability/?pickup_postcode=${env.shiprocketPickupLocation}&delivery_postcode=${pincode}&cod=0&weight=0.5&shipment_id=${order.shiprocketShipmentId}`
   );
 
   return result;
