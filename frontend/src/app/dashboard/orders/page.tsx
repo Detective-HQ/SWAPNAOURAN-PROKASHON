@@ -3,14 +3,15 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useUser } from '@clerk/nextjs';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCart } from '@/lib/cart-context';
 import { useApi } from '@/hooks/use-api';
 import { useToast } from '@/hooks/use-toast';
 import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { ShoppingBag, Trash2, ChevronRight, Package, CheckCircle2, Loader2, FileText, Truck, RotateCcw } from 'lucide-react';
+import { ShoppingBag, Trash2, Package, CheckCircle2, Loader2, FileText, Truck, RotateCcw } from 'lucide-react';
 import InvoiceModal from '@/components/shop/invoice-modal';
+import PaymentSuccessModal from '@/components/shop/payment-success-modal';
 
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
@@ -28,6 +29,8 @@ const loadRazorpayScript = () => {
 
 export default function OrdersPage() {
   const { user, isLoaded: userLoaded } = useUser();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { items: cartItems, removeItem, updateQty, clearCart, total: subtotal } = useCart();
   const api = useApi();
   const [orders, setOrders] = useState<any[]>([]);
@@ -85,7 +88,14 @@ export default function OrdersPage() {
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [estimatedDeliveryDays, setEstimatedDeliveryDays] = useState<string | null>(null);
   const [requiresDelivery, setRequiresDelivery] = useState(false);
+  const [showCelebrationModal, setShowCelebrationModal] = useState(false);
   const checkoutTotal = subtotal + deliveryCharge;
+  const paymentStatus = searchParams.get('payment');
+  const successfulOrderId = searchParams.get('orderId');
+  const celebratedOrder =
+    orders.find((order) => order.id === successfulOrderId) ||
+    paidOrders[0] ||
+    null;
 
   useEffect(() => {
     if (userLoaded && user) {
@@ -139,6 +149,14 @@ export default function OrdersPage() {
     }
     fetchData();
   }, [userLoaded, user, api]);
+
+  useEffect(() => {
+    if (paymentStatus !== 'success' || loading || orders.length === 0) {
+      return;
+    }
+
+    setShowCelebrationModal(true);
+  }, [loading, orders.length, paymentStatus]);
 
   useEffect(() => {
     if (!user || cartItems.length === 0) {
@@ -197,6 +215,16 @@ export default function OrdersPage() {
       pincode: addr.pincode,
     });
     setShowAddressForm(false);
+  };
+
+  const clearPaymentSuccessParams = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('payment');
+    params.delete('orderId');
+    const nextQuery = params.toString();
+    router.replace(nextQuery ? `/dashboard/orders?${nextQuery}` : '/dashboard/orders', {
+      scroll: false,
+    });
   };
 
   const initiateRazorpayPayment = async () => {
@@ -302,7 +330,7 @@ export default function OrdersPage() {
             }
 
             clearCart();
-            window.location.href = '/dashboard/orders?payment=success';
+            window.location.href = `/dashboard/orders?payment=success&orderId=${orderId}`;
           } catch (verifyErr: any) {
             console.error('Payment verification failed:', verifyErr);
             setError(verifyErr.message || 'Payment verification failed');
@@ -708,6 +736,28 @@ export default function OrdersPage() {
         orderId={invoiceOrderId || ''}
         open={!!invoiceOrderId}
         onClose={() => setInvoiceOrderId(null)}
+      />
+      <PaymentSuccessModal
+        open={showCelebrationModal}
+        order={celebratedOrder}
+        onOpenChange={(open) => {
+          setShowCelebrationModal(open);
+          if (!open) {
+            clearPaymentSuccessParams();
+          }
+        }}
+        onViewInvoice={() => {
+          if (celebratedOrder?.id) {
+            setInvoiceOrderId(celebratedOrder.id);
+          }
+          setShowCelebrationModal(false);
+          clearPaymentSuccessParams();
+        }}
+        onContinueShopping={() => {
+          setShowCelebrationModal(false);
+          clearPaymentSuccessParams();
+          router.push('/dashboard/shop');
+        }}
       />
 
       {/* Return Request Modal */}
