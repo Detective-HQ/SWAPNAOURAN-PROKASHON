@@ -56,6 +56,8 @@ const buildInvoice = async ({ orderId, requester }) => {
         qrCodes: itemQrs
       };
     }),
+    subtotalAmount: Number(order.subtotalAmount ?? order.totalAmount),
+    deliveryCharge: Number(order.deliveryCharge ?? 0),
     grandTotal: Number(order.totalAmount),
     qrCodes: order.qrCodes.map((qr) => ({
       bookId: qr.bookId,

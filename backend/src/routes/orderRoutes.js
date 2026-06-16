@@ -6,6 +6,7 @@ const validate = require("../middleware/validate");
 const asyncHandler = require("../utils/asyncHandler");
 const {
   createOrderController,
+  getShippingQuoteController,
   listMyOrders,
   getOrderByIdController,
   initiateOrderPayment,
@@ -15,6 +16,7 @@ const {
 } = require("../controllers/orderController");
 const {
   createOrderSchema,
+  shippingQuoteSchema,
   orderIdParamsSchema,
   payOrderParamsSchema,
   verifyPaymentSchema
@@ -24,6 +26,7 @@ const router = express.Router();
 
 router.use(authMiddleware);
 
+router.post("/shipping-quote", validate({ body: shippingQuoteSchema }), asyncHandler(getShippingQuoteController));
 router.post("/", validate({ body: createOrderSchema }), asyncHandler(createOrderController));
 router.get("/my", asyncHandler(listMyOrders));
 router.get("/:id/invoice", validate({ params: orderIdParamsSchema }), asyncHandler(getOrderInvoice));

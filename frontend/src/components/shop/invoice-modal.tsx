@@ -21,6 +21,8 @@ interface InvoiceData {
   status: string;
   payment: { provider: string; status: string; transactionId: string } | null;
   items: InvoiceItem[];
+  subtotalAmount?: number;
+  deliveryCharge?: number;
   grandTotal: number;
   qrCodes?: { bookId: string; imageUrl: string }[];
 }
@@ -197,8 +199,18 @@ export default function InvoiceModal({ orderId, open, onClose }: InvoiceModalPro
 
             {/* Total */}
             <div className="flex justify-end">
-              <div className="w-64 p-6 bg-botanical-forest text-white rounded-2xl">
-                <div className="flex justify-between items-center">
+              <div className="w-72 p-6 bg-botanical-forest text-white rounded-2xl space-y-3">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="opacity-60">Subtotal</span>
+                  <span>₹{(invoice.subtotalAmount ?? invoice.grandTotal).toLocaleString()}</span>
+                </div>
+                {(invoice.deliveryCharge ?? 0) > 0 && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="opacity-60">Delivery</span>
+                    <span>₹{Number(invoice.deliveryCharge).toLocaleString()}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center border-t border-white/20 pt-3">
                   <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">Grand Total</span>
                   <span className="text-2xl font-bold italic">₹{invoice.grandTotal.toLocaleString()}</span>
                 </div>

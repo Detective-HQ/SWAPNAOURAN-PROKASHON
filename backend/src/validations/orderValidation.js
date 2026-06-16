@@ -27,6 +27,11 @@ const addressSchema = z
   }))
   .optional();
 
+const shippingQuoteSchema = z.object({
+  items: z.array(orderItemSchema).min(1),
+  pincode: z.string().regex(/^\d{6}$/, "Valid 6-digit pincode is required")
+});
+
 const createOrderSchema = z.object({
   items: z.array(orderItemSchema).min(1),
   shippingAddress: addressSchema
@@ -60,6 +65,7 @@ const updateOrderTrackingSchema = z.object({
 
 module.exports = {
   createOrderSchema,
+  shippingQuoteSchema,
   orderIdParamsSchema,
   payOrderParamsSchema,
   verifyPaymentSchema,

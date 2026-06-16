@@ -2,6 +2,7 @@ const prisma = require("../prisma/client");
 const ApiError = require("../utils/ApiError");
 const { createPaymentSession, verifyPaymentSession, provider } = require("./paymentService");
 const { ensureQRCodesForPaidOrder } = require("./qrService");
+const { getShippingQuoteForItems } = require("./shiprocketService");
 
 const normalizeItems = (items) => {
   const map = new Map();
@@ -46,11 +47,26 @@ const createOrder = async ({ userId, items, shippingAddress }) => {
     };
   });
 
-  const totalAmount = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
+  const subtotalAmount = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
+
+  let deliveryCharge = 0;
+  if (hasPhysical) {
+    const pincode = String(shippingAddress?.pincode || shippingAddress?.postalCode || "").trim();
+    const quote = await getShippingQuoteForItems({
+      items: normalizedItems,
+      booksById: bookById,
+      pincode
+    });
+    deliveryCharge = quote.deliveryCharge;
+  }
+
+  const totalAmount = subtotalAmount + deliveryCharge;
 
   const order = await prisma.order.create({
     data: {
       userId,
+      subtotalAmount,
+      deliveryCharge,
       totalAmount,
       shippingAddress: shippingAddress || undefined,
       items: {
@@ -65,6 +81,27 @@ const createOrder = async ({ userId, items, shippingAddress }) => {
   });
 
   return order;
+};
+
+const getShippingQuote = async ({ items, pincode }) => {
+  const normalizedItems = normalizeItems(items);
+  const bookIds = normalizedItems.map((item) => item.bookId);
+
+  const books = await prisma.book.findMany({
+    where: { id: { in: bookIds }, isActive: true }
+  });
+
+  if (books.length !== bookIds.length) {
+    throw new ApiError(400, "Some books are invalid or inactive");
+  }
+
+  const bookById = books.reduce((acc, book) => ({ ...acc, [book.id]: book }), {});
+
+  return getShippingQuoteForItems({
+    items: normalizedItems,
+    booksById: bookById,
+    pincode
+  });
 };
 
 const getOrderById = async ({ orderId, requester }) => {
@@ -298,6 +335,7 @@ const verifyPayment = async ({ orderId, requester, payload }) => {
 
 module.exports = {
   createOrder,
+  getShippingQuote,
   getOrderById,
   listOrders,
   initiatePayment,
