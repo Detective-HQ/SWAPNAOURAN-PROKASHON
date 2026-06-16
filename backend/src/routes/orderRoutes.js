@@ -4,6 +4,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
 const validate = require("../middleware/validate");
 const asyncHandler = require("../utils/asyncHandler");
+const { orderLimiter, paymentLimiter } = require("../middleware/rateLimiter");
 const {
   createOrderController,
   getShippingQuoteController,
@@ -26,8 +27,8 @@ const router = express.Router();
 
 router.use(authMiddleware);
 
-router.post("/shipping-quote", validate({ body: shippingQuoteSchema }), asyncHandler(getShippingQuoteController));
-router.post("/", validate({ body: createOrderSchema }), asyncHandler(createOrderController));
+router.post("/shipping-quote", orderLimiter, validate({ body: shippingQuoteSchema }), asyncHandler(getShippingQuoteController));
+router.post("/", orderLimiter, validate({ body: createOrderSchema }), asyncHandler(createOrderController));
 router.get("/my", asyncHandler(listMyOrders));
 router.get("/:id/invoice", validate({ params: orderIdParamsSchema }), asyncHandler(getOrderInvoice));
 router.post(
@@ -37,9 +38,10 @@ router.post(
   asyncHandler(fulfillShiprocket)
 );
 router.get("/:id", validate({ params: orderIdParamsSchema }), asyncHandler(getOrderByIdController));
-router.post("/:orderId/pay", validate({ params: payOrderParamsSchema }), asyncHandler(initiateOrderPayment));
+router.post("/:orderId/pay", paymentLimiter, validate({ params: payOrderParamsSchema }), asyncHandler(initiateOrderPayment));
 router.post(
   "/:orderId/verify",
+  paymentLimiter,
   validate({ params: payOrderParamsSchema, body: verifyPaymentSchema }),
   asyncHandler(verifyOrderPayment)
 );

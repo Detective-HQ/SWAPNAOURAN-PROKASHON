@@ -3,37 +3,45 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Navbar } from '@/components/layout/navbar';
-import { BauhausCard } from '@/components/bauhaus/bauhaus-card';
 import { BauhausButton } from '@/components/bauhaus/bauhaus-primitives';
 import { useCart } from '@/lib/cart-context';
 import { useApi } from '@/hooks/use-api';
 import { useUser } from '@clerk/nextjs';
 import { ShoppingCart, Search, SlidersHorizontal, Check, X, BookOpen, Heart, Loader2 } from 'lucide-react';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 type Book = {
   id: string;
   title: string;
   description?: string;
   price: number | string;
+  mrp?: number | string;
+  discountPercentage?: number | string;
   coverImage?: string;
   type: string;
   sampleChapterUrl?: string;
   authorName?: string;
+  isbn?: string;
+  pageCount?: number;
+  bindingDetails?: string;
   weight?: string;
   stockQuantity?: number;
+  copiesSold?: number;
+  createdAt?: string;
 };
 
 export default function ShopPage() {
   const { addItem } = useCart();
   const api = useApi();
+  const { isSignedIn } = useUser();
   const [addedItems, setAddedItems] = useState<string[]>([]);
   const [wishlistedIds, setWishlistedIds] = useState<string[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high'>('newest');
+  const [sortBy, setSortBy] = useState<'newest' | 'best-sellers' | 'price-low' | 'price-high'>('newest');
+  const [wishlistLoading, setWishlistLoading] = useState<string[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -50,7 +58,9 @@ export default function ShopPage() {
       }
     };
     fetchBooks();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [api]);
 
   const parsePrice = (price: number | string) => {
@@ -59,60 +69,75 @@ export default function ShopPage() {
   };
 
   const filteredBooks = useMemo(() => {
-    let result = [...books];
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(b =>
-        b.title.toLowerCase().includes(q) ||
-        (b.description && b.description.toLowerCase().includes(q))
-      );
-    }
-    switch (sortBy) {
-      case 'price-low': result.sort((a, b) => parsePrice(a.price) - parsePrice(b.price)); break;
-      case 'price-high': result.sort((a, b) => parsePrice(b.price) - parsePrice(a.price)); break;
-      default: result.sort((a, b) => String(a.id).localeCompare(String(b.id))); break;
-    }
-    return result;
-  }, [books, searchQuery, sortBy]);
+    const result = [...books];
+    const normalizedQuery = searchQuery.trim().toLowerCase();
 
-  // Fetch wishlist status for all books
-  const { isLoaded: userLoaded, isSignedIn } = useUser();
-  const [wishlistLoading, setWishlistLoading] = useState<string[]>([]);
+    const searched = normalizedQuery
+      ? result.filter(
+          (book) =>
+            book.title.toLowerCase().includes(normalizedQuery) ||
+            (book.description && book.description.toLowerCase().includes(normalizedQuery))
+        )
+      : result;
+
+    searched.sort((a, b) => {
+      switch (sortBy) {
+        case 'best-sellers':
+          return (b.copiesSold || 0) - (a.copiesSold || 0);
+        case 'price-low':
+          return parsePrice(a.price) - parsePrice(b.price);
+        case 'price-high':
+          return parsePrice(b.price) - parsePrice(a.price);
+        default:
+          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+      }
+    });
+
+    return searched;
+  }, [books, searchQuery, sortBy]);
 
   useEffect(() => {
     if (!isSignedIn || books.length === 0) return;
-    const ids = books.map(b => b.id);
-    if (ids.length === 0) return;
-    Promise.all(ids.map(id =>
-      api.get(`/wishlist/check/${id}`).then(r => {
-        if (r.data?.isWishlisted) setWishlistedIds(prev => [...prev, id]);
-      }).catch(() => {})
-    ));
-  }, [isSignedIn, books]);
+    const ids = books.map((book) => book.id);
+    Promise.all(
+      ids.map((id) =>
+        api
+          .get(`/wishlist/check/${id}`)
+          .then((response) => {
+            if (response.data?.isWishlisted) {
+              setWishlistedIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+            }
+          })
+          .catch(() => {})
+      )
+    );
+  }, [api, books, isSignedIn]);
 
-  const handleToggleWishlist = async (e: React.MouseEvent, bookId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleToggleWishlist = async (event: React.MouseEvent, bookId: string) => {
+    event.preventDefault();
+    event.stopPropagation();
     if (!isSignedIn) return;
-    setWishlistLoading(prev => [...prev, bookId]);
+
+    setWishlistLoading((prev) => [...prev, bookId]);
     try {
       if (wishlistedIds.includes(bookId)) {
         await api.del(`/wishlist/${bookId}`);
-        setWishlistedIds(prev => prev.filter(id => id !== bookId));
+        setWishlistedIds((prev) => prev.filter((id) => id !== bookId));
       } else {
         await api.post('/wishlist', { bookId });
-        setWishlistedIds(prev => [...prev, bookId]);
+        setWishlistedIds((prev) => [...prev, bookId]);
       }
     } catch (err) {
       console.error('Wishlist error:', err);
     } finally {
-      setWishlistLoading(prev => prev.filter(id => id !== bookId));
+      setWishlistLoading((prev) => prev.filter((id) => id !== bookId));
     }
   };
 
   const handleAddToCart = (book: Book) => {
     const parsedPrice = parsePrice(book.price);
     if (isNaN(parsedPrice)) return;
+
     addItem({
       id: book.id,
       title: book.title,
@@ -120,6 +145,7 @@ export default function ShopPage() {
       price: parsedPrice,
       image: book.coverImage || '',
     });
+
     setAddedItems((prev) => [...prev, book.id]);
     setTimeout(() => {
       setAddedItems((prev) => prev.filter((id) => id !== book.id));
@@ -137,7 +163,9 @@ export default function ShopPage() {
               <div className="h-px w-8 bg-botanical-sage sm:w-12" />
               The Collection
             </div>
-            <h1 className="font-headline text-4xl font-bold leading-none text-botanical-forest sm:text-5xl lg:text-6xl">Curated <br /> <span className="italic font-normal">Physical Library</span></h1>
+            <h1 className="font-headline text-4xl font-bold leading-none text-botanical-forest sm:text-5xl lg:text-6xl">
+              Curated <br /> <span className="italic font-normal">Physical Library</span>
+            </h1>
           </div>
 
           <div className="flex w-full gap-3 md:w-auto md:gap-4">
@@ -147,7 +175,7 @@ export default function ShopPage() {
                 type="text"
                 placeholder="Find your story..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(event) => setSearchQuery(event.target.value)}
                 className="w-full rounded-full border border-border bg-botanical-clay/10 py-4 pl-12 pr-5 font-medium transition-all focus:outline-none focus:ring-2 focus:ring-botanical-sage/30 sm:py-5 sm:pl-16 sm:pr-8"
               />
             </div>
@@ -160,17 +188,23 @@ export default function ShopPage() {
         {showFilters && (
           <div className="max-w-7xl mx-auto mt-8 flex flex-wrap items-center gap-3 p-4 bg-botanical-clay/10 rounded-2xl border border-border/40">
             <span className="w-full text-xs font-bold uppercase tracking-widest text-botanical-sage sm:w-auto">Sort by:</span>
-            {(['newest', 'price-low', 'price-high'] as const).map((opt) => (
+            {(['newest', 'best-sellers', 'price-low', 'price-high'] as const).map((option) => (
               <button
-                key={opt}
-                onClick={() => setSortBy(opt)}
+                key={option}
+                onClick={() => setSortBy(option)}
                 className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
-                  sortBy === opt
+                  sortBy === option
                     ? 'bg-botanical-forest text-white'
                     : 'bg-white border border-border text-botanical-forest/60 hover:text-botanical-forest'
                 }`}
               >
-                {opt === 'newest' ? 'Newest' : opt === 'price-low' ? 'Price: Low' : 'Price: High'}
+                {option === 'newest'
+                  ? 'Newest'
+                  : option === 'best-sellers'
+                    ? 'Best Sellers'
+                    : option === 'price-low'
+                      ? 'Price: Low'
+                      : 'Price: High'}
               </button>
             ))}
             <button onClick={() => setShowFilters(false)} className="ml-auto p-2 text-botanical-forest/40 hover:text-botanical-forest">
@@ -206,16 +240,31 @@ export default function ShopPage() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                         <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-500 space-y-2">
                           <button
-                            onClick={(e) => { e.preventDefault(); if (book.type === "EBOOK" || (book.stockQuantity !== undefined && book.stockQuantity > 0)) handleAddToCart(book); }}
-                            className={`w-full py-3 rounded-2xl bg-white/90 backdrop-blur-sm font-bold text-[11px] uppercase tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-lg ${book.type !== "EBOOK" && book.stockQuantity !== undefined && book.stockQuantity <= 0 ? "text-rose-500 opacity-50 cursor-not-allowed" : "text-botanical-forest"}`}
-                            disabled={book.type !== "EBOOK" && book.stockQuantity !== undefined && book.stockQuantity <= 0}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              if (book.type === 'EBOOK' || (book.stockQuantity !== undefined && book.stockQuantity > 0)) {
+                                handleAddToCart(book);
+                              }
+                            }}
+                            className={`w-full py-3 rounded-2xl bg-white/90 backdrop-blur-sm font-bold text-[11px] uppercase tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-lg ${
+                              book.type !== 'EBOOK' && book.stockQuantity !== undefined && book.stockQuantity <= 0
+                                ? 'text-rose-500 opacity-50 cursor-not-allowed'
+                                : 'text-botanical-forest'
+                            }`}
+                            disabled={book.type !== 'EBOOK' && book.stockQuantity !== undefined && book.stockQuantity <= 0}
                           >
                             {addedItems.includes(book.id) ? (
-                              <><Check className="w-4 h-4" /> Added</>
-                            ) : book.type !== "EBOOK" && book.stockQuantity !== undefined && book.stockQuantity <= 0 ? (
-                              <><X className="w-4 h-4" /> Out of Stock</>
+                              <>
+                                <Check className="w-4 h-4" /> Added
+                              </>
+                            ) : book.type !== 'EBOOK' && book.stockQuantity !== undefined && book.stockQuantity <= 0 ? (
+                              <>
+                                <X className="w-4 h-4" /> Out of Stock
+                              </>
                             ) : (
-                              <><ShoppingCart className="w-4 h-4" /> Add to Cart</>
+                              <>
+                                <ShoppingCart className="w-4 h-4" /> Add to Cart
+                              </>
                             )}
                           </button>
                           {book.sampleChapterUrl && (
@@ -228,20 +277,40 @@ export default function ShopPage() {
                           )}
                         </div>
                       </div>
+
                       <div className="p-5 space-y-3">
                         <div>
                           <h3 className="text-base font-headline font-bold text-botanical-forest leading-tight line-clamp-2">{book.title}</h3>
-                          <p className="text-[10px] font-medium text-botanical-sage uppercase tracking-widest mt-1 italic">{book.authorName ? `${book.authorName} | Swapno Uran Prakashan` : 'Swapno Uran Prakashan'}</p>
+                          <p className="text-[10px] font-medium text-botanical-sage uppercase tracking-widest mt-1 italic">
+                            {book.authorName ? `${book.authorName} | Swapno Uran Prakashan` : 'Swapno Uran Prakashan'}
+                          </p>
                         </div>
+
                         {book.description && (
                           <p className="text-xs text-botanical-forest/50 leading-relaxed line-clamp-2">{book.description}</p>
                         )}
+
+                        <div className="flex flex-wrap gap-2 text-[10px] uppercase tracking-wider text-botanical-forest/45">
+                          {typeof book.copiesSold === 'number' && book.copiesSold > 0 && <span>{book.copiesSold} sold</span>}
+                          {book.bindingDetails && <span>{book.bindingDetails}</span>}
+                        </div>
+
                         <div className="flex items-center justify-between pt-2 border-t border-border/10">
-                          <span className="text-xl font-headline font-bold text-botanical-terracotta">₹{parsePrice(book.price).toLocaleString()}</span>
+                          <div className="flex flex-col">
+                            <span className="text-xl font-headline font-bold text-botanical-terracotta">
+                              Rs {parsePrice(book.price).toLocaleString()}
+                            </span>
+                            {book.mrp && Number(book.mrp) > Number(book.price) && (
+                              <span className="text-[10px] text-botanical-forest/35 line-through">
+                                Rs {parsePrice(book.mrp).toLocaleString()}
+                              </span>
+                            )}
+                          </div>
+
                           <div className="flex gap-1.5">
                             {isSignedIn && (
                               <button
-                                onClick={(e) => handleToggleWishlist(e, book.id)}
+                                onClick={(event) => handleToggleWishlist(event, book.id)}
                                 disabled={wishlistLoading.includes(book.id)}
                                 className={`p-2.5 rounded-xl border transition-all ${
                                   wishlistedIds.includes(book.id)
@@ -257,20 +326,26 @@ export default function ShopPage() {
                                 )}
                               </button>
                             )}
+
                             <button
-                              onClick={(e) => { e.preventDefault(); if (book.type === "EBOOK" || (book.stockQuantity !== undefined && book.stockQuantity > 0)) handleAddToCart(book); }}
-                              disabled={book.type !== "EBOOK" && book.stockQuantity !== undefined && book.stockQuantity <= 0}
+                              onClick={(event) => {
+                                event.preventDefault();
+                                if (book.type === 'EBOOK' || (book.stockQuantity !== undefined && book.stockQuantity > 0)) {
+                                  handleAddToCart(book);
+                                }
+                              }}
+                              disabled={book.type !== 'EBOOK' && book.stockQuantity !== undefined && book.stockQuantity <= 0}
                               className={`p-2.5 rounded-xl transition-colors ${
                                 addedItems.includes(book.id)
                                   ? 'bg-botanical-forest text-white'
-                                  : book.type !== "EBOOK" && book.stockQuantity !== undefined && book.stockQuantity <= 0
-                                  ? 'bg-rose-50 text-rose-300 cursor-not-allowed'
-                                  : 'bg-botanical-clay/20 text-botanical-forest hover:bg-botanical-clay/40'
+                                  : book.type !== 'EBOOK' && book.stockQuantity !== undefined && book.stockQuantity <= 0
+                                    ? 'bg-rose-50 text-rose-300 cursor-not-allowed'
+                                    : 'bg-botanical-clay/20 text-botanical-forest hover:bg-botanical-clay/40'
                               }`}
                             >
                               {addedItems.includes(book.id) ? (
                                 <Check className="w-4 h-4" />
-                              ) : book.type !== "EBOOK" && book.stockQuantity !== undefined && book.stockQuantity <= 0 ? (
+                              ) : book.type !== 'EBOOK' && book.stockQuantity !== undefined && book.stockQuantity <= 0 ? (
                                 <X className="w-4 h-4" />
                               ) : (
                                 <ShoppingCart className="w-4 h-4" />

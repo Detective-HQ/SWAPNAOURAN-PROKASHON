@@ -28,8 +28,12 @@ export default function EditProductPage() {
     title: "",
     description: "",
     authorName: "",
+    isbn: "",
+    pageCount: "",
+    bindingDetails: "",
     weight: "",
     stockQuantity: "0",
+    copiesSold: "0",
     price: "",
     mrp: "",
     discountPercentage: "0",
@@ -60,8 +64,12 @@ export default function EditProductPage() {
         title: book.title || "",
         description: book.description || "",
         authorName: book.authorName || "",
+        isbn: book.isbn || "",
+        pageCount: book.pageCount?.toString() || "",
+        bindingDetails: book.bindingDetails || "",
         weight: book.weight || "",
         stockQuantity: book.stockQuantity?.toString() || "0",
+        copiesSold: book.copiesSold?.toString() || "0",
         price: book.price || "",
         mrp: book.mrp || "",
         discountPercentage: book.discountPercentage || "0",
@@ -111,8 +119,12 @@ export default function EditProductPage() {
         title: formData.title,
         description: formData.description,
         authorName: formData.authorName,
+        isbn: formData.isbn,
+        pageCount: formData.pageCount ? parseInt(formData.pageCount, 10) : undefined,
+        bindingDetails: formData.bindingDetails,
         weight: formData.weight,
         stockQuantity: parseInt(formData.stockQuantity, 10),
+        copiesSold: parseInt(formData.copiesSold, 10),
         type: formData.type,
       };
 
@@ -206,6 +218,52 @@ export default function EditProductPage() {
               className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest min-h-[150px] focus-visible:ring-botanical-terracotta"
               required
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-botanical-forest/80">ISBN Number</label>
+              <Input
+                name="isbn"
+                value={formData.isbn}
+                onChange={handleInputChange}
+                className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-botanical-forest/80">No. of Pages</label>
+              <Input
+                name="pageCount"
+                type="number"
+                min="1"
+                value={formData.pageCount}
+                onChange={handleInputChange}
+                className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-botanical-forest/80">Binding Details</label>
+              <Input
+                name="bindingDetails"
+                value={formData.bindingDetails}
+                onChange={handleInputChange}
+                className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-botanical-forest/80">Copies Sold</label>
+              <Input
+                name="copiesSold"
+                type="number"
+                min="0"
+                value={formData.copiesSold}
+                onChange={handleInputChange}
+                className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

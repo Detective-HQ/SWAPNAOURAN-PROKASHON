@@ -137,6 +137,7 @@ export default function AdminProductsPage() {
               <TableHead className="text-botanical-forest/70 font-semibold py-4">Title</TableHead>
               <TableHead className="text-botanical-forest/70 font-semibold">Type</TableHead>
               <TableHead className="text-botanical-forest/70 font-semibold">Stock</TableHead>
+              <TableHead className="text-botanical-forest/70 font-semibold">Sold</TableHead>
               <TableHead className="text-botanical-forest/70 font-semibold">Price</TableHead>
               <TableHead className="text-botanical-forest/70 font-semibold">Status</TableHead>
               <TableHead className="text-right text-botanical-forest/70 font-semibold pr-6">Actions</TableHead>
@@ -151,7 +152,12 @@ export default function AdminProductsPage() {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={book.coverImage} alt="" className="w-10 h-14 rounded object-cover" />
                     )}
-                    <span>{book.title}</span>
+                    <div>
+                      <span>{book.title}</span>
+                      <p className="text-[10px] text-botanical-forest/45">
+                        {book.isbn ? `ISBN: ${book.isbn}` : "ISBN not set"}
+                      </p>
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell>
@@ -172,6 +178,9 @@ export default function AdminProductsPage() {
                   ) : (
                     <span className="text-botanical-forest/40 text-xs italic">N/A</span>
                   )}
+                </TableCell>
+                <TableCell>
+                  <span className="font-semibold text-botanical-forest">{book.copiesSold || 0}</span>
                 </TableCell>
                 <TableCell className="text-botanical-terracotta font-semibold">
                   <span className="flex items-center">
@@ -225,7 +234,7 @@ export default function AdminProductsPage() {
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="h-32 text-center text-botanical-forest/50">
+                <TableCell colSpan={7} className="h-32 text-center text-botanical-forest/50">
                   {searchQuery ? "No products match your search." : "No products found."}
                 </TableCell>
               </TableRow>

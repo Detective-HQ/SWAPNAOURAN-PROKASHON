@@ -83,8 +83,12 @@ model Book {
   title            String
   description      String
   authorName       String?
+  isbn             String?
+  pageCount        Int?
+  bindingDetails   String?
   weight           String?
   stockQuantity    Int           @default(0)
+  copiesSold       Int           @default(0)
   price            Decimal       @db.Decimal(10, 2)
   mrp              Decimal?      @db.Decimal(10, 2)
   discountPercentage Decimal?    @db.Decimal(5, 2)

@@ -265,14 +265,20 @@ const finalizePaidOrder = async ({ orderId, paymentId, paymentMeta }) => {
       });
     }
 
-    const physicalItems = order.items.filter((item) => item.book.type === "PHYSICAL" || item.book.type === "ENGLISH_BOOK");
-    for (const item of physicalItems) {
+    for (const item of order.items) {
       await tx.book.update({
         where: { id: item.bookId },
         data: {
-          stockQuantity: {
-            decrement: item.quantity
-          }
+          copiesSold: {
+            increment: item.quantity
+          },
+          ...((item.book.type === "PHYSICAL" || item.book.type === "ENGLISH_BOOK")
+            ? {
+              stockQuantity: {
+                decrement: item.quantity
+              }
+            }
+            : {})
         }
       });
     }
