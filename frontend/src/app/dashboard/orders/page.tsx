@@ -80,6 +80,12 @@ export default function OrdersPage() {
   const { toast } = useToast();
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [deliveryCharge, setDeliveryCharge] = useState(0);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
+  const [estimatedDeliveryDays, setEstimatedDeliveryDays] = useState<string | null>(null);
+  const [requiresDelivery, setRequiresDelivery] = useState(false);
+  const checkoutTotal = subtotal + deliveryCharge;
 
   useEffect(() => {
     if (userLoaded && user) {
@@ -134,6 +140,52 @@ export default function OrdersPage() {
     fetchData();
   }, [userLoaded, user, api]);
 
+  useEffect(() => {
+    if (!user || cartItems.length === 0) {
+      setDeliveryCharge(0);
+      setQuoteError(null);
+      setEstimatedDeliveryDays(null);
+      setRequiresDelivery(false);
+      return;
+    }
+
+    const pincode = shippingAddress.pincode?.trim();
+    if (!/^\d{6}$/.test(pincode || '')) {
+      setDeliveryCharge(0);
+      setQuoteError(null);
+      setEstimatedDeliveryDays(null);
+      setRequiresDelivery(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setQuoteLoading(true);
+      setQuoteError(null);
+      try {
+        const res = await api.post('/orders/shipping-quote', {
+          items: cartItems.map((item) => ({
+            bookId: String(item.id),
+            quantity: item.qty || 1,
+          })),
+          pincode,
+        });
+        const quote = res.data || res;
+        setDeliveryCharge(Number(quote.deliveryCharge || 0));
+        setEstimatedDeliveryDays(quote.estimatedDeliveryDays || null);
+        setRequiresDelivery(Boolean(quote.requiresDelivery));
+      } catch (err: any) {
+        setDeliveryCharge(0);
+        setEstimatedDeliveryDays(null);
+        setRequiresDelivery(false);
+        setQuoteError(err.message || 'Could not calculate delivery charge');
+      } finally {
+        setQuoteLoading(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [api, cartItems, shippingAddress.pincode, user]);
+
   const handleAddressSelect = (addr: any) => {
     setSelectedAddressId(addr.id);
     setShippingAddress({
@@ -154,6 +206,21 @@ export default function OrdersPage() {
       setAddressError('All address fields are required');
       setShowAddressForm(true);
       return;
+    }
+
+    if (requiresDelivery) {
+      if (quoteLoading) {
+        setError('Please wait while delivery charges are calculated');
+        return;
+      }
+      if (quoteError) {
+        setError(quoteError);
+        return;
+      }
+      if (deliveryCharge <= 0) {
+        setError('Delivery charge could not be calculated for this address');
+        return;
+      }
     }
 
     setProcessingPayment(true);
@@ -358,12 +425,28 @@ export default function OrdersPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-botanical-forest/60">Delivery Charges</span>
-                  <span className="text-green-600 font-bold uppercase tracking-widest text-[10px]">Free</span>
+                  {quoteLoading ? (
+                    <span className="text-botanical-forest/50 text-xs">Calculating...</span>
+                  ) : deliveryCharge > 0 ? (
+                    <span>₹{deliveryCharge.toLocaleString()}</span>
+                  ) : (
+                    <span className="text-green-600 font-bold uppercase tracking-widest text-[10px]">
+                      {quoteError ? 'Unavailable' : 'Free'}
+                    </span>
+                  )}
                 </div>
+                {estimatedDeliveryDays && deliveryCharge > 0 && (
+                  <p className="text-[10px] text-botanical-forest/50">
+                    Estimated delivery in {estimatedDeliveryDays} day{estimatedDeliveryDays === '1' ? '' : 's'}
+                  </p>
+                )}
+                {quoteError && (
+                  <p className="text-[10px] text-red-500">{quoteError}</p>
+                )}
                 <div className="h-px bg-botanical-forest/10 my-6" />
                 <div className="flex justify-between items-end">
                   <span className="text-lg font-headline font-bold">Total Amount</span>
-                  <span className="text-2xl font-bold italic text-botanical-terracotta">₹{subtotal.toLocaleString()}</span>
+                  <span className="text-2xl font-bold italic text-botanical-terracotta">₹{checkoutTotal.toLocaleString()}</span>
                 </div>
               </div>
 

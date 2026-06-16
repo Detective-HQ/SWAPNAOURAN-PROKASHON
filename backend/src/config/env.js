@@ -40,6 +40,7 @@ const env = {
   shiprocketEmail: process.env.SHIPROCKET_EMAIL || "",
   shiprocketPassword: process.env.SHIPROCKET_PASSWORD || "",
   shiprocketPickupLocation: process.env.SHIPROCKET_PICKUP_LOCATION || "Primary",
+  shiprocketPickupPincode: process.env.SHIPROCKET_PICKUP_PINCODE || "",
   shiprocketWebhookToken: process.env.SHIPROCKET_WEBHOOK_TOKEN || "",
   shiprocketChannelId: process.env.SHIPROCKET_CHANNEL_ID || ""
 };

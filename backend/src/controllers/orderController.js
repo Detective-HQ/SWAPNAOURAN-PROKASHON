@@ -1,6 +1,7 @@
 const { sendSuccess } = require("../utils/response");
 const {
   createOrder,
+  getShippingQuote,
   getOrderById,
   listOrders,
   initiatePayment,
@@ -19,6 +20,15 @@ const createOrderController = async (req, res) => {
   });
 
   sendSuccess(res, 201, "Order created", order);
+};
+
+const getShippingQuoteController = async (req, res) => {
+  const quote = await getShippingQuote({
+    items: req.body.items,
+    pincode: req.body.pincode
+  });
+
+  sendSuccess(res, 200, "Shipping quote calculated", quote);
 };
 
 const listMyOrders = async (req, res) => {
@@ -105,6 +115,7 @@ const fulfillShiprocket = async (req, res) => {
 
 module.exports = {
   createOrderController,
+  getShippingQuoteController,
   listMyOrders,
   getOrderByIdController,
   initiateOrderPayment,

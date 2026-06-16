@@ -51,6 +51,116 @@ const shiprocketApi = async (method, path, body = null) => {
   }
 };
 
+const isPhysicalBookType = (type) => type === "PHYSICAL" || type === "ENGLISH_BOOK";
+
+const computePackageFromLineItems = (lineItems) => {
+  const physical = lineItems.filter((item) => isPhysicalBookType(item.book.type));
+
+  const totalWeightKg = physical.reduce(
+    (sum, item) => sum + ((Number(item.book.weightGrams) || 500) / 1000) * item.quantity,
+    0
+  );
+
+  const maxLength = physical.length
+    ? Math.max(...physical.map((item) => Number(item.book.lengthCm) || 25))
+    : 25;
+  const maxBreadth = physical.length
+    ? Math.max(...physical.map((item) => Number(item.book.breadthCm) || 18))
+    : 18;
+  const totalHeight = physical.reduce(
+    (sum, item) => sum + (Number(item.book.heightCm) || 3) * item.quantity,
+    0
+  );
+
+  return {
+    totalWeightKg: Math.max(totalWeightKg, 0.5),
+    maxLength,
+    maxBreadth,
+    totalHeight: Math.max(totalHeight, 3)
+  };
+};
+
+const pickCheapestCourier = (couriers) => {
+  const available = (couriers || []).filter((courier) => !courier.blocked);
+  if (!available.length) return null;
+
+  return available.reduce((best, courier) => {
+    const rate = Number(courier.rate || courier.freight_charge || 0);
+    if (!Number.isFinite(rate) || rate <= 0) return best;
+    if (!best || rate < best.rate) {
+      return {
+        rate,
+        courierName: courier.courier_name || "",
+        estimatedDeliveryDays: courier.estimated_delivery_days || ""
+      };
+    }
+    return best;
+  }, null);
+};
+
+const getShippingQuoteForItems = async ({ items, booksById, pincode }) => {
+  const lineItems = items.map((item) => ({
+    bookId: item.bookId,
+    quantity: item.quantity,
+    book: booksById[item.bookId]
+  }));
+
+  const subtotalAmount = lineItems.reduce(
+    (sum, item) => sum + Number(item.book.price) * item.quantity,
+    0
+  );
+
+  const hasPhysical = lineItems.some((item) => isPhysicalBookType(item.book.type));
+  if (!hasPhysical) {
+    return {
+      subtotalAmount,
+      deliveryCharge: 0,
+      totalAmount: subtotalAmount,
+      requiresDelivery: false,
+      courierName: null,
+      estimatedDeliveryDays: null
+    };
+  }
+
+  const normalizedPincode = String(pincode || "").trim();
+  if (!/^\d{6}$/.test(normalizedPincode)) {
+    throw new ApiError(400, "A valid 6-digit delivery pincode is required");
+  }
+
+  if (!env.shiprocketPickupPincode) {
+    throw new ApiError(500, "Shiprocket pickup pincode is not configured");
+  }
+
+  const pkg = computePackageFromLineItems(lineItems);
+  const params = new URLSearchParams({
+    pickup_postcode: env.shiprocketPickupPincode,
+    delivery_postcode: normalizedPincode,
+    cod: "0",
+    weight: String(pkg.totalWeightKg),
+    length: String(pkg.maxLength),
+    breadth: String(pkg.maxBreadth),
+    height: String(pkg.totalHeight)
+  });
+
+  const result = await shiprocketApi("GET", `/courier/serviceability/?${params.toString()}`);
+  const cheapest = pickCheapestCourier(result?.data?.available_courier_companies);
+
+  if (!cheapest) {
+    throw new ApiError(400, "Delivery is not available for this pincode");
+  }
+
+  const deliveryCharge = Math.ceil(cheapest.rate);
+
+  return {
+    subtotalAmount,
+    deliveryCharge,
+    totalAmount: subtotalAmount + deliveryCharge,
+    requiresDelivery: true,
+    courierName: cheapest.courierName,
+    estimatedDeliveryDays: cheapest.estimatedDeliveryDays
+  };
+};
+
 // ──────────────────────── Create Shiprocket Order ────────────────────────
 /**
  * Pushes a paid order from our DB to Shiprocket.
@@ -103,18 +213,12 @@ const createShiprocketOrder = async (orderId) => {
     throw new ApiError(400, "No physical items to ship in this order");
   }
 
-  // Calculate package dimensions from heaviest / largest item
-  const physicalBooks = order.items
-    .filter((item) => item.book.type === "PHYSICAL" || item.book.type === "ENGLISH_BOOK")
-    .map((i) => i.book);
+  // Calculate package dimensions from physical line items
+  const physicalLineItems = order.items.filter((item) => isPhysicalBookType(item.book.type));
+  const pkg = computePackageFromLineItems(physicalLineItems);
 
-  const totalWeightKg = physicalBooks.reduce((sum, b) => {
-    return sum + (Number(b.weightGrams) || 500) / 1000;
-  }, 0);
-
-  const maxLength = Math.max(...physicalBooks.map((b) => Number(b.lengthCm) || 25));
-  const maxBreadth = Math.max(...physicalBooks.map((b) => Number(b.breadthCm) || 18));
-  const totalHeight = physicalBooks.reduce((sum, b) => sum + (Number(b.heightCm) || 3), 0);
+  const subtotalAmount = Number(order.subtotalAmount ?? order.totalAmount);
+  const shippingCharges = Number(order.deliveryCharge ?? 0);
 
   const payload = {
     order_id: order.id,
@@ -135,15 +239,15 @@ const createShiprocketOrder = async (orderId) => {
     shipping_is_billing: true,
     order_items: orderItems,
     payment_method: "Prepaid",
-    shipping_charges: 0,
+    shipping_charges: shippingCharges,
     giftwrap_charges: 0,
     transaction_charges: 0,
     total_discount: 0,
-    sub_total: Number(order.totalAmount),
-    length: maxLength,
-    breadth: maxBreadth,
-    height: totalHeight,
-    weight: totalWeightKg
+    sub_total: subtotalAmount,
+    length: pkg.maxLength,
+    breadth: pkg.maxBreadth,
+    height: pkg.totalHeight,
+    weight: pkg.totalWeightKg
   };
 
   const result = await shiprocketApi("POST", "/orders/create/adhoc", payload);
@@ -208,9 +312,11 @@ const getAvailableCouriers = async (shiprocketOrderId) => {
 
   const addr = order.shippingAddress || {};
   const pincode = String(addr.pincode || addr.postalCode || "").trim();
+  const physicalLineItems = order.items.filter((item) => isPhysicalBookType(item.book.type));
+  const pkg = computePackageFromLineItems(physicalLineItems);
   const result = await shiprocketApi(
     "GET",
-    `/courier/serviceability/?pickup_postcode=${env.shiprocketPickupLocation}&delivery_postcode=${pincode}&cod=0&weight=0.5&shipment_id=${order.shiprocketShipmentId}`
+    `/courier/serviceability/?pickup_postcode=${env.shiprocketPickupPincode}&delivery_postcode=${pincode}&cod=0&weight=${pkg.totalWeightKg}&shipment_id=${order.shiprocketShipmentId}`
   );
 
   return result;
@@ -352,6 +458,7 @@ const updateLocalDispute = async (id, data) => {
 
 module.exports = {
   createShiprocketOrder,
+  getShippingQuoteForItems,
   requestShipment,
   trackByAwb,
   trackByShiprocketOrderId,
