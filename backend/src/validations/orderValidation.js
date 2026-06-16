@@ -15,9 +15,16 @@ const addressSchema = z
     line2: z.string().optional(),
     city: z.string().min(2).optional(),
     state: z.string().min(2).optional(),
+    pincode: z.string().min(4).optional(),
     postalCode: z.string().min(3).optional(),
     country: z.string().min(2).optional()
   })
+  .transform((addr) => ({
+    ...addr,
+    pincode: addr.pincode || addr.postalCode,
+    address: addr.address || addr.line1,
+    addressLine2: addr.line2
+  }))
   .optional();
 
 const createOrderSchema = z.object({
