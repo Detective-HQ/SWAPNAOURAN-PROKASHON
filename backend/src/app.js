@@ -7,6 +7,7 @@ const path = require("path");
 const routes = require("./routes");
 const ApiError = require("./utils/ApiError");
 const errorMiddleware = require("./middleware/errorMiddleware");
+const { apiLimiter } = require("./middleware/rateLimiter");
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use("/api/ebooks", (req, res, next) => {
 
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
+app.use("/api", apiLimiter);
 app.use("/api", routes);
 
 app.use((_req, _res, next) => next(new ApiError(404, "Route not found")));

@@ -200,6 +200,31 @@ export default function BookDetailPage() {
                 <p className="text-botanical-forest/70 leading-relaxed">{book.description}</p>
               )}
 
+              <div className="rounded-[28px] border border-border/40 bg-botanical-clay/10 p-6">
+                <div className="mb-5 flex items-center gap-2 text-botanical-sage uppercase tracking-[0.28em] text-[10px] font-bold">
+                  <div className="w-8 h-px bg-botanical-sage" />
+                  Details
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-white/70 p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-botanical-forest/40">ISBN</p>
+                    <p className="mt-2 text-sm font-semibold text-botanical-forest">{book.isbn || 'Not provided'}</p>
+                  </div>
+                  <div className="rounded-2xl bg-white/70 p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-botanical-forest/40">No. of Pages</p>
+                    <p className="mt-2 text-sm font-semibold text-botanical-forest">{book.pageCount || 'Not provided'}</p>
+                  </div>
+                  <div className="rounded-2xl bg-white/70 p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-botanical-forest/40">Binding</p>
+                    <p className="mt-2 text-sm font-semibold text-botanical-forest">{book.bindingDetails || 'Not provided'}</p>
+                  </div>
+                  <div className="rounded-2xl bg-white/70 p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-botanical-forest/40">Copies Sold</p>
+                    <p className="mt-2 text-sm font-semibold text-botanical-forest">{Number(book.copiesSold || 0).toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex flex-wrap gap-4 pt-4">
                 <BauhausButton 
                   variant="primary" 

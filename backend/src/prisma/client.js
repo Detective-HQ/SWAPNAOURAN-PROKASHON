@@ -14,7 +14,7 @@ function buildClientOptions() {
 
   // Append Prisma-level pool config via query params
   const separator = baseUrl.includes("?") ? "&" : "?";
-  const pooledUrl = `${baseUrl}${separator}connection_limit=5&pool_timeout=30`;
+  const pooledUrl = `${baseUrl}${separator}connection_limit=20&pool_timeout=30`;
 
   return {
     datasources: {

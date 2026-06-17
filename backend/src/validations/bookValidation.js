@@ -5,6 +5,13 @@ const bookTypes = ["PHYSICAL", "EBOOK", "ENGLISH_BOOK"];
 const baseBookSchema = z.object({
   title: z.string().min(2),
   description: z.string().min(10),
+  authorName: z.string().optional(),
+  isbn: z.string().optional(),
+  pageCount: z.number().int().positive().optional(),
+  bindingDetails: z.string().optional(),
+  weight: z.string().optional(),
+  stockQuantity: z.number().int().min(0).optional(),
+  copiesSold: z.number().int().min(0).optional(),
   price: z.number().positive().optional(),
   mrp: z.number().positive().optional(),
   discountPercentage: z.number().min(0).max(100).optional(),

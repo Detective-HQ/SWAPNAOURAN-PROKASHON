@@ -9,8 +9,12 @@ const publicBookSelect = {
   title: true,
   description: true,
   authorName: true,
+  isbn: true,
+  pageCount: true,
+  bindingDetails: true,
   weight: true,
   stockQuantity: true,
+  copiesSold: true,
   price: true,
   mrp: true,
   discountPercentage: true,
@@ -100,11 +104,15 @@ const createBook = async (req, res) => {
 };
 
 const createBookWithFiles = async (req, res) => {
-  const { title, description, type, authorName, weight } = req.body;
+  const { title, description, type, authorName, isbn, bindingDetails, weight } = req.body;
   let price = Number(req.body.price);
   const mrp = req.body.mrp !== undefined ? Number(req.body.mrp) : null;
   const discountPercentage = req.body.discountPercentage !== undefined ? Number(req.body.discountPercentage) : 0;
   const stockQuantity = req.body.stockQuantity !== undefined ? parseInt(req.body.stockQuantity, 10) : 0;
+  const parsedPageCount = req.body.pageCount !== undefined && req.body.pageCount !== "" ? parseInt(req.body.pageCount, 10) : null;
+  const pageCount = Number.isNaN(parsedPageCount) ? null : parsedPageCount;
+  const parsedCopiesSold = req.body.copiesSold !== undefined && req.body.copiesSold !== "" ? parseInt(req.body.copiesSold, 10) : 0;
+  const copiesSold = Number.isNaN(parsedCopiesSold) ? 0 : parsedCopiesSold;
 
   // Shipping dimension fields
   const sku = req.body.sku || null;
@@ -164,8 +172,12 @@ const createBookWithFiles = async (req, res) => {
       title,
       description,
       authorName,
+      isbn: isbn || null,
+      pageCount,
+      bindingDetails: bindingDetails || null,
       weight,
       stockQuantity,
+      copiesSold,
       price,
       mrp,
       discountPercentage,
@@ -194,10 +206,36 @@ const updateBook = async (req, res) => {
     throw new ApiError(404, "Book not found");
   }
 
-  let { mrp, discountPercentage, price, stockQuantity, sku, hsn, lengthCm, breadthCm, heightCm, weightGrams, ...rest } = req.body;
+  let {
+    mrp,
+    discountPercentage,
+    price,
+    stockQuantity,
+    pageCount,
+    copiesSold,
+    sku,
+    hsn,
+    lengthCm,
+    breadthCm,
+    heightCm,
+    weightGrams,
+    ...rest
+  } = req.body;
   
   if (stockQuantity !== undefined) {
     stockQuantity = parseInt(stockQuantity, 10);
+  }
+  if (pageCount !== undefined) {
+    if (pageCount === "" || pageCount === null) {
+      pageCount = null;
+    } else {
+      const parsedPageCount = parseInt(pageCount, 10);
+      pageCount = Number.isNaN(parsedPageCount) ? null : parsedPageCount;
+    }
+  }
+  if (copiesSold !== undefined) {
+    const parsedCopiesSold = parseInt(copiesSold, 10);
+    copiesSold = Number.isNaN(parsedCopiesSold) ? 0 : parsedCopiesSold;
   }
 
   // Parse shipping dimension fields
@@ -219,7 +257,21 @@ const updateBook = async (req, res) => {
 
   const updated = await prisma.book.update({
     where: { id: req.params.id },
-    data: { mrp, discountPercentage, price, stockQuantity, sku, hsn, lengthCm, breadthCm, heightCm, weightGrams, ...rest }
+    data: {
+      mrp,
+      discountPercentage,
+      price,
+      stockQuantity,
+      pageCount,
+      copiesSold,
+      sku,
+      hsn,
+      lengthCm,
+      breadthCm,
+      heightCm,
+      weightGrams,
+      ...rest
+    }
   });
 
   sendSuccess(res, 200, "Book updated", updated);

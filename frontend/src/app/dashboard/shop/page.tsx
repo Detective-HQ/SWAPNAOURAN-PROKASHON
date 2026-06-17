@@ -25,8 +25,13 @@ type Book = {
   coverImage?: string;
   fileUrl?: string;
   authorName?: string;
+  isbn?: string;
+  pageCount?: number;
+  bindingDetails?: string;
   weight?: string;
   stockQuantity?: number;
+  copiesSold?: number;
+  createdAt?: string;
 };
 
 export default function ShopPage() {
@@ -40,7 +45,7 @@ export default function ShopPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high'>('newest');
+  const [sortBy, setSortBy] = useState<'newest' | 'best-sellers' | 'price-low' | 'price-high'>('newest');
   const [typeFilter, setTypeFilter] = useState<'ALL' | 'PHYSICAL' | 'EBOOK' | 'ENGLISH_BOOK'>('ALL');
   const [previewBook, setPreviewBook] = useState<Book | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -131,9 +136,10 @@ export default function ShopPage() {
       return b.title.toLowerCase().includes(q) || (b.description && b.description.toLowerCase().includes(q));
     })
     .sort((a, b) => {
+      if (sortBy === 'best-sellers') return (b.copiesSold || 0) - (a.copiesSold || 0);
       if (sortBy === 'price-low') return parsePrice(a.price) - parsePrice(b.price);
       if (sortBy === 'price-high') return parsePrice(b.price) - parsePrice(a.price);
-      return 0;
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
     });
 
   return (
@@ -194,7 +200,7 @@ export default function ShopPage() {
       {showFilters && (
         <div className="flex items-center gap-3 p-4 bg-botanical-clay/10 rounded-lg border border-border/40 -mt-4">
           <span className="text-[10px] font-bold uppercase tracking-widest text-botanical-sage">Sort:</span>
-          {(['newest', 'price-low', 'price-high'] as const).map((opt) => (
+          {(['newest', 'best-sellers', 'price-low', 'price-high'] as const).map((opt) => (
             <button
               key={opt}
               onClick={() => setSortBy(opt)}
@@ -204,7 +210,7 @@ export default function ShopPage() {
                   : 'bg-white border border-border text-botanical-forest/60'
               }`}
             >
-              {opt === 'newest' ? 'Newest' : opt === 'price-low' ? 'Low Price' : 'High Price'}
+              {opt === 'newest' ? 'Newest' : opt === 'best-sellers' ? 'Best Sellers' : opt === 'price-low' ? 'Low Price' : 'High Price'}
             </button>
           ))}
         </div>
@@ -273,6 +279,12 @@ export default function ShopPage() {
                 {book.description && (
                   <p className="text-[11px] text-botanical-forest/50 leading-relaxed line-clamp-2">{book.description}</p>
                 )}
+                <div className="flex flex-wrap gap-2 text-[9px] font-bold uppercase tracking-widest text-botanical-forest/45">
+                  {typeof book.copiesSold === 'number' && book.copiesSold > 0 && (
+                    <span>{book.copiesSold} sold</span>
+                  )}
+                  {book.bindingDetails && <span>{book.bindingDetails}</span>}
+                </div>
 
                 {/* Price + Actions */}
                 <div className="flex items-center justify-between pt-2 border-t border-border/10">
