@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Image from 'next/image';
 import { useUser } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -27,7 +27,7 @@ const loadRazorpayScript = () => {
   });
 };
 
-export default function OrdersPage() {
+function OrdersContent() {
   const { user, isLoaded: userLoaded } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -792,5 +792,17 @@ export default function OrdersPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-botanical-terracotta" />
+      </div>
+    }>
+      <OrdersContent />
+    </Suspense>
   );
 }
