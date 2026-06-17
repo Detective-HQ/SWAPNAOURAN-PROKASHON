@@ -21,8 +21,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { motion } from "framer-motion";
-import { Search, Filter, Truck, PackageCheck, ChevronDown, ChevronUp, FileText, Rocket, Loader2 } from "lucide-react";
+import { Search, Filter, Truck, PackageCheck, ChevronDown, ChevronUp, FileText, Rocket, Loader2, AlertCircle } from "lucide-react";
 import InvoiceModal from "@/components/shop/invoice-modal";
 
 export default function AdminOrdersPage() {
@@ -34,6 +35,8 @@ export default function AdminOrdersPage() {
   const [trackingInputs, setTrackingInputs] = useState<Record<string, { number: string; status: string }>>({});
   const [invoiceOrderId, setInvoiceOrderId] = useState<string | null>(null);
   const [isFulfilling, setIsFulfilling] = useState<Record<string, boolean>>({});
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [isBulkFulfilling, setIsBulkFulfilling] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -101,6 +104,59 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handleBulkShiprocketFulfill = async () => {
+    if (selectedOrders.length === 0) return;
+    setIsBulkFulfilling(true);
+    let successCount = 0;
+    
+    try {
+      for (const orderId of selectedOrders) {
+        try {
+          const res = await api.post(`/orders/${orderId}/fulfill-shiprocket`);
+          const updatedOrder = res.data;
+          setOrders((prev) =>
+            prev.map((order) =>
+              order.id === orderId ? { ...order, ...updatedOrder } : order
+            )
+          );
+          successCount++;
+        } catch (err: any) {
+          console.error(`Failed to fulfill order ${orderId}:`, err);
+          toast({
+            title: `Error fulfilling ${orderId.substring(0,8)}`,
+            description: err.message || "Shiprocket error",
+            variant: "destructive"
+          });
+        }
+      }
+      
+      if (successCount > 0) {
+        toast({
+          title: "Bulk Fulfillment Complete",
+          description: `Successfully pushed ${successCount} order(s) to Shiprocket.`
+        });
+      }
+      setSelectedOrders([]);
+    } finally {
+      setIsBulkFulfilling(false);
+    }
+  };
+
+  const toggleOrderSelection = (orderId: string) => {
+    setSelectedOrders(prev => 
+      prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]
+    );
+  };
+  
+  const toggleAllSelection = (filteredOrders: any[]) => {
+    const unfulfilled = filteredOrders.filter(o => o.status === "PAID" && !o.trackingNumber && !o.deliveryStatus);
+    if (selectedOrders.length === unfulfilled.length && unfulfilled.length > 0) {
+      setSelectedOrders([]);
+    } else {
+      setSelectedOrders(unfulfilled.map(o => o.id));
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "PAID": return "bg-emerald-100 text-emerald-700 border-emerald-200";
@@ -128,7 +184,22 @@ export default function AdminOrdersPage() {
           <p className="text-botanical-forest/70 font-body mt-1">Monitor transactions, handle disputes, and track active orders.</p>
         </div>
         
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap justify-end">
+          {selectedOrders.length > 0 && (
+            <Button
+              size="sm"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white h-10 px-4 mr-2"
+              onClick={handleBulkShiprocketFulfill}
+              disabled={isBulkFulfilling}
+            >
+              {isBulkFulfilling ? (
+                <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+              ) : (
+                <Rocket className="w-4 h-4 mr-1.5" />
+              )}
+              Bulk Fulfill ({selectedOrders.length})
+            </Button>
+          )}
           <div className="relative group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-botanical-forest/50" size={16} />
             <input 
@@ -158,6 +229,13 @@ export default function AdminOrdersPage() {
         <Table>
           <TableHeader className="bg-botanical-alabaster/60">
             <TableRow className="border-b border-botanical-sage/20 hover:bg-transparent">
+              <TableHead className="w-12 text-center py-4">
+                <Checkbox 
+                  checked={selectedOrders.length > 0 && selectedOrders.length === orders.filter(o => o.status === "PAID" && !o.trackingNumber && !o.deliveryStatus).length}
+                  onCheckedChange={() => toggleAllSelection(orders.filter((o) => !searchQuery.trim() || o.id.toLowerCase().includes(searchQuery.toLowerCase())))}
+                  aria-label="Select all unfulfilled"
+                />
+              </TableHead>
               <TableHead className="text-botanical-forest/70 font-semibold py-4 w-8"></TableHead>
               <TableHead className="text-botanical-forest/70 font-semibold">Order ID</TableHead>
               <TableHead className="text-botanical-forest/70 font-semibold">Buyer</TableHead>
@@ -174,6 +252,15 @@ export default function AdminOrdersPage() {
               .map((order) => (
               <>
                 <TableRow key={order.id} className="border-b border-botanical-sage/10 hover:bg-botanical-alabaster/40 transition-colors group cursor-pointer" onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}>
+                  <TableCell className="py-3 text-center">
+                    {order.status === "PAID" && !order.trackingNumber && !order.deliveryStatus ? (
+                      <Checkbox 
+                        checked={selectedOrders.includes(order.id)}
+                        onCheckedChange={() => toggleOrderSelection(order.id)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ) : null}
+                  </TableCell>
                   <TableCell className="py-3">
                     {expandedOrder === order.id ? <ChevronUp size={16} className="text-botanical-forest/40" /> : <ChevronDown size={16} className="text-botanical-forest/40" />}
                   </TableCell>
@@ -210,14 +297,19 @@ export default function AdminOrdersPage() {
                     {new Date(order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={`border text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 ${getStatusColor(order.status)}`}>
-                      {order.status}
-                    </Badge>
-                    {order.deliveryStatus && (
-                      <Badge variant="outline" className="ml-1 border-purple-200 bg-purple-50 text-purple-700 text-[9px] uppercase font-bold">
-                        {order.deliveryStatus.replace(/_/g, ' ')}
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={`border text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 ${getStatusColor(order.status)}`}>
+                        {order.status}
                       </Badge>
-                    )}
+                      {order.deliveryStatus && (
+                        <Badge variant="outline" className="border-purple-200 bg-purple-50 text-purple-700 text-[9px] uppercase font-bold">
+                          {order.deliveryStatus.replace(/_/g, ' ')}
+                        </Badge>
+                      )}
+                      {order.status === "PAID" && !order.trackingNumber && !order.deliveryStatus && (
+                        <span title="Not fulfilled yet"><AlertCircle className="w-4 h-4 text-red-500 shrink-0" /></span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right pr-6">
                     <Select
@@ -237,7 +329,7 @@ export default function AdminOrdersPage() {
                 </TableRow>
                 {expandedOrder === order.id && (
                   <TableRow key={`${order.id}-tracking`}>
-                    <TableCell colSpan={8} className="bg-botanical-alabaster/30 p-4">
+                    <TableCell colSpan={9} className="bg-botanical-alabaster/30 p-4">
                       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
                         <div className="flex-1 space-y-1">
                           <label className="text-[10px] font-bold uppercase tracking-widest text-botanical-forest/60">Tracking Number</label>
@@ -303,7 +395,7 @@ export default function AdminOrdersPage() {
                             <FileText className="w-4 h-4 mr-1.5 text-botanical-terracotta" /> View Invoice
                           </Button>
                           
-                          {order.status === "PAID" && (
+                          {order.status === "PAID" && !order.trackingNumber && !order.deliveryStatus && (
                             <Button
                               size="sm"
                               className="bg-indigo-600 hover:bg-indigo-700 text-white"
@@ -333,7 +425,7 @@ export default function AdminOrdersPage() {
             ))}
             {orders.filter((o) => !searchQuery.trim() || o.id.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="h-32 text-center text-botanical-forest/50">
+                <TableCell colSpan={9} className="h-32 text-center text-botanical-forest/50">
                   {searchQuery ? 'No orders match your search.' : 'No orders found in the system.'}
                 </TableCell>
               </TableRow>
