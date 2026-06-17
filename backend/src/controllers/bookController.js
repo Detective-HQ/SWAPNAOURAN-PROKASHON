@@ -3,6 +3,7 @@ const ApiError = require("../utils/ApiError");
 const { sendSuccess } = require("../utils/response");
 const { uploadBuffer, uploadPdf } = require("../services/storageService");
 const { getPreviewUrl } = require("../services/ebookService");
+const { getActiveFlashSale, applyFlashSaleToBook } = require("../services/settingService");
 
 const publicBookSelect = {
   id: true,
@@ -63,8 +64,11 @@ const listBooks = async (req, res) => {
     prisma.book.count({ where })
   ]);
 
+  const flashSale = await getActiveFlashSale();
+  const processedItems = items.map(book => applyFlashSaleToBook(book, flashSale));
+
   sendSuccess(res, 200, "Books fetched", {
-    items,
+    items: processedItems,
     pagination: {
       page,
       limit,
@@ -84,7 +88,10 @@ const getBookById = async (req, res) => {
     throw new ApiError(404, "Book not found");
   }
 
-  sendSuccess(res, 200, "Book fetched", book);
+  const flashSale = await getActiveFlashSale();
+  const processedBook = applyFlashSaleToBook(book, flashSale);
+
+  sendSuccess(res, 200, "Book fetched", processedBook);
 };
 
 const createBook = async (req, res) => {

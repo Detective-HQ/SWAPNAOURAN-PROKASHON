@@ -5,6 +5,7 @@ import './globals.css'
 import { ClerkProvider } from '@clerk/nextjs'
 import { CartProvider } from '@/lib/cart-context'
 import { AuthProvider } from '@/context/auth-context'
+import { AnnouncementBanner } from '@/components/layout/announcement-banner'
 
 const playfair = Playfair_Display({ 
   subsets: ["latin"], 
@@ -44,6 +45,7 @@ export default function RootLayout({
                   backgroundRepeat: "repeat",
                 }}
               />
+              <AnnouncementBanner />
               {children}
             </CartProvider>
           </AuthProvider>

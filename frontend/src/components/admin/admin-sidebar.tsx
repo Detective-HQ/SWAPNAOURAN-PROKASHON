@@ -13,6 +13,7 @@ import {
   BookOpen,
   RotateCcw,
   Mail,
+  Megaphone,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { useState } from "react";
@@ -25,6 +26,7 @@ const navItems = [
   { label: "Returns", href: "/admin/returns", icon: RotateCcw },
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Newsletter", href: "/admin/newsletter", icon: Mail },
+  { label: "Marketing", href: "/admin/marketing", icon: Megaphone },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
 ];
 
