@@ -13,6 +13,8 @@ const wishlistRoutes = require("./wishlistRoutes");
 const returnRoutes = require("./returnRoutes");
 const newsletterRoutes = require("./newsletterRoutes");
 
+const settingRoutes = require("./settingRoutes");
+
 const router = express.Router();
 
 router.get("/health", (_req, res) => {
@@ -34,5 +36,6 @@ router.use("/reviews", reviewRoutes);
 router.use("/wishlist", wishlistRoutes);
 router.use("/returns", returnRoutes);
 router.use("/newsletter", newsletterRoutes);
+router.use("/settings", settingRoutes);
 
 module.exports = router;

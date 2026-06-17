@@ -3,6 +3,7 @@ const ApiError = require("../utils/ApiError");
 const { createPaymentSession, verifyPaymentSession, provider } = require("./paymentService");
 const { ensureQRCodesForPaidOrder } = require("./qrService");
 const { getShippingQuoteForItems } = require("./shiprocketService");
+const { getActiveFlashSale, applyFlashSaleToBook } = require("./settingService");
 
 const normalizeItems = (items) => {
   const map = new Map();
@@ -35,8 +36,12 @@ const createOrder = async ({ userId, items, shippingAddress }) => {
     throw new ApiError(400, "Shipping address is required for physical books");
   }
 
+  const flashSale = await getActiveFlashSale();
+
   const orderItems = normalizedItems.map((item) => {
-    const book = bookById[item.bookId];
+    let book = bookById[item.bookId];
+    book = applyFlashSaleToBook(book, flashSale);
+    
     const unitPrice = Number(book.price);
     const totalPrice = unitPrice * item.quantity;
     return {
