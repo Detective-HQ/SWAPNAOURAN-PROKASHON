@@ -19,6 +19,32 @@ const getAdminUsers = async (_req, res) => {
 
 const getAdminBooks = async (_req, res) => {
   const books = await prisma.book.findMany({
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      authorName: true,
+      isbn: true,
+      pageCount: true,
+      bindingDetails: true,
+      weight: true,
+      stockQuantity: true,
+      copiesSold: true,
+      price: true,
+      mrp: true,
+      discountPercentage: true,
+      type: true,
+      coverImage: true,
+      isActive: true,
+      sku: true,
+      hsn: true,
+      lengthCm: true,
+      breadthCm: true,
+      heightCm: true,
+      weightGrams: true,
+      createdAt: true,
+      updatedAt: true
+    },
     orderBy: { createdAt: "desc" }
   });
 

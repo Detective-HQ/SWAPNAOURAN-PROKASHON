@@ -155,8 +155,10 @@ export default function AdminProductsPage() {
                     <div>
                       <span>{book.title}</span>
                       <p className="text-[10px] text-botanical-forest/45">
-                        {book.isbn ? `ISBN: ${book.isbn}` : "ISBN not set"}
-                      </p>
+                      {book.isbn ? `ISBN: ${book.isbn}` : "ISBN not set"}
+                      {book.pageCount ? ` · ${book.pageCount} pages` : ""}
+                      {book.bindingDetails ? ` · ${book.bindingDetails}` : ""}
+                    </p>
                     </div>
                   </div>
                 </TableCell>
