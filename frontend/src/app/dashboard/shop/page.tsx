@@ -145,7 +145,9 @@ export default function ShopPage() {
       if (typeFilter !== 'ALL' && b.type !== typeFilter) return false;
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
-      return b.title.toLowerCase().includes(q) || (b.description && b.description.toLowerCase().includes(q)) || (b.isbn && b.isbn.toLowerCase().includes(q));
+      return b.title.toLowerCase().includes(q) || 
+             (b.description && b.description.toLowerCase().includes(q)) ||
+             (b.isbn && b.isbn.toLowerCase().includes(q));
     })
     .sort((a, b) => {
       if (sortBy === 'best-sellers') return (b.copiesSold || 0) - (a.copiesSold || 0);
@@ -243,11 +245,12 @@ export default function ShopPage() {
 
       {/* Book Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-        {filteredBooks.map((book, i) => {
-          const metadataItems = getBookMetaItems(book);
-
-          return (
-          <div key={book.id} className="group">
+        {filteredBooks.map((book, i) => (
+          <div 
+            key={book.id} 
+            className="group cursor-pointer"
+            onClick={() => router.push(`/shop/${book.id}`)}
+          >
             <div className="relative rounded-xl bg-white border border-border/40 overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
               {/* Cover Image */}
               <div className="aspect-[3/4] relative overflow-hidden bg-botanical-clay/10">
@@ -272,7 +275,7 @@ export default function ShopPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 translate-y-3 group-hover:translate-y-0 transition-all duration-300">
                   <button
-                    onClick={() => handleAddToCart(book)}
+                    onClick={(e) => { e.stopPropagation(); handleAddToCart(book); }}
                     className="w-full py-2.5 rounded-lg bg-white/90 backdrop-blur-sm text-botanical-forest font-bold text-[10px] uppercase tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md"
                   >
                     {addedItems.includes(book.id) ? (
@@ -294,13 +297,13 @@ export default function ShopPage() {
                 {book.description && (
                   <p className="text-[11px] text-botanical-forest/50 leading-relaxed line-clamp-2">{book.description}</p>
                 )}
-                {metadataItems.length > 0 && (
-                  <div className="flex flex-wrap gap-2 text-[9px] font-bold uppercase tracking-widest text-botanical-forest/45">
-                    {metadataItems.map((item) => (
-                      <span key={item}>{item}</span>
-                    ))}
-                  </div>
-                )}
+                <div className="flex flex-wrap gap-2 text-[9px] font-bold uppercase tracking-widest text-botanical-forest/45">
+                  {typeof book.copiesSold === 'number' && book.copiesSold > 0 && (
+                    <span>{book.copiesSold} sold</span>
+                  )}
+                  {book.bindingDetails && <span>{book.bindingDetails}</span>}
+                  {book.isbn && <span>ISBN: {book.isbn}</span>}
+                </div>
 
                 {/* Price + Actions */}
                 <div className="flex items-center justify-between pt-2 border-t border-border/10">
@@ -319,14 +322,14 @@ export default function ShopPage() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <button
-                      onClick={() => toggleWishlist(book.id)}
+                      onClick={(e) => { e.stopPropagation(); toggleWishlist(book.id); }}
                       className="p-2 rounded-lg bg-botanical-clay/10 text-botanical-forest hover:bg-botanical-clay/20 transition-colors"
                       title="Wishlist"
                     >
                       <Heart className={`w-3.5 h-3.5 transition-colors ${wishlistItems.includes(book.id) ? 'fill-red-500 text-red-500' : ''}`} />
                     </button>
                     <button
-                      onClick={() => router.push(`/shop/${book.id}`)}
+                      onClick={(e) => { e.stopPropagation(); router.push(`/shop/${book.id}`); }}
                       className="p-2 rounded-lg bg-botanical-clay/10 text-botanical-forest hover:bg-botanical-clay/20 transition-colors"
                       title="View Details"
                     >
@@ -334,7 +337,7 @@ export default function ShopPage() {
                     </button>
                     {book.type === 'EBOOK' && book.fileUrl && (
                       <button
-                        onClick={() => handlePreview(book)}
+                        onClick={(e) => { e.stopPropagation(); handlePreview(book); }}
                         className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
                         title="Preview"
                       >
@@ -346,7 +349,7 @@ export default function ShopPage() {
 
                 {/* Buy Now */}
                 <button
-                  onClick={() => handleBuyNow(book)}
+                  onClick={(e) => { e.stopPropagation(); handleBuyNow(book); }}
                   className="w-full py-2.5 rounded-lg bg-botanical-forest text-white font-bold text-[10px] uppercase tracking-widest hover:bg-botanical-forest/90 transition-colors flex items-center justify-center gap-2"
                 >
                   <ShoppingCart className="w-3.5 h-3.5" /> Buy Now

@@ -222,9 +222,23 @@ export default function BookDetailPage() {
                 </div>
               )}
 
-              <p className="text-4xl font-headline font-bold text-botanical-terracotta">
-                ₹{price.toLocaleString()}
-              </p>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-4">
+                  <p className="text-4xl font-headline font-bold text-botanical-terracotta">
+                    ₹{price.toLocaleString()}
+                  </p>
+                  {book.mrp && Number(book.mrp) > price && (
+                    <p className="text-xl font-medium text-botanical-forest/40 line-through">
+                      ₹{Number(book.mrp).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+                {book.discountPercentage && Number(book.discountPercentage) > 0 && (
+                  <span className="text-sm font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md w-fit inline-block border border-emerald-100">
+                    {Number(book.discountPercentage)}% OFF
+                  </span>
+                )}
+              </div>
 
               {book.description && (
                 <p className="text-botanical-forest/70 leading-relaxed">{book.description}</p>

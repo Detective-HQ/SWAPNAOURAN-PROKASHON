@@ -47,7 +47,8 @@ const listBooks = async (req, res) => {
       ? {
         OR: [
           { title: { contains: search, mode: "insensitive" } },
-          { description: { contains: search, mode: "insensitive" } }
+          { description: { contains: search, mode: "insensitive" } },
+          { isbn: { contains: search, mode: "insensitive" } }
         ]
       }
       : {})
@@ -112,6 +113,9 @@ const createBook = async (req, res) => {
 
 const createBookWithFiles = async (req, res) => {
   const { title, description, type, authorName, isbn, bindingDetails, weight } = req.body;
+  const normalizedIsbn = typeof isbn === "string" && isbn.trim() !== "" ? isbn.trim() : null;
+  const normalizedBindingDetails = typeof bindingDetails === "string" && bindingDetails.trim() !== "" ? bindingDetails.trim() : null;
+  const normalizedWeight = typeof weight === "string" && weight.trim() !== "" ? weight.trim() : null;
   let price = Number(req.body.price);
   const mrp = req.body.mrp !== undefined ? Number(req.body.mrp) : null;
   const discountPercentage = req.body.discountPercentage !== undefined ? Number(req.body.discountPercentage) : 0;
@@ -179,10 +183,10 @@ const createBookWithFiles = async (req, res) => {
       title,
       description,
       authorName,
-      isbn: isbn || null,
+      isbn: normalizedIsbn,
       pageCount,
-      bindingDetails: bindingDetails || null,
-      weight,
+      bindingDetails: normalizedBindingDetails,
+      weight: normalizedWeight,
       stockQuantity,
       copiesSold,
       price,
@@ -226,9 +230,18 @@ const updateBook = async (req, res) => {
     breadthCm,
     heightCm,
     weightGrams,
+    isbn,
+    bindingDetails,
     ...rest
   } = req.body;
   
+  const normalizedIsbn = isbn !== undefined
+    ? (typeof isbn === "string" && isbn.trim() !== "" ? isbn.trim() : null)
+    : undefined;
+  const normalizedBindingDetails = bindingDetails !== undefined
+    ? (typeof bindingDetails === "string" && bindingDetails.trim() !== "" ? bindingDetails.trim() : null)
+    : undefined;
+
   if (stockQuantity !== undefined) {
     stockQuantity = parseInt(stockQuantity, 10);
   }
@@ -277,6 +290,8 @@ const updateBook = async (req, res) => {
       breadthCm,
       heightCm,
       weightGrams,
+      ...(normalizedIsbn !== undefined ? { isbn: normalizedIsbn } : {}),
+      ...(normalizedBindingDetails !== undefined ? { bindingDetails: normalizedBindingDetails } : {}),
       ...rest
     }
   });
