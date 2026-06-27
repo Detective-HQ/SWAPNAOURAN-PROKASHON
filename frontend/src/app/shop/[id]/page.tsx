@@ -13,12 +13,30 @@ import { ReviewSection } from '@/components/shop/review-section';
 import { ShoppingCart, BookOpen, Heart, Loader2, Check, Star, ChevronLeft, Eye } from 'lucide-react';
 import Link from 'next/link';
 
+type Book = {
+  id: string;
+  title: string;
+  description?: string;
+  price: number | string;
+  type: 'PHYSICAL' | 'EBOOK' | 'ENGLISH_BOOK';
+  coverImage?: string;
+  fileUrl?: string;
+  sampleChapterUrl?: string;
+  authorName?: string;
+  isbn?: string;
+  pageCount?: number;
+  bindingDetails?: string;
+  weight?: string;
+  stockQuantity?: number;
+  copiesSold?: number;
+};
+
 export default function BookDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { addItem } = useCart();
   const api = useApi();
-  const [book, setBook] = useState<any>(null);
+  const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
   const [addedToCart, setAddedToCart] = useState(false);
   const [showSample, setShowSample] = useState(false);
@@ -77,6 +95,8 @@ export default function BookDetailPage() {
   };
 
   const handleToggleWishlist = async () => {
+    if (!book) return;
+
     try {
       if (isWishlisted) {
         await api.del(`/wishlist/${book.id}`);
@@ -128,6 +148,16 @@ export default function BookDetailPage() {
   }
 
   const price = typeof book.price === 'number' ? book.price : parseFloat(String(book.price).replace(/,/g, ''));
+  const stockQuantity = book.stockQuantity ?? 0;
+  const detailItems = [
+    { label: 'ISBN', value: book.isbn || 'Not provided' },
+    { label: 'No. of Pages', value: typeof book.pageCount === 'number' && book.pageCount > 0 ? String(book.pageCount) : 'Not provided' },
+    { label: 'Binding', value: book.bindingDetails || 'Not provided' },
+    { label: 'Weight', value: book.weight || 'Not provided' },
+    { label: 'Format', value: book.type === 'EBOOK' ? 'Ebook' : book.type === 'ENGLISH_BOOK' ? 'English Book' : 'Physical Book' },
+    { label: 'Availability', value: book.type === 'EBOOK' ? 'Instant digital access' : stockQuantity > 0 ? `In Stock (${stockQuantity})` : 'Out of Stock' },
+    { label: 'Copies Sold', value: Number(book.copiesSold || 0).toLocaleString() },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -169,8 +199,8 @@ export default function BookDetailPage() {
                     </div>
                   )}
                   {book.type !== 'EBOOK' && (
-                    <div className={`px-3 py-1.5 rounded-lg text-sm font-bold border ${book.stockQuantity > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
-                      {book.stockQuantity > 0 ? `In Stock (${book.stockQuantity})` : 'Out of Stock'}
+                    <div className={`px-3 py-1.5 rounded-lg text-sm font-bold border ${stockQuantity > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                      {stockQuantity > 0 ? `In Stock (${stockQuantity})` : 'Out of Stock'}
                     </div>
                   )}
                 </div>
@@ -220,22 +250,12 @@ export default function BookDetailPage() {
                   Details
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="rounded-2xl bg-white/70 p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-botanical-forest/40">ISBN</p>
-                    <p className="mt-2 text-sm font-semibold text-botanical-forest">{book.isbn || 'Not provided'}</p>
-                  </div>
-                  <div className="rounded-2xl bg-white/70 p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-botanical-forest/40">No. of Pages</p>
-                    <p className="mt-2 text-sm font-semibold text-botanical-forest">{book.pageCount || 'Not provided'}</p>
-                  </div>
-                  <div className="rounded-2xl bg-white/70 p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-botanical-forest/40">Binding</p>
-                    <p className="mt-2 text-sm font-semibold text-botanical-forest">{book.bindingDetails || 'Not provided'}</p>
-                  </div>
-                  <div className="rounded-2xl bg-white/70 p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-botanical-forest/40">Copies Sold</p>
-                    <p className="mt-2 text-sm font-semibold text-botanical-forest">{Number(book.copiesSold || 0).toLocaleString()}</p>
-                  </div>
+                  {detailItems.map((item) => (
+                    <div key={item.label} className="rounded-2xl bg-white/70 p-4">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-botanical-forest/40">{item.label}</p>
+                      <p className="mt-2 text-sm font-semibold text-botanical-forest">{item.value}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -244,12 +264,12 @@ export default function BookDetailPage() {
                   variant="primary" 
                   size="lg" 
                   onClick={handleAddToCart}
-                  disabled={book.type !== 'EBOOK' && book.stockQuantity <= 0}
-                  className={book.type !== 'EBOOK' && book.stockQuantity <= 0 ? 'opacity-50 cursor-not-allowed' : ''}
+                  disabled={book.type !== 'EBOOK' && stockQuantity <= 0}
+                  className={book.type !== 'EBOOK' && stockQuantity <= 0 ? 'opacity-50 cursor-not-allowed' : ''}
                 >
                   {addedToCart ? (
                     <><Check className="w-5 h-5" /> Added to Cart</>
-                  ) : book.type !== 'EBOOK' && book.stockQuantity <= 0 ? (
+                  ) : book.type !== 'EBOOK' && stockQuantity <= 0 ? (
                     'Out of Stock'
                   ) : (
                     <><ShoppingCart className="w-5 h-5" /> Add to Cart</>
