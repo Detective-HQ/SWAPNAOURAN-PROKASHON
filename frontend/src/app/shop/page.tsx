@@ -298,13 +298,20 @@ export default function ShopPage() {
                         </div>
 
                         <div className="flex items-center justify-between pt-2 border-t border-border/10">
-                          <div className="flex flex-col">
-                            <span className="text-xl font-headline font-bold text-botanical-terracotta">
-                              Rs {parsePrice(book.price).toLocaleString()}
-                            </span>
-                            {book.mrp && Number(book.mrp) > Number(book.price) && (
-                              <span className="text-[10px] text-botanical-forest/35 line-through">
-                                Rs {parsePrice(book.mrp).toLocaleString()}
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xl font-headline font-bold text-botanical-terracotta">
+                                ₹{parsePrice(book.price).toLocaleString()}
+                              </span>
+                              {book.mrp && Number(book.mrp) > Number(book.price) && (
+                                <span className="text-[10px] font-medium text-botanical-forest/40 line-through">
+                                  ₹{parsePrice(book.mrp).toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                            {book.discountPercentage && Number(book.discountPercentage) > 0 && (
+                              <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded w-fit inline-block leading-none">
+                                {Number(book.discountPercentage)}% OFF
                               </span>
                             )}
                           </div>
