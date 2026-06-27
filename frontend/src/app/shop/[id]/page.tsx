@@ -29,6 +29,8 @@ type Book = {
   weight?: string;
   stockQuantity?: number;
   copiesSold?: number;
+  mrp?: number | string;
+  discountPercentage?: number | string;
 };
 
 export default function BookDetailPage() {
@@ -150,13 +152,17 @@ export default function BookDetailPage() {
   const price = typeof book.price === 'number' ? book.price : parseFloat(String(book.price).replace(/,/g, ''));
   const stockQuantity = book.stockQuantity ?? 0;
   const detailItems = [
-    { label: 'ISBN', value: book.isbn || 'Not provided' },
-    { label: 'No. of Pages', value: typeof book.pageCount === 'number' && book.pageCount > 0 ? String(book.pageCount) : 'Not provided' },
-    { label: 'Binding', value: book.bindingDetails || 'Not provided' },
-    { label: 'Weight', value: book.weight || 'Not provided' },
+    ...(book.isbn ? [{ label: 'ISBN', value: book.isbn }] : []),
+    ...(typeof book.pageCount === 'number' && book.pageCount > 0
+      ? [{ label: 'No. of Pages', value: String(book.pageCount) }]
+      : []),
+    ...(book.bindingDetails ? [{ label: 'Binding', value: book.bindingDetails }] : []),
+    ...(book.weight ? [{ label: 'Weight', value: book.weight }] : []),
     { label: 'Format', value: book.type === 'EBOOK' ? 'Ebook' : book.type === 'ENGLISH_BOOK' ? 'English Book' : 'Physical Book' },
-    { label: 'Availability', value: book.type === 'EBOOK' ? 'Instant digital access' : stockQuantity > 0 ? `In Stock (${stockQuantity})` : 'Out of Stock' },
-    { label: 'Copies Sold', value: Number(book.copiesSold || 0).toLocaleString() },
+    { label: 'Availability', value: book.type === 'EBOOK' ? 'Instant digital access' : stockQuantity > 0 ? 'In Stock' : 'Out of Stock' },
+    ...(Number(book.copiesSold || 0) > 0
+      ? [{ label: 'Copies Sold', value: Number(book.copiesSold || 0).toLocaleString() }]
+      : []),
   ];
 
   return (
@@ -200,7 +206,7 @@ export default function BookDetailPage() {
                   )}
                   {book.type !== 'EBOOK' && (
                     <div className={`px-3 py-1.5 rounded-lg text-sm font-bold border ${stockQuantity > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
-                      {stockQuantity > 0 ? `In Stock (${stockQuantity})` : 'Out of Stock'}
+                      {stockQuantity > 0 ? 'In Stock' : 'Out of Stock'}
                     </div>
                   )}
                 </div>
