@@ -311,8 +311,7 @@ export default function ShopPage() {
                             {metadataItems.map((item) => (
                               <span key={item}>{item}</span>
                             ))}
-                            {book.isbn && <span>ISBN: {book.isbn}</span>}
-                        </div>
+                          </div>
                         )}
 
                         <div className="flex items-center justify-between pt-2 border-t border-border/10">
@@ -384,7 +383,8 @@ export default function ShopPage() {
                     </div>
                   </Link>
                 </div>
-              )})}
+                );
+              })}
             </div>
           )}
         </div>

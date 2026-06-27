@@ -245,7 +245,10 @@ export default function ShopPage() {
 
       {/* Book Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-        {filteredBooks.map((book, i) => (
+        {filteredBooks.map((book, i) => {
+          const metadataItems = getBookMetaItems(book);
+
+          return (
           <div 
             key={book.id} 
             className="group cursor-pointer"
@@ -297,13 +300,13 @@ export default function ShopPage() {
                 {book.description && (
                   <p className="text-[11px] text-botanical-forest/50 leading-relaxed line-clamp-2">{book.description}</p>
                 )}
-                <div className="flex flex-wrap gap-2 text-[9px] font-bold uppercase tracking-widest text-botanical-forest/45">
-                  {typeof book.copiesSold === 'number' && book.copiesSold > 0 && (
-                    <span>{book.copiesSold} sold</span>
-                  )}
-                  {book.bindingDetails && <span>{book.bindingDetails}</span>}
-                  {book.isbn && <span>ISBN: {book.isbn}</span>}
-                </div>
+                {metadataItems.length > 0 && (
+                  <div className="flex flex-wrap gap-2 text-[9px] font-bold uppercase tracking-widest text-botanical-forest/45">
+                    {metadataItems.map((item) => (
+                      <span key={item}>{item}</span>
+                    ))}
+                  </div>
+                )}
 
                 {/* Price + Actions */}
                 <div className="flex items-center justify-between pt-2 border-t border-border/10">
@@ -357,7 +360,8 @@ export default function ShopPage() {
               </div>
             </div>
           </div>
-        )})}
+        );
+        })}
       </div>
 
       {/* Preview PDF Viewer Overlay */}
