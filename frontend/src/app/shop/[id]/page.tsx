@@ -152,17 +152,13 @@ export default function BookDetailPage() {
   const price = typeof book.price === 'number' ? book.price : parseFloat(String(book.price).replace(/,/g, ''));
   const stockQuantity = book.stockQuantity ?? 0;
   const detailItems = [
-    ...(book.isbn ? [{ label: 'ISBN', value: book.isbn }] : []),
-    ...(typeof book.pageCount === 'number' && book.pageCount > 0
-      ? [{ label: 'No. of Pages', value: String(book.pageCount) }]
-      : []),
-    ...(book.bindingDetails ? [{ label: 'Binding', value: book.bindingDetails }] : []),
-    ...(book.weight ? [{ label: 'Weight', value: book.weight }] : []),
+    { label: 'ISBN', value: book.isbn || 'Not provided' },
+    { label: 'No. of Pages', value: typeof book.pageCount === 'number' && book.pageCount > 0 ? String(book.pageCount) : 'Not provided' },
+    { label: 'Binding', value: book.bindingDetails || 'Not provided' },
+    { label: 'Weight', value: book.weight || 'Not provided' },
     { label: 'Format', value: book.type === 'EBOOK' ? 'Ebook' : book.type === 'ENGLISH_BOOK' ? 'English Book' : 'Physical Book' },
-    { label: 'Availability', value: book.type === 'EBOOK' ? 'Instant digital access' : stockQuantity > 0 ? 'In Stock' : 'Out of Stock' },
-    ...(Number(book.copiesSold || 0) > 0
-      ? [{ label: 'Copies Sold', value: Number(book.copiesSold || 0).toLocaleString() }]
-      : []),
+    { label: 'Availability', value: book.type === 'EBOOK' ? 'Instant digital access' : stockQuantity > 0 ? `In Stock (${stockQuantity})` : 'Out of Stock' },
+    { label: 'Copies Sold', value: String(Number(book.copiesSold || 0)) },
   ];
 
   return (
