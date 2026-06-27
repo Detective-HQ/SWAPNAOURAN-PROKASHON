@@ -119,12 +119,12 @@ export default function EditProductPage() {
         title: formData.title,
         description: formData.description,
         authorName: formData.authorName,
-        isbn: formData.isbn,
-        pageCount: formData.pageCount ? parseInt(formData.pageCount, 10) : undefined,
-        bindingDetails: formData.bindingDetails,
-        weight: formData.weight,
-        stockQuantity: parseInt(formData.stockQuantity, 10),
-        copiesSold: parseInt(formData.copiesSold, 10),
+        isbn: formData.isbn || null,
+        pageCount: formData.pageCount ? parseInt(formData.pageCount, 10) : null,
+        bindingDetails: formData.bindingDetails || null,
+        weight: formData.weight || null,
+        stockQuantity: parseInt(formData.stockQuantity || "0", 10),
+        copiesSold: parseInt(formData.copiesSold || "0", 10),
         type: formData.type,
       };
 
