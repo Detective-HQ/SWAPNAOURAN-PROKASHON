@@ -157,7 +157,7 @@ export default function BookDetailPage() {
     { label: 'Binding', value: book.bindingDetails || 'Not provided' },
     { label: 'Weight', value: book.weight || 'Not provided' },
     { label: 'Format', value: book.type === 'EBOOK' ? 'Ebook' : book.type === 'ENGLISH_BOOK' ? 'English Book' : 'Physical Book' },
-    { label: 'Availability', value: book.type === 'EBOOK' ? 'Instant digital access' : stockQuantity > 0 ? `In Stock (${stockQuantity})` : 'Out of Stock' },
+    { label: 'Availability', value: book.type === 'EBOOK' ? 'Instant digital access' : stockQuantity > 0 ? 'In Stock' : 'Out of Stock' },
     { label: 'Copies Sold', value: String(Number(book.copiesSold || 0)) },
   ];
 
@@ -189,7 +189,7 @@ export default function BookDetailPage() {
                   <div className="w-8 h-px bg-botanical-sage" />
                   {book.type === 'EBOOK' ? 'Digital Edition' : 'Physical Book'}
                 </div>
-                <h1 className="text-5xl font-headline font-bold text-botanical-forest leading-tight">{book.title}</h1>
+                <h1 className="text-3xl md:text-5xl font-headline font-bold text-botanical-forest leading-tight">{book.title}</h1>
                 <p className="text-sm font-medium text-botanical-sage uppercase tracking-widest italic">{book.authorName ? `${book.authorName} | Swapno Uran Prakashan` : 'Swapno Uran Prakashan'}</p>
               </div>
 
@@ -226,7 +226,7 @@ export default function BookDetailPage() {
 
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-4">
-                  <p className="text-4xl font-headline font-bold text-botanical-terracotta">
+                  <p className="text-3xl md:text-4xl font-headline font-bold text-botanical-terracotta">
                     ₹{price.toLocaleString()}
                   </p>
                   {book.mrp && Number(book.mrp) > price && (
