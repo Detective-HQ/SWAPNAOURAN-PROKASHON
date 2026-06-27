@@ -76,7 +76,8 @@ export default function ShopPage() {
       ? result.filter(
           (book) =>
             book.title.toLowerCase().includes(normalizedQuery) ||
-            (book.description && book.description.toLowerCase().includes(normalizedQuery))
+            (book.description && book.description.toLowerCase().includes(normalizedQuery)) ||
+            (book.isbn && book.isbn.toLowerCase().includes(normalizedQuery))
         )
       : result;
 
@@ -293,6 +294,7 @@ export default function ShopPage() {
                         <div className="flex flex-wrap gap-2 text-[10px] uppercase tracking-wider text-botanical-forest/45">
                           {typeof book.copiesSold === 'number' && book.copiesSold > 0 && <span>{book.copiesSold} sold</span>}
                           {book.bindingDetails && <span>{book.bindingDetails}</span>}
+                          {book.isbn && <span>ISBN: {book.isbn}</span>}
                         </div>
 
                         <div className="flex items-center justify-between pt-2 border-t border-border/10">

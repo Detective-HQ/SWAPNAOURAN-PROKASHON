@@ -47,7 +47,8 @@ const listBooks = async (req, res) => {
       ? {
         OR: [
           { title: { contains: search, mode: "insensitive" } },
-          { description: { contains: search, mode: "insensitive" } }
+          { description: { contains: search, mode: "insensitive" } },
+          { isbn: { contains: search, mode: "insensitive" } }
         ]
       }
       : {})

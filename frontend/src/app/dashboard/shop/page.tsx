@@ -133,7 +133,9 @@ export default function ShopPage() {
       if (typeFilter !== 'ALL' && b.type !== typeFilter) return false;
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
-      return b.title.toLowerCase().includes(q) || (b.description && b.description.toLowerCase().includes(q));
+      return b.title.toLowerCase().includes(q) || 
+             (b.description && b.description.toLowerCase().includes(q)) ||
+             (b.isbn && b.isbn.toLowerCase().includes(q));
     })
     .sort((a, b) => {
       if (sortBy === 'best-sellers') return (b.copiesSold || 0) - (a.copiesSold || 0);
@@ -288,6 +290,7 @@ export default function ShopPage() {
                     <span>{book.copiesSold} sold</span>
                   )}
                   {book.bindingDetails && <span>{book.bindingDetails}</span>}
+                  {book.isbn && <span>ISBN: {book.isbn}</span>}
                 </div>
 
                 {/* Price + Actions */}
