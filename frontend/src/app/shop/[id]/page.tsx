@@ -29,6 +29,8 @@ type Book = {
   weight?: string;
   stockQuantity?: number;
   copiesSold?: number;
+  mrp?: number | string;
+  discountPercentage?: number | string;
 };
 
 export default function BookDetailPage() {
@@ -156,7 +158,7 @@ export default function BookDetailPage() {
     { label: 'Weight', value: book.weight || 'Not provided' },
     { label: 'Format', value: book.type === 'EBOOK' ? 'Ebook' : book.type === 'ENGLISH_BOOK' ? 'English Book' : 'Physical Book' },
     { label: 'Availability', value: book.type === 'EBOOK' ? 'Instant digital access' : stockQuantity > 0 ? `In Stock (${stockQuantity})` : 'Out of Stock' },
-    { label: 'Copies Sold', value: Number(book.copiesSold || 0).toLocaleString() },
+    { label: 'Copies Sold', value: String(Number(book.copiesSold || 0)) },
   ];
 
   return (
@@ -200,7 +202,7 @@ export default function BookDetailPage() {
                   )}
                   {book.type !== 'EBOOK' && (
                     <div className={`px-3 py-1.5 rounded-lg text-sm font-bold border ${stockQuantity > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
-                      {stockQuantity > 0 ? `In Stock (${stockQuantity})` : 'Out of Stock'}
+                      {stockQuantity > 0 ? 'In Stock' : 'Out of Stock'}
                     </div>
                   )}
                 </div>
