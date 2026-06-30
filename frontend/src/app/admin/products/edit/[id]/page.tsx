@@ -7,12 +7,12 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 import { motion } from "framer-motion";
 import { ArrowLeft, Loader2, Package, Ruler } from "lucide-react";
@@ -23,7 +23,7 @@ export default function EditProductPage() {
   const api = useApi();
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
-  
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -59,7 +59,7 @@ export default function EditProductPage() {
     try {
       const response = await api.get(`/books/${id}`);
       const book = response.data;
-      
+
       setFormData({
         title: book.title || "",
         description: book.description || "",
@@ -93,10 +93,14 @@ export default function EditProductPage() {
     }
   };
 
+  // Fields that should NOT be uppercased (numeric / special fields)
+  const numericFields = new Set(["pageCount", "stockQuantity", "copiesSold", "price", "mrp", "discountPercentage", "lengthCm", "breadthCm", "heightCm", "weightGrams"]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    const finalValue = numericFields.has(name) ? value : value.toUpperCase();
     setFormData((prev) => {
-      const newData = { ...prev, [name]: value };
+      const newData = { ...prev, [name]: finalValue };
       if (name === "mrp" || name === "discountPercentage") {
         const mrpVal = Number(newData.mrp) || 0;
         const discountVal = Number(newData.discountPercentage) || 0;
@@ -108,6 +112,10 @@ export default function EditProductPage() {
 
   const handleTypeChange = (value: string) => {
     setFormData((prev) => ({ ...prev, type: value }));
+  };
+
+  const handleBindingChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, bindingDetails: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -169,7 +177,7 @@ export default function EditProductPage() {
   const isPhysical = formData.type === "PHYSICAL" || formData.type === "ENGLISH_BOOK";
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="max-w-4xl mx-auto"
@@ -194,7 +202,7 @@ export default function EditProductPage() {
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+              className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta uppercase"
               required
             />
           </div>
@@ -205,7 +213,7 @@ export default function EditProductPage() {
               name="authorName"
               value={formData.authorName}
               onChange={handleInputChange}
-              className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+              className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta uppercase"
             />
           </div>
 
@@ -215,7 +223,7 @@ export default function EditProductPage() {
               name="description"
               value={formData.description}
               onChange={handleInputChange}
-              className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest min-h-[150px] focus-visible:ring-botanical-terracotta"
+              className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest min-h-[150px] focus-visible:ring-botanical-terracotta uppercase"
               required
             />
           </div>
@@ -227,7 +235,7 @@ export default function EditProductPage() {
                 name="isbn"
                 value={formData.isbn}
                 onChange={handleInputChange}
-                className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+                className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta uppercase"
               />
             </div>
             <div className="space-y-2">
@@ -246,12 +254,15 @@ export default function EditProductPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-botanical-forest/80">Binding Details</label>
-              <Input
-                name="bindingDetails"
-                value={formData.bindingDetails}
-                onChange={handleInputChange}
-                className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
-              />
+              <Select value={formData.bindingDetails} onValueChange={handleBindingChange}>
+                <SelectTrigger className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus:ring-botanical-terracotta">
+                  <SelectValue placeholder="Select binding type" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-botanical-sage/20 text-botanical-forest">
+                  <SelectItem value="PAPERBACK" className="hover:bg-botanical-alabaster focus:bg-botanical-alabaster cursor-pointer">PAPERBACK</SelectItem>
+                  <SelectItem value="HARDBOARD" className="hover:bg-botanical-alabaster focus:bg-botanical-alabaster cursor-pointer">HARDBOARD</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-botanical-forest/80">Copies Sold</label>
@@ -287,7 +298,7 @@ export default function EditProductPage() {
                 value={formData.sku}
                 onChange={handleInputChange}
                 placeholder="e.g. BOOK-001"
-                className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+                className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta uppercase"
               />
             </div>
           </div>
@@ -300,7 +311,7 @@ export default function EditProductPage() {
                   name="weight"
                   value={formData.weight}
                   onChange={handleInputChange}
-                  className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta"
+                  className="bg-botanical-alabaster border-botanical-sage/30 text-botanical-forest focus-visible:ring-botanical-terracotta uppercase"
                 />
               </div>
               <div className="space-y-2">
@@ -322,7 +333,7 @@ export default function EditProductPage() {
           {/* Pricing Settings */}
           <div className="bg-botanical-clay/10 p-6 rounded-2xl border border-botanical-sage/20 space-y-6">
             <h3 className="text-lg font-semibold text-botanical-forest">Pricing Settings</h3>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-botanical-forest/80">MRP (₹)</label>
@@ -363,7 +374,7 @@ export default function EditProductPage() {
                 className="bg-botanical-sage/20 border-botanical-sage/40 text-botanical-forest cursor-not-allowed font-bold text-lg"
               />
             </div>
-            
+
             <p className="text-xs text-botanical-forest/60 italic">
               Selling price is automatically calculated based on the MRP and Discount.
             </p>
@@ -388,7 +399,7 @@ export default function EditProductPage() {
                   value={formData.hsn}
                   onChange={handleInputChange}
                   placeholder="e.g. 49011010"
-                  className="bg-white border-blue-200/50 text-botanical-forest focus-visible:ring-blue-400"
+                  className="bg-white border-blue-200/50 text-botanical-forest focus-visible:ring-blue-400 uppercase"
                 />
               </div>
 
@@ -459,8 +470,8 @@ export default function EditProductPage() {
           )}
 
           <div className="pt-4">
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full h-12 text-lg font-semibold bg-botanical-forest hover:bg-botanical-forest/90 text-white rounded-xl shadow-lg transition-all"
               disabled={isLoading}
             >
