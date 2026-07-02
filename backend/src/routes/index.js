@@ -37,5 +37,6 @@ router.use("/wishlist", wishlistRoutes);
 router.use("/returns", returnRoutes);
 router.use("/newsletter", newsletterRoutes);
 router.use("/settings", settingRoutes);
+router.use("/admin/settings", settingRoutes);
 
 module.exports = router;

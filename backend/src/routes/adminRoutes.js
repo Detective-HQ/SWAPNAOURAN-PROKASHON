@@ -22,6 +22,10 @@ const {
   listSubscribers
 } = require("../controllers/newsletterController");
 const {
+  getAdminSettings,
+  updateSetting
+} = require("../controllers/settingController");
+const {
   pushOrderToShiprocket,
   assignAwb,
   trackAwb,
@@ -63,6 +67,8 @@ router.get("/analytics", asyncHandler(getAnalytics));
 router.get("/returns", asyncHandler(getAllReturns));
 router.put("/returns/:id", validate({ body: updateReturnSchema }), asyncHandler(updateReturnStatus));
 router.get("/newsletter", asyncHandler(listSubscribers));
+router.get("/settings", asyncHandler(getAdminSettings));
+router.put("/settings", asyncHandler(updateSetting));
 
 // Shiprocket admin routes
 router.post("/shiprocket/orders/:orderId/push", asyncHandler(pushOrderToShiprocket));
