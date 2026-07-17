@@ -36,10 +36,10 @@ const requireEbookAccess = async (userId, bookId) => {
 const getReadUrl = async ({ userId, bookId }) => {
   const book = await prisma.book.findUnique({
     where: { id: bookId },
-    select: { id: true, type: true, title: true, fileUrl: true, isActive: true }
+    select: { id: true, type: true, title: true, fileUrl: true, isActive: true, isDeleted: true }
   });
 
-  if (!book || !book.isActive) {
+  if (!book || !book.isActive || book.isDeleted) {
     throw new ApiError(404, "Book not found");
   }
 
@@ -125,10 +125,10 @@ const streamRemoteFile = async ({ url, res, filenameHint }) => {
 const getPreviewUrl = async ({ bookId }) => {
   const book = await prisma.book.findUnique({
     where: { id: bookId },
-    select: { id: true, type: true, title: true, fileUrl: true, isActive: true }
+    select: { id: true, type: true, title: true, fileUrl: true, isActive: true, isDeleted: true }
   });
 
-  if (!book || !book.isActive) {
+  if (!book || !book.isActive || book.isDeleted) {
     throw new ApiError(404, "Book not found");
   }
 
@@ -168,10 +168,10 @@ const streamPreview = async ({ bookId, token, res }) => {
 
   const book = await prisma.book.findUnique({
     where: { id: bookId },
-    select: { id: true, fileUrl: true, title: true, type: true, isActive: true }
+    select: { id: true, fileUrl: true, title: true, type: true, isActive: true, isDeleted: true }
   });
 
-  if (!book || !book.isActive || book.type !== "EBOOK" || !book.fileUrl) {
+  if (!book || !book.isActive || book.isDeleted || book.type !== "EBOOK" || !book.fileUrl) {
     throw new ApiError(404, "E-book file not found");
   }
 
@@ -200,10 +200,10 @@ const streamEbook = async ({ bookId, token, res }) => {
 
   const book = await prisma.book.findUnique({
     where: { id: bookId },
-    select: { id: true, fileUrl: true, title: true, type: true, isActive: true }
+    select: { id: true, fileUrl: true, title: true, type: true, isActive: true, isDeleted: true }
   });
 
-  if (!book || !book.isActive || book.type !== "EBOOK" || !book.fileUrl) {
+  if (!book || !book.isActive || book.isDeleted || book.type !== "EBOOK" || !book.fileUrl) {
     throw new ApiError(404, "E-book file not found");
   }
 

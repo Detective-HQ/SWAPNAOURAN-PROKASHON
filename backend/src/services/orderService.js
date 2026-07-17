@@ -22,7 +22,7 @@ const createOrder = async ({ userId, items, shippingAddress }) => {
   const bookIds = normalizedItems.map((item) => item.bookId);
 
   const books = await prisma.book.findMany({
-    where: { id: { in: bookIds }, isActive: true }
+    where: { id: { in: bookIds }, isActive: true, isDeleted: false }
   });
 
   if (books.length !== bookIds.length) {
@@ -93,7 +93,7 @@ const getShippingQuote = async ({ items, pincode }) => {
   const bookIds = normalizedItems.map((item) => item.bookId);
 
   const books = await prisma.book.findMany({
-    where: { id: { in: bookIds }, isActive: true }
+    where: { id: { in: bookIds }, isActive: true, isDeleted: false }
   });
 
   if (books.length !== bookIds.length) {

@@ -19,6 +19,7 @@ const getAdminUsers = async (_req, res) => {
 
 const getAdminBooks = async (_req, res) => {
   const books = await prisma.book.findMany({
+    where: { isDeleted: false },
     select: {
       id: true,
       title: true,
@@ -105,7 +106,7 @@ const getAnalytics = async (_req, res) => {
 const getAdminStats = async (_req, res) => {
   const [totalUsers, totalProducts, totalOrders, revenueAgg] = await Promise.all([
     prisma.user.count(),
-    prisma.book.count(),
+    prisma.book.count({ where: { isDeleted: false } }),
     prisma.order.count(),
     prisma.order.aggregate({
       where: { status: "PAID" },
@@ -121,6 +122,69 @@ const getAdminStats = async (_req, res) => {
   });
 };
 
+const getTrashBooks = async (_req, res) => {
+  const books = await prisma.book.findMany({
+    where: {
+      isDeleted: true,
+      deletedAt: {
+        gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
+      }
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      authorName: true,
+      isbn: true,
+      pageCount: true,
+      bindingDetails: true,
+      weight: true,
+      stockQuantity: true,
+      copiesSold: true,
+      price: true,
+      mrp: true,
+      discountPercentage: true,
+      type: true,
+      coverImage: true,
+      isActive: true,
+      sku: true,
+      hsn: true,
+      lengthCm: true,
+      breadthCm: true,
+      heightCm: true,
+      weightGrams: true,
+      createdAt: true,
+      updatedAt: true,
+      deletedAt: true
+    },
+    orderBy: { deletedAt: "desc" }
+  });
+
+  sendSuccess(res, 200, "Trash books fetched", books);
+};
+
+const restoreBook = async (req, res) => {
+  const { id } = req.params;
+  const book = await prisma.book.findUnique({
+    where: { id }
+  });
+
+  if (!book) {
+    const ApiError = require("../utils/ApiError");
+    throw new ApiError(404, "Book not found");
+  }
+
+  const restored = await prisma.book.update({
+    where: { id },
+    data: {
+      isDeleted: false,
+      deletedAt: null
+    }
+  });
+
+  sendSuccess(res, 200, "Book restored from trash", restored);
+};
+
 module.exports = {
   getAdminUsers,
   getAdminBooks,
@@ -128,5 +192,7 @@ module.exports = {
   getAnalytics,
   getAdminStats,
   updateAdminOrderStatus,
-  updateAdminOrderTracking
+  updateAdminOrderTracking,
+  getTrashBooks,
+  restoreBook
 };

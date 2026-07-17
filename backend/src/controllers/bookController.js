@@ -24,6 +24,7 @@ const publicBookSelect = {
   fileUrl: true,
   sampleChapterUrl: true,
   isActive: true,
+  isDeleted: true,
   sku: true,
   hsn: true,
   lengthCm: true,
@@ -42,6 +43,7 @@ const listBooks = async (req, res) => {
 
   const where = {
     isActive: true,
+    isDeleted: false,
     ...(type ? { type } : {}),
     ...(search
       ? {
@@ -85,7 +87,7 @@ const getBookById = async (req, res) => {
     select: publicBookSelect
   });
 
-  if (!book || !book.isActive) {
+  if (!book || !book.isActive || book.isDeleted) {
     throw new ApiError(404, "Book not found");
   }
 
@@ -301,37 +303,31 @@ const updateBook = async (req, res) => {
 
 const deleteBook = async (req, res) => {
   const existing = await prisma.book.findUnique({
-    where: { id: req.params.id },
-    include: { _count: { select: { orderItems: true } } }
+    where: { id: req.params.id }
   });
 
   if (!existing) {
     throw new ApiError(404, "Book not found");
   }
 
-  if (existing._count.orderItems > 0) {
-    // Soft delete if orders exist to maintain history
-    await prisma.book.update({
-      where: { id: req.params.id },
-      data: { isActive: false }
-    });
-    return sendSuccess(res, 200, "Book disabled (cannot be deleted due to existing orders)");
-  } else {
-    // Hard delete if no orders
-    await prisma.book.delete({
-      where: { id: req.params.id }
-    });
-    return sendSuccess(res, 200, "Book permanently deleted");
-  }
+  await prisma.book.update({
+    where: { id: req.params.id },
+    data: {
+      isDeleted: true,
+      deletedAt: new Date()
+    }
+  });
+
+  return sendSuccess(res, 200, "Book moved to trash");
 };
 
 const getBookSample = async (req, res) => {
   const book = await prisma.book.findUnique({
     where: { id: req.params.id },
-    select: { id: true, title: true, type: true, sampleChapterUrl: true, fileUrl: true, isActive: true }
+    select: { id: true, title: true, type: true, sampleChapterUrl: true, fileUrl: true, isActive: true, isDeleted: true }
   });
 
-  if (!book || !book.isActive) {
+  if (!book || !book.isActive || book.isDeleted) {
     throw new ApiError(404, "Sample not available");
   }
 
