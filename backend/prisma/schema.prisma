@@ -115,9 +115,13 @@ model Book {
   wishlistItems    WishlistItem[]
   returnRequests   ReturnRequest[]
 
+  isDeleted        Boolean       @default(false)
+  deletedAt        DateTime?
+
   @@index([type])
   @@index([isActive])
   @@index([title])
+  @@index([isDeleted])
 }
 
 model Order {

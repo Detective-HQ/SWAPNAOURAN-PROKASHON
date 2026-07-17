@@ -18,7 +18,7 @@ const getMyWishlist = async (req, res) => {
 const addToWishlist = async (req, res) => {
   const { bookId } = req.body;
   const book = await prisma.book.findUnique({ where: { id: bookId } });
-  if (!book || !book.isActive) throw new ApiError(404, "Book not found");
+  if (!book || !book.isActive || book.isDeleted) throw new ApiError(404, "Book not found");
 
   const existing = await prisma.wishlistItem.findUnique({
     where: { userId_bookId: { userId: req.user.id, bookId } }

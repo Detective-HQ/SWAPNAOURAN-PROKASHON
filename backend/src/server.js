@@ -2,6 +2,7 @@ const http = require("http");
 const app = require("./app");
 const env = require("./config/env");
 const prisma = require("./prisma/client");
+const { startCleanupInterval } = require("./services/cleanupService");
 
 const server = http.createServer(app);
 
@@ -9,6 +10,7 @@ const startServer = async () => {
   try {
     await prisma.$connect();
     console.log("✅ Database connected successfully");
+    startCleanupInterval();
   } catch (error) {
     console.error("❌ Database connection failed:", error.message);
     process.exit(1);

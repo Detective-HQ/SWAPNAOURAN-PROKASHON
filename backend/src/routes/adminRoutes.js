@@ -11,7 +11,9 @@ const {
   getAnalytics,
   getAdminStats,
   updateAdminOrderStatus,
-  updateAdminOrderTracking
+  updateAdminOrderTracking,
+  getTrashBooks,
+  restoreBook
 } = require("../controllers/adminController");
 const {
   getAllReturns,
@@ -54,7 +56,9 @@ const router = express.Router();
 router.use(authMiddleware, adminMiddleware);
 
 router.get("/users", asyncHandler(getAdminUsers));
+router.get("/books/trash", asyncHandler(getTrashBooks));
 router.get("/books", asyncHandler(getAdminBooks));
+router.post("/books/:id/restore", asyncHandler(restoreBook));
 router.get("/orders", asyncHandler(getAdminOrders));
 router.put("/orders/:id/status", asyncHandler(updateAdminOrderStatus));
 router.put("/orders/:id/tracking", validate({ body: updateOrderTrackingSchema }), asyncHandler(updateAdminOrderTracking));

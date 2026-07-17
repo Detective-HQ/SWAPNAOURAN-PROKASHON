@@ -6,7 +6,7 @@ const createReview = async (req, res) => {
   const { bookId, rating, comment } = req.body;
 
   const book = await prisma.book.findUnique({ where: { id: bookId } });
-  if (!book || !book.isActive) {
+  if (!book || !book.isActive || book.isDeleted) {
     throw new ApiError(404, "Book not found");
   }
 
