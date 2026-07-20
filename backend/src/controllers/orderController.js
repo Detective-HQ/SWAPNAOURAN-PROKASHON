@@ -16,7 +16,8 @@ const createOrderController = async (req, res) => {
   const order = await createOrder({
     userId: req.user.id,
     items: req.body.items,
-    shippingAddress: req.body.shippingAddress
+    shippingAddress: req.body.shippingAddress,
+    shippingQuote: req.body.shippingQuote
   });
 
   sendSuccess(res, 201, "Order created", order);
@@ -109,7 +110,10 @@ const fulfillShiprocket = async (req, res) => {
 
   sendSuccess(res, 200, "Order successfully pushed to Shiprocket", {
     ...updatedOrder,
-    trackingNumber: result.shipment_id ? String(result.shipment_id) : null // Fallback reference for front-end toasts
+    // AWB is auto-assigned inside createShiprocketOrder. If successful, awbCode is already in updatedOrder.
+    // We surface it here for convenience; null means AWB assignment is still pending (admin can assign manually).
+    awbCode: updatedOrder.awbCode || null,
+    shiprocketShipmentId: updatedOrder.shiprocketShipmentId || null
   });
 };
 

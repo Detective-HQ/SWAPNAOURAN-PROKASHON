@@ -17,7 +17,7 @@ const normalizeItems = (items) => {
 
 const getOrderScope = (user) => (user.role === "ADMIN" ? {} : { userId: user.id });
 
-const createOrder = async ({ userId, items, shippingAddress }) => {
+const createOrder = async ({ userId, items, shippingAddress, shippingQuote }) => {
   const normalizedItems = normalizeItems(items);
   const bookIds = normalizedItems.map((item) => item.bookId);
 
@@ -55,14 +55,57 @@ const createOrder = async ({ userId, items, shippingAddress }) => {
   const subtotalAmount = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
 
   let deliveryCharge = 0;
+  let selectedCourierId = null;
+  let selectedCourierName = null;
+  let packageWeightKg = null;
+  let packageLengthCm = null;
+  let packageBreadthCm = null;
+  let packageHeightCm = null;
+
   if (hasPhysical) {
     const pincode = String(shippingAddress?.pincode || shippingAddress?.postalCode || "").trim();
+
+    // Always re-quote from Shiprocket at order create — never trust a flat fallback fee
     const quote = await getShippingQuoteForItems({
       items: normalizedItems,
       booksById: bookById,
       pincode
     });
+
+    if (!quote.courierId || !quote.requiresDelivery) {
+      throw new ApiError(400, "Delivery is not available for this address");
+    }
+
+    // Bind the charge shown at checkout: if the UI quote no longer matches, ask the client to refresh
+    if (shippingQuote?.courierId || shippingQuote?.deliveryCharge != null) {
+      const expectedCourierId = shippingQuote.courierId != null ? String(shippingQuote.courierId) : null;
+      const expectedCharge =
+        shippingQuote.deliveryCharge != null ? Math.ceil(Number(shippingQuote.deliveryCharge)) : null;
+      const courierChanged = expectedCourierId && expectedCourierId !== String(quote.courierId);
+      const chargeChanged =
+        expectedCharge != null && Number.isFinite(expectedCharge) && expectedCharge !== quote.deliveryCharge;
+
+      if (courierChanged || chargeChanged) {
+        throw new ApiError(409, "Shipping rates updated. Please review the new delivery charge.", {
+          quote: {
+            deliveryCharge: quote.deliveryCharge,
+            courierId: quote.courierId,
+            courierName: quote.courierName,
+            estimatedDeliveryDays: quote.estimatedDeliveryDays,
+            requiresDelivery: quote.requiresDelivery,
+            totalAmount: subtotalAmount + quote.deliveryCharge
+          }
+        });
+      }
+    }
+
     deliveryCharge = quote.deliveryCharge;
+    selectedCourierId = String(quote.courierId);
+    selectedCourierName = quote.courierName || null;
+    packageWeightKg = quote.package?.weightKg ?? null;
+    packageLengthCm = quote.package?.lengthCm ?? null;
+    packageBreadthCm = quote.package?.breadthCm ?? null;
+    packageHeightCm = quote.package?.heightCm ?? null;
   }
 
   const totalAmount = subtotalAmount + deliveryCharge;
@@ -74,6 +117,12 @@ const createOrder = async ({ userId, items, shippingAddress }) => {
       deliveryCharge,
       totalAmount,
       shippingAddress: shippingAddress || undefined,
+      selectedCourierId,
+      selectedCourierName,
+      packageWeightKg,
+      packageLengthCm,
+      packageBreadthCm,
+      packageHeightCm,
       items: {
         create: orderItems
       }

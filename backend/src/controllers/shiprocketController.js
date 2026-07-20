@@ -31,11 +31,41 @@ const pushOrderToShiprocket = async (req, res) => {
 
 /**
  * POST /api/admin/shiprocket/shipments/:shipmentId/awb
- * Request AWB assignment for a shipment
+ * Request AWB assignment for a shipment.
+ * Uses the courier locked at checkout unless force=true overrides it.
  */
 const assignAwb = async (req, res) => {
-  const { courierId } = req.body;
-  const result = await requestShipment(req.params.shipmentId, courierId);
+  const shipmentId = req.params.shipmentId;
+  const { courierId, force } = req.body || {};
+
+  const order = await prisma.order.findFirst({
+    where: { shiprocketShipmentId: String(shipmentId) },
+    select: { id: true, selectedCourierId: true, selectedCourierName: true }
+  });
+
+  let resolvedCourierId = courierId;
+
+  if (order?.selectedCourierId) {
+    if (
+      courierId &&
+      String(courierId) !== String(order.selectedCourierId) &&
+      force !== true
+    ) {
+      throw new ApiError(
+        400,
+        `Courier is locked to ${order.selectedCourierName || order.selectedCourierId} from checkout. Pass force=true only if you intentionally accept a different shipping cost.`
+      );
+    }
+    if (!force) {
+      resolvedCourierId = order.selectedCourierId;
+    }
+  }
+
+  if (!resolvedCourierId) {
+    throw new ApiError(400, "courierId is required when the order has no locked checkout courier");
+  }
+
+  const result = await requestShipment(shipmentId, resolvedCourierId);
   sendSuccess(res, 200, "AWB assignment requested", result);
 };
 
@@ -73,9 +103,13 @@ const cancelOrder = async (req, res) => {
  * Shiprocket sends a POST with order tracking details.
  */
 const shiprocketWebhookHandler = async (req, res) => {
-  // Optional: verify webhook token
+  // Strict token verification — SHIPROCKET_WEBHOOK_TOKEN must be set in .env
+  if (!env.shiprocketWebhookToken) {
+    throw new ApiError(500, "Shiprocket webhook token is not configured on the server. Set SHIPROCKET_WEBHOOK_TOKEN in .env");
+  }
+
   const token = req.headers["x-api-key"] || req.query.token;
-  if (env.shiprocketWebhookToken && token !== env.shiprocketWebhookToken) {
+  if (token !== env.shiprocketWebhookToken) {
     return res.status(401).json({ success: false, message: "Invalid webhook token" });
   }
 

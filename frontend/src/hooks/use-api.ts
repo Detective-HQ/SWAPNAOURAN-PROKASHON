@@ -55,7 +55,15 @@ export function useApi() {
         ? data.errors.map((issue: any) => `${issue.path}: ${issue.message}`).join(", ")
         : "";
       const message = data?.message || "Something went wrong";
-      throw new Error(validationDetails ? `${message} (${validationDetails})` : message);
+      const error = new Error(validationDetails ? `${message} (${validationDetails})` : message) as Error & {
+        status?: number;
+        details?: unknown;
+        data?: unknown;
+      };
+      error.status = response.status;
+      error.details = data?.details;
+      error.data = data;
+      throw error;
     }
 
     return data;
