@@ -1,9 +1,19 @@
 const prisma = require("../prisma/client");
 const ApiError = require("../utils/ApiError");
 const { sendSuccess } = require("../utils/response");
-const { uploadBuffer, uploadPdf } = require("../services/storageService");
+const { uploadBuffer, uploadPdf, resolvePublicAssetUrl } = require("../services/storageService");
 const { getPreviewUrl } = require("../services/ebookService");
 const { getActiveFlashSale, applyFlashSaleToBook } = require("../services/settingService");
+
+const withResolvedMedia = (book) => {
+  if (!book) return book;
+  return {
+    ...book,
+    coverImage: resolvePublicAssetUrl(book.coverImage),
+    fileUrl: resolvePublicAssetUrl(book.fileUrl),
+    sampleChapterUrl: resolvePublicAssetUrl(book.sampleChapterUrl)
+  };
+};
 
 const publicBookSelect = {
   id: true,
@@ -68,7 +78,7 @@ const listBooks = async (req, res) => {
   ]);
 
   const flashSale = await getActiveFlashSale();
-  const processedItems = items.map(book => applyFlashSaleToBook(book, flashSale));
+  const processedItems = items.map((book) => withResolvedMedia(applyFlashSaleToBook(book, flashSale)));
 
   sendSuccess(res, 200, "Books fetched", {
     items: processedItems,
@@ -92,7 +102,7 @@ const getBookById = async (req, res) => {
   }
 
   const flashSale = await getActiveFlashSale();
-  const processedBook = applyFlashSaleToBook(book, flashSale);
+  const processedBook = withResolvedMedia(applyFlashSaleToBook(book, flashSale));
 
   sendSuccess(res, 200, "Book fetched", processedBook);
 };
@@ -310,15 +320,20 @@ const deleteBook = async (req, res) => {
     throw new ApiError(404, "Book not found");
   }
 
-  await prisma.book.update({
+  if (existing.isDeleted) {
+    return sendSuccess(res, 200, "Book is already in trash", existing);
+  }
+
+  const deleted = await prisma.book.update({
     where: { id: req.params.id },
     data: {
       isDeleted: true,
+      isActive: false,
       deletedAt: new Date()
     }
   });
 
-  return sendSuccess(res, 200, "Book moved to trash");
+  return sendSuccess(res, 200, "Book moved to trash", deleted);
 };
 
 const getBookSample = async (req, res) => {

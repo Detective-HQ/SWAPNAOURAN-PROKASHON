@@ -1,6 +1,7 @@
 const prisma = require("../prisma/client");
 const { sendSuccess } = require("../utils/response");
 const { getAdminAnalytics } = require("../services/analyticsService");
+const { resolvePublicAssetUrl } = require("../services/storageService");
 
 const getAdminUsers = async (_req, res) => {
   const users = await prisma.user.findMany({
@@ -49,7 +50,12 @@ const getAdminBooks = async (_req, res) => {
     orderBy: { createdAt: "desc" }
   });
 
-  sendSuccess(res, 200, "Books fetched", books);
+  const data = books.map((book) => ({
+    ...book,
+    coverImage: resolvePublicAssetUrl(book.coverImage)
+  }));
+
+  sendSuccess(res, 200, "Books fetched", data);
 };
 
 const getAdminOrders = async (_req, res) => {
@@ -125,10 +131,7 @@ const getAdminStats = async (_req, res) => {
 const getTrashBooks = async (_req, res) => {
   const books = await prisma.book.findMany({
     where: {
-      isDeleted: true,
-      deletedAt: {
-        gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
-      }
+      isDeleted: true
     },
     select: {
       id: true,
@@ -160,7 +163,12 @@ const getTrashBooks = async (_req, res) => {
     orderBy: { deletedAt: "desc" }
   });
 
-  sendSuccess(res, 200, "Trash books fetched", books);
+  const data = books.map((book) => ({
+    ...book,
+    coverImage: resolvePublicAssetUrl(book.coverImage)
+  }));
+
+  sendSuccess(res, 200, "Trash books fetched", data);
 };
 
 const restoreBook = async (req, res) => {

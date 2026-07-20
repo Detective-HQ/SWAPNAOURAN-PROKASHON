@@ -33,9 +33,7 @@ const cleanupDeletedBooks = async () => {
         });
         hardDeletedCount++;
       } else {
-        // If there are orders, we cannot hard-delete it due to database constraints.
-        // It remains soft-deleted in the DB (isDeleted: true) and will not be displayed in the trash
-        // or anywhere else because we query only where: { isDeleted: true, deletedAt: { gte: 24h_ago } }.
+        // Keep soft-deleted forever when orders exist (FK). Still visible in Trash UI.
         softDeletedKeptCount++;
       }
     }

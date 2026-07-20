@@ -26,7 +26,37 @@ const ensureFolder = async (folderPath) => {
   await fs.mkdir(folderPath, { recursive: true });
 };
 
-const buildPublicUploadUrl = (folder, filename) => `${env.appBaseUrl}/uploads/${folder}/${filename}`;
+/**
+ * Store relative upload paths so DB URLs are environment-agnostic.
+ * Absolute URLs are resolved at read-time via resolvePublicAssetUrl().
+ */
+const buildPublicUploadUrl = (folder, filename) => `/uploads/${folder}/${filename}`;
+
+/**
+ * Rewrite legacy localhost absolute upload URLs and relative /uploads paths
+ * to the current APP_BASE_URL so production never points at a developer machine.
+ */
+const resolvePublicAssetUrl = (url) => {
+  if (!url || typeof url !== "string") return url;
+
+  const base = String(env.appBaseUrl || "").replace(/\/$/, "");
+
+  if (url.startsWith("/uploads/")) {
+    return base ? `${base}${url}` : url;
+  }
+
+  try {
+    const parsed = new URL(url);
+    const isLoopback = parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+    if (isLoopback && parsed.pathname.startsWith("/uploads/")) {
+      return base ? `${base}${parsed.pathname}${parsed.search}` : parsed.pathname;
+    }
+  } catch {
+    // not an absolute URL
+  }
+
+  return url;
+};
 
 const uploadBuffer = async ({ buffer, folder = "misc", filename, mimetype }) => {
   if (!buffer) {
@@ -171,5 +201,7 @@ module.exports = {
   uploadBase64,
   uploadPdf,
   deleteFile,
-  getLocalFilePathFromUrl
+  getLocalFilePathFromUrl,
+  resolvePublicAssetUrl,
+  buildPublicUploadUrl
 };

@@ -16,6 +16,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Search, IndianRupee, Eye, EyeOff, Plus, Edit, Trash2, AlertTriangle, RotateCcw } from "lucide-react";
+import { mediaUrl } from "@/lib/media-url";
 
 export default function AdminProductsPage() {
   const api = useApi();
@@ -78,14 +79,13 @@ export default function AdminProductsPage() {
   };
 
   const deleteProduct = async (book: any) => {
-    if (!confirm(`Are you sure you want to delete "${book.title}"?`)) return;
+    if (!confirm(`Are you sure you want to delete "${book.title}"? It will move to Trash.`)) return;
     try {
-      await api.del(`/books/${book.id}`);
-      setProducts((prev) => prev.filter((b) => b.id !== book.id));
-      await fetchTrashProducts();
+      const result = await api.del(`/books/${book.id}`);
+      await Promise.all([fetchProducts(), fetchTrashProducts()]);
       toast({
-        title: "Product Deleted",
-        description: `${book.title} has been moved to trash.`,
+        title: "Moved to Trash",
+        description: result?.message || `${book.title} has been moved to trash.`,
       });
     } catch (error: any) {
       toast({
@@ -93,6 +93,7 @@ export default function AdminProductsPage() {
         description: error.message,
         variant: "destructive",
       });
+      await fetchProducts();
     }
   };
 
@@ -226,7 +227,7 @@ export default function AdminProductsPage() {
                       <div className="flex items-center gap-3">
                         {book.coverImage && (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={book.coverImage} alt="" className="w-10 h-14 rounded object-cover" />
+                          <img src={mediaUrl(book.coverImage)} alt="" className="w-10 h-14 rounded object-cover" />
                         )}
                         <div>
                           <span>{book.title}</span>
@@ -347,7 +348,7 @@ export default function AdminProductsPage() {
                       <div className="flex items-center gap-3">
                         {book.coverImage && (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={book.coverImage} alt="" className="w-10 h-14 rounded object-cover" />
+                          <img src={mediaUrl(book.coverImage)} alt="" className="w-10 h-14 rounded object-cover" />
                         )}
                         <div>
                           <span>{book.title}</span>
