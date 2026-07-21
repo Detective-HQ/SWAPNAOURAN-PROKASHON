@@ -11,6 +11,9 @@ const { apiLimiter } = require("./middleware/rateLimiter");
 
 const app = express();
 
+// Next.js rewrite proxy sets X-Forwarded-For; required for express-rate-limit.
+app.set("trust proxy", 1);
+
 app.use(
   helmet({
     contentSecurityPolicy: {

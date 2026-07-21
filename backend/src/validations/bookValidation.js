@@ -29,12 +29,30 @@ const baseBookSchema = z.object({
   weightGrams: z.number().positive().optional()
 });
 
+const PHYSICAL_TYPES = ["PHYSICAL", "ENGLISH_BOOK"];
+
 const createBookSchema = baseBookSchema.superRefine((value, ctx) => {
   if (value.type === "EBOOK" && !value.fileUrl) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: "fileUrl is required for EBOOK"
     });
+  }
+
+  // Physical books MUST have dimensions so shipping quotes are accurate
+  if (PHYSICAL_TYPES.includes(value.type)) {
+    if (!value.weightGrams || value.weightGrams <= 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["weightGrams"], message: "weightGrams is required for physical books (used for shipping calculation)" });
+    }
+    if (!value.lengthCm || value.lengthCm <= 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["lengthCm"], message: "lengthCm is required for physical books (used for shipping calculation)" });
+    }
+    if (!value.breadthCm || value.breadthCm <= 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["breadthCm"], message: "breadthCm is required for physical books (used for shipping calculation)" });
+    }
+    if (!value.heightCm || value.heightCm <= 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["heightCm"], message: "heightCm is required for physical books (used for shipping calculation)" });
+    }
   }
 });
 

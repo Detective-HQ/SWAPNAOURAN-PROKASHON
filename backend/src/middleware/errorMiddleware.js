@@ -19,8 +19,22 @@ const errorMiddleware = (err, _req, res, _next) => {
     });
   }
 
+  // express-rate-limit misconfiguration (e.g. trust proxy) should not look like auth failure
+  if (err?.name === "ValidationError" && err?.code?.startsWith?.("ERR_ERL_")) {
+    console.error("Rate limiter configuration error:", err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Payment temporarily unavailable due to server configuration. Please try again."
+    });
+  }
+
+  // Payment provider SDKs (e.g. Razorpay) often throw plain objects with statusCode + error.description
+  const providerDescription = err?.error?.description;
   const statusCode = err.statusCode || 500;
-  const message = err.message || "Internal server error";
+  const message =
+    err.message ||
+    providerDescription ||
+    "Internal server error";
 
   return res.status(statusCode).json({
     success: false,

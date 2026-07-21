@@ -84,6 +84,7 @@ function OrdersContent() {
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [deliveryCharge, setDeliveryCharge] = useState(0);
+  const [quotedCourierId, setQuotedCourierId] = useState<string | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [estimatedDeliveryDays, setEstimatedDeliveryDays] = useState<string | null>(null);
@@ -161,6 +162,7 @@ function OrdersContent() {
   useEffect(() => {
     if (!user || cartItems.length === 0) {
       setDeliveryCharge(0);
+      setQuotedCourierId(null);
       setQuoteError(null);
       setEstimatedDeliveryDays(null);
       setRequiresDelivery(false);
@@ -170,6 +172,7 @@ function OrdersContent() {
     const pincode = shippingAddress.pincode?.trim();
     if (!/^\d{6}$/.test(pincode || '')) {
       setDeliveryCharge(0);
+      setQuotedCourierId(null);
       setQuoteError(null);
       setEstimatedDeliveryDays(null);
       setRequiresDelivery(false);
@@ -189,10 +192,12 @@ function OrdersContent() {
         });
         const quote = res.data || res;
         setDeliveryCharge(Number(quote.deliveryCharge || 0));
+        setQuotedCourierId(quote.courierId ? String(quote.courierId) : null);
         setEstimatedDeliveryDays(quote.estimatedDeliveryDays || null);
         setRequiresDelivery(Boolean(quote.requiresDelivery));
       } catch (err: any) {
         setDeliveryCharge(0);
+        setQuotedCourierId(null);
         setEstimatedDeliveryDays(null);
         setRequiresDelivery(false);
         setQuoteError(err.message || 'Could not calculate delivery charge');
@@ -245,7 +250,7 @@ function OrdersContent() {
         setError(quoteError);
         return;
       }
-      if (deliveryCharge <= 0) {
+      if (deliveryCharge <= 0 || !quotedCourierId) {
         setError('Delivery charge could not be calculated for this address');
         return;
       }
@@ -269,13 +274,29 @@ function OrdersContent() {
           city: shippingAddress.city,
           state: shippingAddress.state,
           pincode: shippingAddress.pincode,
-        }
+        },
+        ...(requiresDelivery
+          ? {
+              shippingQuote: {
+                courierId: quotedCourierId,
+                deliveryCharge,
+              },
+            }
+          : {}),
       });
 
       const order = orderResponse.data;
       const orderId = order?.id;
       if (!orderId) {
         throw new Error('Failed to create order - no order ID returned');
+      }
+
+      // Keep UI total aligned with the charge locked on the order (source of truth for Razorpay)
+      if (order.deliveryCharge != null) {
+        setDeliveryCharge(Number(order.deliveryCharge));
+      }
+      if (order.selectedCourierId) {
+        setQuotedCourierId(String(order.selectedCourierId));
       }
 
       // Step 2: Initiate payment through backend
@@ -351,6 +372,21 @@ function OrdersContent() {
       razorpay.open();
     } catch (err: any) {
       console.error('Payment error:', err);
+
+      // Shipping quote changed between display and order create — refresh UI and ask user to confirm again
+      if (err?.status === 409 && err?.details?.quote) {
+        const nextQuote = err.details.quote;
+        setDeliveryCharge(Number(nextQuote.deliveryCharge || 0));
+        setQuotedCourierId(nextQuote.courierId ? String(nextQuote.courierId) : null);
+        setEstimatedDeliveryDays(nextQuote.estimatedDeliveryDays || null);
+        setRequiresDelivery(Boolean(nextQuote.requiresDelivery ?? true));
+        setError(
+          `Delivery charge updated to ₹${Number(nextQuote.deliveryCharge || 0).toLocaleString()}. Please review and pay again.`
+        );
+        setProcessingPayment(false);
+        return;
+      }
+
       const message = err?.message || 'Payment failed. Please try again.';
       if (/Some books are invalid or inactive/i.test(message)) {
         setError('Some cart items are outdated. Please remove them and add books again from the Shop page.');

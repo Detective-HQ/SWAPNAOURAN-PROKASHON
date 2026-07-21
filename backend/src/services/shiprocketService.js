@@ -29,7 +29,7 @@ const getAuthToken = async () => {
   return cachedToken;
 };
 
-const shiprocketApi = async (method, path, body = null) => {
+const shiprocketApi = async (method, path, body = null, isRetry = false) => {
   const token = await getAuthToken();
   const config = {
     method,
@@ -45,6 +45,13 @@ const shiprocketApi = async (method, path, body = null) => {
     const { data } = await axios(config);
     return data;
   } catch (err) {
+    // If token was revoked/expired mid-session, clear cache and retry once
+    if (!isRetry && err.response?.status === 401) {
+      console.warn("[Shiprocket] Token expired or revoked. Refreshing token and retrying...");
+      cachedToken = null;
+      tokenExpiresAt = 0;
+      return shiprocketApi(method, path, body, true);
+    }
     const msg = err.response?.data?.message || err.response?.data?.errors || err.message;
     console.error("[Shiprocket API Error]", method, path, msg);
     throw new ApiError(502, `Shiprocket API error: ${JSON.stringify(msg)}`);
@@ -53,30 +60,38 @@ const shiprocketApi = async (method, path, body = null) => {
 
 const isPhysicalBookType = (type) => type === "PHYSICAL" || type === "ENGLISH_BOOK";
 
+// Realistic defaults for a standard paperback book (previously 500g/25x18x3 were too large)
+const BOOK_DEFAULTS = {
+  weightGrams: 300,
+  lengthCm: 22,
+  breadthCm: 14,
+  heightCm: 2
+};
+
 const computePackageFromLineItems = (lineItems) => {
   const physical = lineItems.filter((item) => isPhysicalBookType(item.book.type));
 
   const totalWeightKg = physical.reduce(
-    (sum, item) => sum + ((Number(item.book.weightGrams) || 500) / 1000) * item.quantity,
+    (sum, item) => sum + ((Number(item.book.weightGrams) || BOOK_DEFAULTS.weightGrams) / 1000) * item.quantity,
     0
   );
 
   const maxLength = physical.length
-    ? Math.max(...physical.map((item) => Number(item.book.lengthCm) || 25))
-    : 25;
+    ? Math.max(...physical.map((item) => Number(item.book.lengthCm) || BOOK_DEFAULTS.lengthCm))
+    : BOOK_DEFAULTS.lengthCm;
   const maxBreadth = physical.length
-    ? Math.max(...physical.map((item) => Number(item.book.breadthCm) || 18))
-    : 18;
+    ? Math.max(...physical.map((item) => Number(item.book.breadthCm) || BOOK_DEFAULTS.breadthCm))
+    : BOOK_DEFAULTS.breadthCm;
   const totalHeight = physical.reduce(
-    (sum, item) => sum + (Number(item.book.heightCm) || 3) * item.quantity,
+    (sum, item) => sum + (Number(item.book.heightCm) || BOOK_DEFAULTS.heightCm) * item.quantity,
     0
   );
 
   return {
-    totalWeightKg: Math.max(totalWeightKg, 0.5),
+    totalWeightKg: Math.max(totalWeightKg, 0.3),
     maxLength,
     maxBreadth,
-    totalHeight: Math.max(totalHeight, 3)
+    totalHeight: Math.max(totalHeight, BOOK_DEFAULTS.heightCm)
   };
 };
 
@@ -90,6 +105,8 @@ const pickCheapestCourier = (couriers) => {
     if (!best || rate < best.rate) {
       return {
         rate,
+        // courier_id is stored so we can force the SAME courier at fulfillment time
+        courierId: String(courier.courier_company_id || courier.id || ""),
         courierName: courier.courier_name || "",
         estimatedDeliveryDays: courier.estimated_delivery_days || ""
       };
@@ -130,6 +147,9 @@ const getShippingQuoteForItems = async ({ items, booksById, pincode }) => {
   if (!env.shiprocketPickupPincode) {
     throw new ApiError(500, "Shiprocket pickup pincode is not configured");
   }
+  if (!env.shiprocketPickupLocation) {
+    throw new ApiError(500, "Shiprocket pickup location name is not configured");
+  }
 
   const pkg = computePackageFromLineItems(lineItems);
   const params = new URLSearchParams({
@@ -156,8 +176,16 @@ const getShippingQuoteForItems = async ({ items, booksById, pincode }) => {
     deliveryCharge,
     totalAmount: subtotalAmount + deliveryCharge,
     requiresDelivery: true,
+    // Return courierId so it can be locked into the order record at checkout
+    courierId: cheapest.courierId,
     courierName: cheapest.courierName,
-    estimatedDeliveryDays: cheapest.estimatedDeliveryDays
+    estimatedDeliveryDays: cheapest.estimatedDeliveryDays,
+    package: {
+      weightKg: pkg.totalWeightKg,
+      lengthCm: pkg.maxLength,
+      breadthCm: pkg.maxBreadth,
+      heightCm: pkg.totalHeight
+    }
   };
 };
 
@@ -189,8 +217,11 @@ const createShiprocketOrder = async (orderId) => {
   if (!pincode) {
     throw new ApiError(400, "Shipping address is missing pincode. Update the order address before fulfilling.");
   }
-  if (!billingAddress || !addr.city || !addr.state) {
-    throw new ApiError(400, "Shipping address is incomplete. Name, address, city, state, and pincode are required.");
+  if (billingAddress.length < 6) {
+    throw new ApiError(400, "Shipping address must be at least 6 characters long (Shiprocket requirement).");
+  }
+  if (!addr.city || !addr.state) {
+    throw new ApiError(400, "Shipping address is incomplete. City and state are required.");
   }
   if (billingPhone.length !== 10) {
     throw new ApiError(400, "Shipping address must include a valid 10-digit phone number.");
@@ -199,26 +230,56 @@ const createShiprocketOrder = async (orderId) => {
   // Build order_items array for Shiprocket
   const orderItems = order.items
     .filter((item) => item.book.type === "PHYSICAL" || item.book.type === "ENGLISH_BOOK")
-    .map((item) => ({
-      name: item.book.title,
-      sku: item.book.sku || `BOOK-${item.book.id.slice(-8)}`,
-      units: item.quantity,
-      selling_price: Number(item.unitPrice),
-      discount: item.book.discountPercentage ? Number(item.book.discountPercentage) : 0,
-      tax: 0,
-      hsn: item.book.hsn || ""
-    }));
+    .map((item) => {
+      const unitPrice = Number(item.unitPrice);
+      const mrp = Number(item.book.mrp || item.unitPrice);
+      // Shiprocket expects the absolute discount amount in INR per unit, NOT percentage
+      const discountAmount = Math.max(0, Math.round((mrp - unitPrice) * 100) / 100);
+      return {
+        name: item.book.title,
+        sku: item.book.sku || `BOOK-${item.book.id.slice(-8)}`,
+        units: item.quantity,
+        selling_price: unitPrice,
+        discount: discountAmount,
+        tax: 0,
+        hsn: item.book.hsn || ""
+      };
+    });
 
   if (orderItems.length === 0) {
     throw new ApiError(400, "No physical items to ship in this order");
   }
 
-  // Calculate package dimensions from physical line items
   const physicalLineItems = order.items.filter((item) => isPhysicalBookType(item.book.type));
-  const pkg = computePackageFromLineItems(physicalLineItems);
 
-  const subtotalAmount = Number(order.subtotalAmount ?? order.totalAmount);
+  // Prefer package snapshot from checkout so fulfill uses the exact dims that were quoted
+  const hasPackageSnapshot =
+    order.packageWeightKg != null &&
+    order.packageLengthCm != null &&
+    order.packageBreadthCm != null &&
+    order.packageHeightCm != null;
+
+  const pkg = hasPackageSnapshot
+    ? {
+        totalWeightKg: Number(order.packageWeightKg),
+        maxLength: Number(order.packageLengthCm),
+        maxBreadth: Number(order.packageBreadthCm),
+        totalHeight: Number(order.packageHeightCm)
+      }
+    : computePackageFromLineItems(physicalLineItems);
+
+  // Safe subtotal: if subtotalAmount is null, compute from items to avoid double-counting deliveryCharge
+  const subtotalAmount = order.subtotalAmount
+    ? Number(order.subtotalAmount)
+    : order.items.reduce((sum, item) => sum + Number(item.unitPrice) * item.quantity, 0);
   const shippingCharges = Number(order.deliveryCharge ?? 0);
+
+  if (!order.selectedCourierId) {
+    throw new ApiError(
+      400,
+      "This order has no locked courier from checkout. Recreate the order with a valid shipping quote before fulfilling."
+    );
+  }
 
   const payload = {
     order_id: order.id,
@@ -267,14 +328,51 @@ const createShiprocketOrder = async (orderId) => {
     }
   });
 
+  // Auto-assign AWB using the courier locked at checkout (same rate path as quote)
+  if (!result.shipment_id) {
+    throw new ApiError(502, "Shiprocket order created but no shipment_id was returned for AWB assignment");
+  }
+
+  const courierId = String(order.selectedCourierId);
+  try {
+    const awbResult = await requestShipment(String(result.shipment_id), courierId);
+    const awb = awbResult?.awb_assign_status === 1
+      ? (awbResult?.response?.data?.awb_code || awbResult?.awb_code || null)
+      : null;
+    if (!awb) {
+      throw new ApiError(
+        502,
+        `AWB assignment failed for locked courier ${order.selectedCourierName || courierId}. Do not assign a different courier — retry with the locked courier.`
+      );
+    }
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        awbCode: String(awb),
+        trackingNumber: String(awb)
+      }
+    });
+    result._awbCode = awb;
+  } catch (awbErr) {
+    if (awbErr instanceof ApiError) throw awbErr;
+    throw new ApiError(
+      502,
+      `AWB auto-assignment failed for locked courier ${courierId}: ${awbErr?.message || "unknown error"}`
+    );
+  }
+
   return result;
 };
 
 // ──────────────────────── Request Shipment (AWB assignment) ────────────────────────
 const requestShipment = async (shiprocketShipmentId, courierId) => {
+  if (!courierId) {
+    throw new ApiError(400, "courier_id is required to assign AWB (must match the courier locked at checkout)");
+  }
+
   const result = await shiprocketApi("POST", "/courier/assign/awb", {
     shipment_id: shiprocketShipmentId,
-    courier_id: courierId || undefined
+    courier_id: courierId
   });
 
   return result;
@@ -303,7 +401,8 @@ const cancelShiprocketOrder = async (shiprocketOrderIds) => {
 // ──────────────────────── Get Available Couriers ────────────────────────
 const getAvailableCouriers = async (shiprocketOrderId) => {
   const order = await prisma.order.findFirst({
-    where: { shiprocketOrderId: String(shiprocketOrderId) }
+    where: { shiprocketOrderId: String(shiprocketOrderId) },
+    include: { items: { include: { book: true } } }
   });
 
   if (!order || !order.shiprocketShipmentId) {
@@ -312,13 +411,36 @@ const getAvailableCouriers = async (shiprocketOrderId) => {
 
   const addr = order.shippingAddress || {};
   const pincode = String(addr.pincode || addr.postalCode || "").trim();
-  const physicalLineItems = order.items.filter((item) => isPhysicalBookType(item.book.type));
-  const pkg = computePackageFromLineItems(physicalLineItems);
-  const result = await shiprocketApi(
-    "GET",
-    `/courier/serviceability/?pickup_postcode=${env.shiprocketPickupPincode}&delivery_postcode=${pincode}&cod=0&weight=${pkg.totalWeightKg}&shipment_id=${order.shiprocketShipmentId}`
-  );
 
+  const hasPackageSnapshot =
+    order.packageWeightKg != null &&
+    order.packageLengthCm != null &&
+    order.packageBreadthCm != null &&
+    order.packageHeightCm != null;
+
+  const pkg = hasPackageSnapshot
+    ? {
+        totalWeightKg: Number(order.packageWeightKg),
+        maxLength: Number(order.packageLengthCm),
+        maxBreadth: Number(order.packageBreadthCm),
+        totalHeight: Number(order.packageHeightCm)
+      }
+    : computePackageFromLineItems(
+        order.items.filter((item) => isPhysicalBookType(item.book.type))
+      );
+
+  const params = new URLSearchParams({
+    pickup_postcode: env.shiprocketPickupPincode,
+    delivery_postcode: pincode,
+    cod: "0",
+    weight: String(pkg.totalWeightKg),
+    length: String(pkg.maxLength),
+    breadth: String(pkg.maxBreadth),
+    height: String(pkg.totalHeight),
+    shipment_id: String(order.shiprocketShipmentId)
+  });
+
+  const result = await shiprocketApi("GET", `/courier/serviceability/?${params.toString()}`);
   return result;
 };
 
@@ -351,9 +473,9 @@ const processWebhook = async (payload) => {
     "OUT FOR DELIVERY": "IN_TRANSIT",
     "DELIVERED": "DELIVERED",
     "UNDELIVERED": "IN_TRANSIT",
-    "RTO INITIATED": "IN_TRANSIT",
-    "RTO DELIVERED": "PROCESSING",
-    "CANCELLED": "PROCESSING"
+    "RTO INITIATED": "RTO",
+    "RTO DELIVERED": "RTO",
+    "CANCELLED": "CANCELLED"
   };
 
   const statusUpper = (current_status || "").toUpperCase();

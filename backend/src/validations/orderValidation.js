@@ -34,7 +34,13 @@ const shippingQuoteSchema = z.object({
 
 const createOrderSchema = z.object({
   items: z.array(orderItemSchema).min(1),
-  shippingAddress: addressSchema
+  shippingAddress: addressSchema,
+  shippingQuote: z
+    .object({
+      courierId: z.coerce.string().min(1).optional(),
+      deliveryCharge: z.coerce.number().nonnegative().optional()
+    })
+    .optional()
 });
 
 const orderIdParamsSchema = z.object({

@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { items, shippingAddress } = await request.json();
+    const { items, shippingAddress, shippingQuote } = await request.json();
 
     if (!items || items.length === 0) {
       return NextResponse.json(
@@ -37,6 +37,7 @@ export async function POST(request: Request) {
       data: {
         items: orderItems,
         shippingAddress: shippingAddress || {},
+        ...(shippingQuote ? { shippingQuote } : {}),
       },
     });
 
