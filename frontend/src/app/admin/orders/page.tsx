@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useApi } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -250,8 +250,8 @@ export default function AdminOrdersPage() {
             {orders
               .filter((o) => !searchQuery.trim() || o.id.toLowerCase().includes(searchQuery.toLowerCase()))
               .map((order) => (
-              <>
-                <TableRow key={order.id} className="border-b border-botanical-sage/10 hover:bg-botanical-alabaster/40 transition-colors group cursor-pointer" onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}>
+              <Fragment key={order.id}>
+                <TableRow className="border-b border-botanical-sage/10 hover:bg-botanical-alabaster/40 transition-colors group cursor-pointer" onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}>
                   <TableCell className="py-3 text-center">
                     {order.status === "PAID" && !order.trackingNumber && !order.deliveryStatus ? (
                       <Checkbox 
@@ -421,7 +421,7 @@ export default function AdminOrdersPage() {
                     </TableCell>
                   </TableRow>
                 )}
-              </>
+              </Fragment>
             ))}
             {orders.filter((o) => !searchQuery.trim() || o.id.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
               <TableRow>

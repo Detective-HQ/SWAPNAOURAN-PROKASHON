@@ -68,6 +68,8 @@ router.put("/orders/:id/status", asyncHandler(updateAdminOrderStatus));
 router.put("/orders/:id/tracking", validate({ body: updateOrderTrackingSchema }), asyncHandler(updateAdminOrderTracking));
 router.get("/stats", asyncHandler(getAdminStats));
 router.get("/analytics", asyncHandler(getAnalytics));
+router.get("/settings", asyncHandler(getAdminSettings));
+router.put("/settings", asyncHandler(updateSetting));
 router.get("/returns", asyncHandler(getAllReturns));
 router.put("/returns/:id", validate({ body: updateReturnSchema }), asyncHandler(updateReturnStatus));
 router.get("/newsletter", asyncHandler(listSubscribers));

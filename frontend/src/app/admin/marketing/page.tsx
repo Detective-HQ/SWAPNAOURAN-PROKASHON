@@ -20,24 +20,39 @@ export default function MarketingPage() {
   const [banner, setBanner] = useState({ active: false, text: "" });
   const [flashSale, setFlashSale] = useState({ active: false, bookType: "ALL", discountPercentage: "10", endTime: "" });
 
+  type FlashSaleState = {
+    active: boolean;
+    bookType: string;
+    discountPercentage: string;
+    endTime: string;
+  };
+
   useEffect(() => {
     fetchSettings();
   }, [api]);
+
+  const formatEndTimeForInput = (endTime?: string) => {
+    if (!endTime) return "";
+
+    const parsed = new Date(endTime);
+    if (Number.isNaN(parsed.getTime())) return "";
+
+    const local = new Date(parsed.getTime() - parsed.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 16);
+  };
 
   const fetchSettings = async () => {
     try {
       const res = await api.get("/admin/settings");
       if (res?.data) {
         setBanner(res.data.announcementBanner || { active: false, text: "" });
-        
-        let fs = res.data.flashSale || { active: false, bookType: "ALL", discountPercentage: "10", endTime: "" };
-        if (fs.endTime) {
-          // Format for datetime-local input
-          const d = new Date(fs.endTime);
-          d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-          fs.endTime = d.toISOString().slice(0, 16);
-        }
-        setFlashSale(fs);
+
+        const fs = res.data.flashSale || { active: false, bookType: "ALL", discountPercentage: "10", endTime: "" };
+        setFlashSale({
+          ...fs,
+          discountPercentage: String(fs.discountPercentage ?? "10"),
+          endTime: formatEndTimeForInput(fs.endTime),
+        });
       }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -56,6 +71,33 @@ export default function MarketingPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const buildFlashSalePayload = () => {
+    const normalizedDiscount = Number(flashSale.discountPercentage);
+    const parsedEndTime = flashSale.endTime ? new Date(flashSale.endTime) : null;
+    const fallbackEndTime = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+    const payload = {
+      ...flashSale,
+      active: true,
+      discountPercentage: Number.isFinite(normalizedDiscount) && normalizedDiscount > 0
+        ? normalizedDiscount
+        : 10,
+      endTime: parsedEndTime && !Number.isNaN(parsedEndTime.getTime())
+        ? parsedEndTime.toISOString()
+        : fallbackEndTime,
+    };
+
+    const nextState: FlashSaleState = {
+      ...flashSale,
+      active: true,
+      discountPercentage: String(payload.discountPercentage),
+      endTime: payload.endTime,
+    };
+
+    setFlashSale(nextState);
+    return payload;
   };
 
   if (isLoading) return <div className="text-botanical-forest/60">Loading settings...</div>;
@@ -181,9 +223,7 @@ export default function MarketingPage() {
             <div className="pt-2">
               <Button 
                 onClick={() => {
-                  // Ensure proper UTC time before saving
-                  const d = new Date(flashSale.endTime);
-                  const payload = { ...flashSale, endTime: d.toISOString() };
+                  const payload = buildFlashSalePayload();
                   saveSetting("FLASH_SALE", payload);
                 }}
                 disabled={isSaving}

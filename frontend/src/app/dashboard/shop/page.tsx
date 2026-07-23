@@ -166,7 +166,7 @@ export default function ShopPage() {
             Curated Collection
           </div>
           <h1 className="text-4xl font-headline font-bold text-botanical-forest">
-            Sapnouran <span className="italic font-normal text-botanical-terracotta">Publication</span>
+            Swapnouran <span className="italic font-normal text-botanical-terracotta">Publication</span>
           </h1>
         </div>
 
