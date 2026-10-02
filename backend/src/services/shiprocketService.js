@@ -60,20 +60,47 @@ const shiprocketApi = async (method, path, body = null, isRetry = false) => {
 
 const isPhysicalBookType = (type) => type === "PHYSICAL" || type === "ENGLISH_BOOK";
 
-// Realistic defaults for a standard paperback book (previously 500g/25x18x3 were too large)
+// Fallback only, used when a book row has no dimension/weight of its own.
 const BOOK_DEFAULTS = {
-  weightGrams: 300,
+  weightGrams: 250,
   lengthCm: 22,
-  breadthCm: 14,
-  heightCm: 2
+  breadthCm: 15,
+  heightCm: 3
+};
+
+// The admin panel's "Weight (grams)" field is the PACKED weight of one book (bare book
+// plus its mailer and label). That figure is used exactly as entered — nothing is added
+// on top — so what the admin enters is what the AWB declares and what Shiprocket bills.
+//
+// No floor is applied: a packed book is ~250 g, and MIN_CHARGEABLE_KG below already lifts
+// any such parcel into the courier's 0.5 kg billing slab, which covers every parcel up to
+// 500 g. Overriding it higher would overcharge by a whole slab.
+
+// Shiprocket bills the greater of dead weight, volumetric weight and the courier's
+// minimum billable weight, then rounds that up to the courier's billing slab.
+// On this account the slabs are 0.5 / 1.0 / 1.5 / 2.0 kg (verified against the
+// serviceability API), so quoting the raw dead weight under-collects by a full slab.
+const MIN_CHARGEABLE_KG = 0.5;
+const BILLING_SLAB_KG = 0.5;
+const VOLUMETRIC_DIVISOR = 5000;
+
+const round3 = (value) => Math.round(Number(value) * 1000) / 1000;
+
+const roundUpToBillingSlab = (kg) => {
+  const value = round3(kg);
+  if (!Number.isFinite(value) || value <= 0) return MIN_CHARGEABLE_KG;
+  return round3(Math.max(MIN_CHARGEABLE_KG, Math.ceil(value / BILLING_SLAB_KG) * BILLING_SLAB_KG));
 };
 
 const computePackageFromLineItems = (lineItems) => {
   const physical = lineItems.filter((item) => isPhysicalBookType(item.book.type));
 
-  const totalWeightKg = physical.reduce(
-    (sum, item) => sum + ((Number(item.book.weightGrams) || BOOK_DEFAULTS.weightGrams) / 1000) * item.quantity,
-    0
+  // Weight comes straight from the admin panel's packed-weight field.
+  const deadWeightKg = round3(
+    physical.reduce(
+      (sum, item) => sum + ((Number(item.book.weightGrams) || 0) / 1000) * item.quantity,
+      0
+    )
   );
 
   const maxLength = physical.length
@@ -82,37 +109,81 @@ const computePackageFromLineItems = (lineItems) => {
   const maxBreadth = physical.length
     ? Math.max(...physical.map((item) => Number(item.book.breadthCm) || BOOK_DEFAULTS.breadthCm))
     : BOOK_DEFAULTS.breadthCm;
-  const totalHeight = physical.reduce(
-    (sum, item) => sum + (Number(item.book.heightCm) || BOOK_DEFAULTS.heightCm) * item.quantity,
-    0
+  const totalHeight = Math.max(
+    physical.reduce((sum, item) => sum + (Number(item.book.heightCm) || BOOK_DEFAULTS.heightCm) * item.quantity, 0),
+    BOOK_DEFAULTS.heightCm
   );
 
+  const volumetricWeightKg = round3((maxLength * maxBreadth * totalHeight) / VOLUMETRIC_DIVISOR);
+
+  // totalWeightKg is what gets quoted AND what gets declared on the Shiprocket AWB,
+  // so it must be the weight Shiprocket will actually bill — not the bare dead weight.
   return {
-    totalWeightKg: Math.max(totalWeightKg, 0.3),
+    totalWeightKg: roundUpToBillingSlab(Math.max(deadWeightKg, volumetricWeightKg)),
+    deadWeightKg,
+    volumetricWeightKg,
     maxLength,
     maxBreadth,
-    totalHeight: Math.max(totalHeight, BOOK_DEFAULTS.heightCm)
+    totalHeight
   };
 };
 
-const pickCheapestCourier = (couriers) => {
+const describeCourier = (courier) => ({
+  rate: Number(courier.rate || courier.freight_charge || 0),
+  // courier_id is stored so we can force the SAME courier at fulfillment time
+  courierId: String(courier.courier_company_id || courier.id || ""),
+  courierName: courier.courier_name || "",
+  estimatedDeliveryDays: courier.estimated_delivery_days || "",
+  // The courier's own billable weight, after dead vs volumetric vs minimum
+  chargeWeight: Number(courier.charge_weight || 0) || 0,
+  minWeight: Number(courier.min_weight || 0) || 0
+});
+
+const pickCourier = (couriers) => {
   const available = (couriers || []).filter((courier) => !courier.blocked);
   if (!available.length) return null;
 
-  return available.reduce((best, courier) => {
+  const hasRate = (courier) => {
     const rate = Number(courier.rate || courier.freight_charge || 0);
-    if (!Number.isFinite(rate) || rate <= 0) return best;
-    if (!best || rate < best.rate) {
-      return {
-        rate,
-        // courier_id is stored so we can force the SAME courier at fulfillment time
-        courierId: String(courier.courier_company_id || courier.id || ""),
-        courierName: courier.courier_name || "",
-        estimatedDeliveryDays: courier.estimated_delivery_days || ""
-      };
-    }
+    return Number.isFinite(rate) && rate > 0;
+  };
+
+  // A configured courier wins over the cheapest, so the customer is quoted the rate
+  // of the courier they will actually get. Falls back to cheapest when it is not
+  // serviceable for the package, so a preference can never break checkout.
+  const preferredId = String(env.shippingPreferredCourierId || "").trim();
+  const preferredName = String(env.shippingPreferredCourierName || "").trim().toLowerCase();
+
+  if (preferredId || preferredName) {
+    const preferred = available.find((courier) =>
+      preferredId
+        ? String(courier.courier_company_id || courier.id || "") === preferredId
+        : String(courier.courier_name || "").trim().toLowerCase().includes(preferredName)
+    );
+    if (preferred && hasRate(preferred)) return describeCourier(preferred);
+  }
+
+  return available.reduce((best, courier) => {
+    const described = describeCourier(courier);
+    if (!hasRate(courier)) return best;
+    if (!best || described.rate < best.rate) return described;
     return best;
   }, null);
+};
+
+const fetchCourierForPackage = async (pincode, pkg, weightKg) => {
+  const params = new URLSearchParams({
+    pickup_postcode: env.shiprocketPickupPincode,
+    delivery_postcode: pincode,
+    cod: "0",
+    weight: String(round3(weightKg)),
+    length: String(pkg.maxLength),
+    breadth: String(pkg.maxBreadth),
+    height: String(pkg.totalHeight)
+  });
+
+  const result = await shiprocketApi("GET", `/courier/serviceability/?${params.toString()}`);
+  return pickCourier(result?.data?.available_courier_companies);
 };
 
 const getShippingQuoteForItems = async ({ items, booksById, pincode }) => {
@@ -152,24 +223,27 @@ const getShippingQuoteForItems = async ({ items, booksById, pincode }) => {
   }
 
   const pkg = computePackageFromLineItems(lineItems);
-  const params = new URLSearchParams({
-    pickup_postcode: env.shiprocketPickupPincode,
-    delivery_postcode: normalizedPincode,
-    cod: "0",
-    weight: String(pkg.totalWeightKg),
-    length: String(pkg.maxLength),
-    breadth: String(pkg.maxBreadth),
-    height: String(pkg.totalHeight)
-  });
-
-  const result = await shiprocketApi("GET", `/courier/serviceability/?${params.toString()}`);
-  const cheapest = pickCheapestCourier(result?.data?.available_courier_companies);
+  let chargeWeightKg = pkg.totalWeightKg;
+  let cheapest = await fetchCourierForPackage(normalizedPincode, pkg, chargeWeightKg);
 
   if (!cheapest) {
     throw new ApiError(400, "Delivery is not available for this pincode");
   }
 
-  const deliveryCharge = Math.ceil(cheapest.rate);
+  // Guard against under-quoting: if the courier's own charge_weight is heavier than
+  // the slab we quoted (its volumetric or minimum beats our estimate), the AWB would
+  // be billed at that heavier slab. Re-quote there and keep it only when it costs more.
+  if (cheapest.chargeWeight > chargeWeightKg) {
+    const heavierWeightKg = round3(cheapest.chargeWeight);
+    const heavier = await fetchCourierForPackage(normalizedPincode, pkg, heavierWeightKg);
+    if (heavier && heavier.rate > cheapest.rate) {
+      chargeWeightKg = heavierWeightKg;
+      cheapest = heavier;
+    }
+  }
+
+  const marginFactor = 1 + (Number(env.shippingSafetyMarginPercent) || 0) / 100;
+  const deliveryCharge = Math.ceil(cheapest.rate * marginFactor);
 
   return {
     subtotalAmount,
@@ -181,7 +255,7 @@ const getShippingQuoteForItems = async ({ items, booksById, pincode }) => {
     courierName: cheapest.courierName,
     estimatedDeliveryDays: cheapest.estimatedDeliveryDays,
     package: {
-      weightKg: pkg.totalWeightKg,
+      weightKg: chargeWeightKg,
       lengthCm: pkg.maxLength,
       breadthCm: pkg.maxBreadth,
       heightCm: pkg.totalHeight
@@ -334,6 +408,7 @@ const createShiprocketOrder = async (orderId) => {
   }
 
   const courierId = String(order.selectedCourierId);
+  let awbError = null;
   try {
     const awbResult = await requestShipment(String(result.shipment_id), courierId);
     const awb = awbResult?.awb_assign_status === 1
@@ -354,14 +429,118 @@ const createShiprocketOrder = async (orderId) => {
     });
     result._awbCode = awb;
   } catch (awbErr) {
-    if (awbErr instanceof ApiError) throw awbErr;
+    awbError = awbErr;
+  }
+
+  // Read back what Shiprocket ACTUALLY billed. When AWB assignment fails, Shiprocket
+  // may have auto-assigned a different courier at a heavier slab than we quoted, so the
+  // order must not be left looking correct when it is not.
+  const audit = await auditShipmentCharges({
+    shiprocketOrderId: String(result.order_id),
+    customerPaid: Number(order.deliveryCharge || 0),
+    expectedCourierName: order.selectedCourierName || ""
+  });
+
+  await prisma.order.update({
+    where: { id: orderId },
+    data: {
+      actualShippingCharge: audit.actualShippingCharge,
+      actualCourierName: audit.actualCourierName,
+      shippingShortfall: audit.shippingShortfall,
+      awbFailureReason: awbError ? String(awbError?.message || awbError).slice(0, 500) : null
+    }
+  });
+
+  if (audit.shippingShortfall > 0) {
+    console.error(
+      `[Shiprocket] SHIPPING LOSS on order ${orderId}: customer paid ${audit.customerPaid}, Shiprocket billed ` +
+        `${audit.actualShippingCharge} (courier "${audit.actualCourierName || "unknown"}", charge weight ` +
+        `${audit.chargeWeight} kg, expected courier "${audit.expectedCourierName}"). Shortfall ${audit.shippingShortfall}.`
+    );
+  }
+  if (audit.courierChanged) {
+    console.warn(
+      `[Shiprocket] Courier mismatch on order ${orderId}: quoted "${audit.expectedCourierName}" but Shiprocket assigned ` +
+        `"${audit.actualCourierName}" with charge weight ${audit.chargeWeight} kg.`
+    );
+  }
+
+  if (awbError) {
+    if (awbError instanceof ApiError) throw awbError;
     throw new ApiError(
       502,
-      `AWB auto-assignment failed for locked courier ${courierId}: ${awbErr?.message || "unknown error"}`
+      `AWB auto-assignment failed for locked courier ${courierId}: ${awbError?.message || "unknown error"}`
     );
   }
 
   return result;
+};
+
+// ──────────────────────── Actual-charge audit ────────────────────────
+// Reads the shipment back from Shiprocket to find what was really billed. A failed or
+// silently overridden AWB assignment is the only way the real charge can differ from the
+// quote, so this runs on every push and never throws.
+const auditShipmentCharges = async ({ shiprocketOrderId, customerPaid, expectedCourierName }) => {
+  const empty = {
+    actualShippingCharge: null,
+    actualCourierName: null,
+    shippingShortfall: 0,
+    chargeWeight: null,
+    courierChanged: false,
+    customerPaid,
+    expectedCourierName
+  };
+
+  let detail;
+  try {
+    detail = await shiprocketApi("GET", `/orders/${encodeURIComponent(shiprocketOrderId)}`);
+  } catch (err) {
+    console.warn(`[Shiprocket] Could not read back order ${shiprocketOrderId} to audit shipping charge: ${err?.message || err}`);
+    return empty;
+  }
+
+  const remote = detail?.order || detail;
+  const shipment = (remote?.shipments || [])[0];
+  if (!shipment) return empty;
+
+  // total_charge is the amount Shiprocket actually bills (freight + surge + other + GST).
+  // Prefer it; fall back to summing the parts if it is absent.
+  const toNum = (value) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const round2 = (value) => Math.round(value * 100) / 100;
+  // Shiprocket returns surge as an array of {charge}, a string, or a number depending on
+  // the endpoint, so all three shapes must be summed rather than coerced to NaN.
+  const surgeAmount = (value) => {
+    if (Array.isArray(value)) return value.reduce((sum, part) => sum + toNum(part?.charge ?? part), 0);
+    if (value && typeof value === "object") return toNum(value.charge);
+    return toNum(value);
+  };
+  const billed = round2(
+    toNum(shipment.total_charge) ||
+      toNum(shipment.freight_charge) +
+        toNum(shipment.other_charges) +
+        surgeAmount(shipment.surge) +
+        toNum(shipment.whatsapp_charges)
+  );
+  if (billed <= 0) return empty;
+
+  const paid = round2(toNum(customerPaid));
+  const actualCourierName = String(shipment.courier_name || "").trim();
+  const expected = String(expectedCourierName || "").trim().toLowerCase();
+  const actual = actualCourierName.toLowerCase();
+
+  return {
+    actualShippingCharge: billed,
+    actualCourierName: actualCourierName || null,
+    // Small tolerance so float noise never flags an order.
+    shippingShortfall: round2(billed - paid) > 0.01 ? round2(billed - paid) : 0,
+    chargeWeight: toNum(shipment.charge_weight) || null,
+    courierChanged: Boolean(expected && actual && !actual.includes(expected) && !expected.includes(actual)),
+    customerPaid,
+    expectedCourierName
+  };
 };
 
 // ──────────────────────── Request Shipment (AWB assignment) ────────────────────────

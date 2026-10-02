@@ -108,12 +108,23 @@ const fulfillShiprocket = async (req, res) => {
     }
   });
 
+  const shortfall = Number(updatedOrder.shippingShortfall || 0);
+  const shippingWarning =
+    shortfall > 0
+      ? `Shiprocket billed ${updatedOrder.actualShippingCharge} via ${updatedOrder.actualCourierName || "unknown courier"} but the customer only paid ${updatedOrder.deliveryCharge}. Shortfall ${shortfall}. Collect the difference or cancel the shipment.`
+      : updatedOrder.awbFailureReason
+        ? `AWB assignment failed: ${updatedOrder.awbFailureReason}`
+        : null;
+
   sendSuccess(res, 200, "Order successfully pushed to Shiprocket", {
     ...updatedOrder,
     // AWB is auto-assigned inside createShiprocketOrder. If successful, awbCode is already in updatedOrder.
     // We surface it here for convenience; null means AWB assignment is still pending (admin can assign manually).
     awbCode: updatedOrder.awbCode || null,
-    shiprocketShipmentId: updatedOrder.shiprocketShipmentId || null
+    shiprocketShipmentId: updatedOrder.shiprocketShipmentId || null,
+    // Set when Shiprocket billed more than the customer paid, or the AWB could not be
+    // assigned to the locked courier. Null means billing matched the quote.
+    shippingWarning
   });
 };
 

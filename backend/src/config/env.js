@@ -42,7 +42,17 @@ const env = {
   shiprocketPickupLocation: process.env.SHIPROCKET_PICKUP_LOCATION || "Primary",
   shiprocketPickupPincode: process.env.SHIPROCKET_PICKUP_PINCODE || "",
   shiprocketWebhookToken: process.env.SHIPROCKET_WEBHOOK_TOKEN || "",
-  shiprocketChannelId: process.env.SHIPROCKET_CHANNEL_ID || ""
+  shiprocketChannelId: process.env.SHIPROCKET_CHANNEL_ID || "",
+
+  // Optional courier preference. When set and that courier is serviceable for the
+  // package, it is used instead of the cheapest one. Falls back to cheapest otherwise.
+  // Defaulted here (not only in .env) because .env is gitignored and would not deploy.
+  shippingPreferredCourierName: process.env.SHIPPING_PREFERRED_COURIER_NAME || "Blue Dart Air",
+  shippingPreferredCourierId: process.env.SHIPPING_PREFERRED_COURIER_ID || "",
+
+  // Percent added on top of the Shiprocket rate to cover seller surge / other
+  // charges that Shiprocket bills separately from the quoted freight rate.
+  shippingSafetyMarginPercent: toNumber(process.env.SHIPPING_SAFETY_MARGIN_PERCENT, 0)
 };
 
 if (!env.databaseUrl) {

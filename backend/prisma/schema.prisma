@@ -151,6 +151,14 @@ model Order {
   packageBreadthCm     Decimal?        @db.Decimal(10, 2)
   packageHeightCm      Decimal?        @db.Decimal(10, 2)
 
+  // What Shiprocket actually billed on the AWB, read back after assignment. When this
+  // exceeds deliveryCharge the courier billed a heavier slab than we quoted, so the
+  // shortfall is surfaced to the admin instead of being silently absorbed.
+  actualShippingCharge Decimal?        @db.Decimal(10, 2)
+  actualCourierName    String?
+  shippingShortfall    Decimal?        @db.Decimal(10, 2)
+  awbFailureReason     String?
+
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
